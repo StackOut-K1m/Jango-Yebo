@@ -1,0 +1,85 @@
+docs/specification_template.md
+docs/기능 명세서_Notion_260831.md
+
+# --- 시크릿 / 키 ---
+*.pem
+*.key
+infra/secrets/*
+!infra/secrets/*.example
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+ai/artifacts/
+# 데이터·이미지는 올리지 않되, 사람이 확인한 라벨 교정(overrides.json)만 버전 관리한다
+ai/datasets/**
+!ai/datasets/**/
+!ai/datasets/**/overrides.json
+
+# 라벨링 작업 파일. 정본은 labels.jsonl 이다 — xlsx 는 바이너리라 diff 로 라벨
+# 수정 이력을 리뷰할 수 없고, 두 사람이 같이 채우면 병합이 불가능하다.
+ai/evals/**/*.xlsx
+~$*.xlsx
+
+# --- 서버 런타임 산출물 (레포에 올리지 않음) ---
+infra/certbot/
+infra/backups/
+infra/jenkins_home/
+infra/uploads/
+# 예측 모델 가중치를 서버에 두는 자리 (S15P21C105-76). 이미지에 굽지 않고 볼륨으로 붙인다.
+infra/ai-artifacts/
+
+# --- 공개 저장소: 데이터 덤프·백업·업로드물 재커밋 방지 ---
+*.sql.gz
+*.dump
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+**/uploads/
+**/backups/
+**/jenkins_home/
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+
+# --- Claude Code (로컬 설정/스킬) ---
+.claude/
+
+# --- Codex 로컬 작업 산출물 ---
+.codex*/
+
+# --- Node / 프론트엔드 ---
+node_modules/
+dist/
+build/
+*.log
+*.tsbuildinfo
+coverage/
+
+# Vite 의존성 캐시. 목업을 로컬에서 서빙하면 생긴다.
+# (gitignore 는 줄 끝 주석을 지원하지 않는다 — 반드시 별도 줄에 쓴다)
+.vite/
+
+# 개인 환경 오버라이드. .env.development / .env.production 은 팀 공용이라 추적한다.
+.env*.local
+
+# --- Expo / React Native ---
+.expo/
+mobile/android/
+mobile/ios/
+*.apk
+
+# 시드 스크립트가 만드는 CSV. 생성물이라 저장소에 두지 않는다.
+seed-out/
+
+# CI 전용 — Jenkins 가 빌드 직전에 백엔드 마이그레이션을 여기로 복사한다
+# (ai/tests/ocr/test_v6_schema_conformance.py 가 컨테이너에서도 돌게 하는 훅)
+ai/.ci-migration
+
+# graft 로컬 그래프 캐시 — `graft build` 로 다시 만든다
+/graft/

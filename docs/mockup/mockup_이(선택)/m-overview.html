@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 세 가게 통합</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+/* SC-03-4 다사업장 통합 (모바일)
+   화면구성도: "매장 카드 세로 스크롤 + 시뮬레이터는 결과 요약 중심".
+
+   PC 는 잉여 · 부족 표와 옮긴 뒤를 나란히 놓지만, 모바일에는 그 폭이 없습니다.
+   그래서 시뮬레이터를 표가 아니라 문장 하나로 줄입니다.
+   "왕십리에서 248만원 옮기면 폭풍이 흐림이 됩니다. 173만원은 남습니다."
+   사장이 매장에서 3초 안에 읽어야 하는 것은 그 문장입니다.
+   자세한 표는 PC 에서 봅니다. */
+
+/* 지갑 카드. 세로로 쌓습니다. */
+.pot { border:1px solid var(--hair); border-radius:12px; overflow:hidden; position:relative;
+       margin-top:var(--s5); }
+.pot::before { content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--k); }
+.pot .hd { padding:var(--s5) var(--s5) var(--s4); }
+.pot .nm { font-size:12.5px; font-weight:800; letter-spacing:-.01em; }
+.pot .v { display:block; font-size:26px; font-weight:800; letter-spacing:-.035em; margin-top:var(--s2);
+          font-variant-numeric:tabular-nums; }
+.pot .v small { font-size:12px; font-weight:700; color:var(--ink-3); margin-left:2px; }
+.pot .who { display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s3); }
+.pot .lo { padding:var(--s4) var(--s5) var(--s5); border-top:1px solid var(--hair);
+           display:grid; grid-template-columns:1fr auto; gap:var(--s2) var(--s4); font-size:11.5px;
+           align-items:baseline; }
+.pot .lo b { font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.pot .lo .k { color:var(--ink-3); }
+/* 지갑 안 통장은 접어 둡니다. 모바일 첫 화면에 통장 번호까지 필요하지 않습니다. */
+.pot details { border-top:1px solid var(--hair); background:var(--wash); }
+.pot summary { padding:var(--s4) var(--s5); font-size:11.5px; font-weight:700; cursor:pointer;
+               min-height:44px; display:flex; align-items:center; gap:var(--s3); }
+.pot summary::-webkit-details-marker { display:none; }
+.pot summary::after { content:"›"; margin-left:auto; color:var(--ink-3); font-size:15px;
+                      transition:transform 160ms ease; }
+.pot details[open] summary::after { transform:rotate(90deg); }
+.acct { display:grid; grid-template-columns:1fr auto; gap:2px var(--s4); padding:var(--s3) var(--s5);
+        align-items:baseline; position:relative; }
+.acct::before { content:""; position:absolute; left:var(--s5); right:var(--s5); top:0; height:1px;
+                background:var(--hair); }
+.acct .b { font-size:11.5px; font-weight:700; }
+.acct .no { font-size:10px; color:var(--ink-3); display:block; font-variant-numeric:tabular-nums; }
+.acct .an { font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.shared { padding:var(--s4) var(--s5) var(--s5); font-size:11px; color:var(--ink-2); line-height:1.6;
+          border-top:1px solid var(--hair); }
+.shared b { color:var(--ink); }
+
+/* 가게 카드. 이익률 막대가 세 가게를 갈라놓습니다. */
+.shopc { padding:var(--s5) 0; position:relative; }
+.shopc + .shopc::before { content:""; position:absolute; left:0; right:0; top:0; height:1px;
+                          background:var(--hair); }
+.shopc .t { display:grid; grid-template-columns:1fr auto; gap:var(--s3); align-items:baseline; }
+.shopc .nm { font-size:14px; font-weight:700; }
+.shopc .sub { display:block; font-size:10.5px; color:var(--ink-3); margin-top:1px; line-height:1.5; }
+.shopc .pr { font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.025em; }
+.shopc .pl { display:block; font-size:10px; color:var(--ink-3); text-align:right; }
+.br { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s3); margin-top:var(--s4); }
+.br .c { font-size:10.5px; color:var(--ink-3); }
+.br .c b { display:block; font-size:12px; color:var(--ink-2); font-weight:400; margin-top:1px;
+           font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+/* 융통 결과 요약 */
+.tell { font-family:var(--serif); font-size:17px; line-height:1.75; color:var(--ink);
+        margin-top:var(--s5); }
+.tell b { box-shadow:inset 0 -8px 0 rgb(202 165 33 / .34); }
+.tellm { font-size:11.5px; color:var(--ink-3); line-height:1.6; margin-top:var(--s4); }
+.day { min-height:44px; }
+</style>
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when" id="when"></p>
+    <h1 class="hero" id="hero"></h1>
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>지갑 · 돈이 마르는지</h2>
+    <div id="pots"></div>
+  </section>
+
+  <section class="sec">
+    <h2>가게 · 어디가 버는지</h2>
+    <div id="shops"></div>
+    <p class="tellm" id="unalloc"></p>
+  </section>
+
+  <section class="sec">
+    <h2>남긴 돈이 통장에 남지 않는 까닭</h2>
+    <div id="bridges"></div>
+  </section>
+
+  <section class="sec">
+    <h2 id="simHead"></h2>
+    <div class="strip" id="dates" style="margin-top:var(--s4)"></div>
+    <p class="tell" id="tell"></p>
+    <div class="rows" id="next" style="margin-top:var(--s5)"></div>
+    <p class="tellm" id="note"></p>
+  </section>
+
+  <section class="sec">
+    <h2>가게로 들어가기</h2>
+    <div class="rows" id="into"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('세 가게 통합', 'm-all.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+
+var worst = POTS.reduce(function (a, b) { return RANK[b.lowRisk] > RANK[a.lowRisk] ? b : a; });
+(function () {
+  var k = SKYC[worst.lowRisk], s = document.getElementById('sky');
+  s.style.setProperty('--k0', k[0]); s.style.setProperty('--k1', k[1]); s.style.setProperty('--k2', k[2]);
+  s.dataset.w = worst.lowRisk;
+})();
+document.getElementById('when').textContent =
+  '가게 ' + SHOPS.length + '곳 · 지갑 ' + POTS.length + '개 · 8월 31일 오전 11시 20분';
+document.getElementById('hero').innerHTML =
+  '합치면 <b>' + man(TOTAL_BALANCE) + '원</b>인데 '
+  + mdKo(worst.low.date) + '에 ' + worst.name.replace(' 지갑', '') + ' 쪽이 <b>'
+  + WORD[worst.lowRisk] + '</b>입니다';
+
+/* ── 지갑 카드 ── */
+document.getElementById('pots').innerHTML = POTS.map(function (p) {
+  return '<div class="pot" style="--k:' + SKYC[p.lowRisk][1] + '">'
+    + '<div class="hd"><span class="nm">' + p.name + '</span>'
+      + '<span class="v">' + won(p.balance) + '<small>원</small></span>'
+      + '<div class="who">' + p.shops.map(function (s) {
+          return '<span class="bd">' + s.name + '</span>'; }).join('') + '</div></div>'
+    + '<details><summary>통장 ' + p.accts.length + '개</summary>'
+      + p.accts.map(function (a) {
+          return '<div class="acct"><span><span class="b">' + a.bank + ' ' + a.name + '</span>'
+            + '<span class="no">' + a.masked + '</span></span>'
+            + '<span class="an">' + won(a.balance) + '</span></div>';
+        }).join('') + '</details>'
+    + (p.shops.length > 1
+      ? '<p class="shared">가게 ' + p.shops.length + '곳이 한 통장을 씁니다. '
+        + '<b>가게별 잔액은 말할 수 없습니다.</b></p>' : '')
+    + '<div class="lo">'
+      + '<span class="k">안전선</span><b>' + won(p.safety) + '원</b>'
+      + '<span class="k">30일 최저</span><b>' + won(p.low.v) + '원 · ' + md(p.low.date) + '</b>'
+      + '<span class="k">그날</span><b>' + badge(p.lowRisk) + '</b>'
+    + '</div></div>';
+}).join('');
+
+/* ── 가게 카드 ── */
+var maxMargin = Math.max.apply(null, SHOPS.map(function (s) { return s.margin; }));
+document.getElementById('shops').innerHTML = SHOPS.map(function (s) {
+  var p = POT[s.pot];
+  return '<div class="shopc">'
+    + '<div class="t"><span><span class="nm">' + s.name + '</span>'
+      + '<span class="sub">' + p.name + (p.shops.length > 1 ? ' 공용' : '') + '</span></span>'
+      + '<span><span class="pr">' + won(s.profit) + '</span>'
+      + '<span class="pl">8월 남는 돈 · ' + s.margin + '%</span></span></div>'
+    + '<span class="rail"><i data-w="' + Math.round(s.margin / maxMargin * 100) + '"></i></span>'
+    + '<div class="br">'
+      + [['매출','sales'],['재료비','food'],['인건비','labor'],['그 밖','other']].map(function (c) {
+          return '<span class="c">' + c[0] + '<b>' + man(s[c[1]]) + '</b></span>';
+        }).join('')
+    + '</div></div>';
+}).join('');
+
+document.getElementById('unalloc').innerHTML =
+  '공용 지갑 거래 <b>' + UNALLOC.count + '건 ' + man(UNALLOC.amount)
+  + '원</b>은 어느 가게 것인지 아직 못 갈랐습니다. 그만큼 위 숫자는 범위입니다.';
+
+/* ── 손익 → 현금 다리 ── */
+document.getElementById('bridges').innerHTML = BRIDGE.map(function (b) {
+  return '<h3 class="h4" style="font-size:11px;font-weight:800;letter-spacing:.08em;'
+    + 'color:var(--ink-3);margin-top:var(--s6)">' + b.pot.name + '</h3>'
+    + bridgeHTML(b, true);
+}).join('');
+
+/* ── 융통 · 결과 요약 ──
+   PC 는 표를 두 칸에 나란히 놓지만 모바일에는 폭이 없습니다.
+   문장 하나로 줄이고, 자세한 것은 PC 에서 보게 합니다. */
+/* 전역 FC 는 지금 고른 가게의 지갑 곡선입니다. 이 화면은 사용자 단위라 쓰면 안 됩니다. */
+var DATES = POTS[0].curve.map(function (d) { return d[0]; });
+var CAND = DATES.filter(function (d, i) {
+  return POTS.some(function (o) { return o.curve[i][1] < o.safety; });
+});
+var pick = CAND.indexOf(worst.low.date) >= 0 ? worst.low.date : CAND[0];
+
+document.getElementById('dates').innerHTML = CAND.map(function (d) {
+  var i = DATES.indexOf(d);
+  var sum = POTS.reduce(function (t, o) { return t + o.curve[i][1]; }, 0);
+  var w = POTS.reduce(function (a, o) {
+    var r = riskFor(o.curve[i][1], o.safety);
+    return RANK[r] > RANK[a] ? r : a; }, 'safe');
+  return '<button class="day" data-d="' + d + '" aria-pressed="' + (d === pick) + '">'
+    + '<span class="dw">' + md(d) + '</span>'
+    + '<span class="dv">' + man(sum) + '</span>'
+    + mark(w) + '</button>';
+}).join('');
+
+function render(date) {
+  var t = transferPlan(date);
+  document.getElementById('simHead').textContent = '자금 융통 · ' + mdKo(date);
+
+  var el = document.getElementById('tell');
+  if (t.plans.length) {
+    var p = t.plans[0];
+    var to = t.after.filter(function (a) { return a.pot === p.to; })[0];
+    el.innerHTML = p.from.name.replace(' 지갑','') + '에서 <b>' + won(p.amount) + '원</b>을 옮기면 '
+      + p.to.name.replace(' 지갑','') + ' 쪽이 ' + WORD[to.was] + '에서 <b>' + WORD[to.risk] + '</b>이 됩니다.'
+      + (t.unresolved > 0
+        ? ' 그래도 <b>' + won(t.unresolved) + '원</b>이 모자랍니다.'
+        : ' 이날은 그것으로 넘어갑니다.');
+  } else if (t.unresolved > 0) {
+    el.innerHTML = '<b>두 지갑이 같이 마릅니다.</b> 옆 가게로는 막을 수 없어서 '
+      + won(t.unresolved) + '원을 밖에서 구해야 합니다.';
+  } else {
+    el.innerHTML = '이날은 두 지갑이 모두 안전선 위에 있습니다. <b>옮길 필요가 없습니다.</b>';
+  }
+
+  document.getElementById('next').innerHTML = t.unresolved > 0
+    ? '<a class="r" href="m-loans.html"><span class="grow"><span class="nm">지원 제도 · 대출 보기</span>'
+      + '<span class="mt">' + won(t.unresolved) + '원을 메울 곳</span></span><span class="go">›</span></a>'
+    : '';
+
+  document.getElementById('note').textContent =
+    TRANSFER_NOTE + ' 여유 금액은 그날 예상잔액에서 안전선을 뺀 값입니다. '
+    + '지갑별 잉여와 부족을 표로 보려면 PC 에서 봅니다.';
+
+  document.getElementById('dates').querySelectorAll('.day').forEach(function (b) {
+    b.setAttribute('aria-pressed', String(b.dataset.d === date));
+  });
+  paintRails();
+}
+
+document.getElementById('dates').addEventListener('click', function (e) {
+  var b = e.target.closest('.day[data-d]'); if (!b) return;
+  pick = b.dataset.d;
+  render(pick);
+});
+
+document.getElementById('into').innerHTML = SHOPS.map(function (s) {
+  return '<button class="r" data-s="' + s.id + '"><span class="grow">'
+    + '<span class="nm">' + s.name + '</span>'
+    + '<span class="mt">8월 남는 돈 ' + won(s.profit) + '원 · ' + POT[s.pot].name + '</span></span>'
+    + '<span class="go">›</span></button>';
+}).join('');
+document.getElementById('into').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-s]'); if (!b) return;
+  setShop(b.dataset.s);
+  location.href = 'm-home.html';
+});
+
+render(pick);
+wireReveal();
+mountFeatures('m-overview');
+</script>
+</body>
+</html>

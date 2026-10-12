@@ -1,0 +1,186 @@
+/* 리셋과 바탕. 목업 sky.css 의 전역 규칙을 옮긴 것. */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* overflow-x 는 html 에 둔다.
+ * body 에 두면 body 가 스크롤 컨테이너가 되는데, 그 높이는 제 내용과 같아서
+ * 절대 스크롤되지 않는다. 그러면 scrollIntoView 와 #앵커 이동이 body 에서
+ * 멈춰 버린다 — 주소창의 해시만 바뀌고 화면은 그대로였던 원인이다. */
+html {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--f3);
+  line-height: var(--lh);
+  /* 한국어는 어절 단위로 끊는다 */
+  word-break: keep-all;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* 입력·선택·버튼은 한 높이로 선다.
+ * 화면마다 패딩으로 따로 잡으면 나란히 놓았을 때 밑선이 어긋난다 —
+ * 거래 화면의 파일칸·업로드 버튼·필터 셀렉트가 그랬다. */
+input,
+select,
+textarea {
+  font: inherit;
+  font-size: var(--f3);
+}
+
+button,
+select,
+textarea,
+input:not([type='checkbox'], [type='radio']) {
+  min-height: var(--ctl);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* small 은 기본값이 0.833em 이라 본문 14px 아래에서 10.8px 로 떨어진다.
+ * 척도의 바닥(12px)까지만 내려간다. */
+small {
+  font-size: var(--f1);
+}
+
+/* 금액은 자릿수가 흔들리지 않아야 한다 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 움직임을 줄이는 설정을 켠 사용자에게는 애니메이션을 걷어낸다.
+ * 값과 자리는 애니메이션에 매달지 않았으므로 걷어내도 화면이 온전하다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* 알약 — 뱃지와 작은 버튼이 한 줄에 나란히 선다(계좌 줄의 연결됨·동기화·연결 해제).
+ * 뱃지는 span, 버튼은 button 이라 높이가 갈렸다. 한 자리에서 맞춘다. */
+.risk-badge,
+.account-status,
+.account-primary,
+.account-sync__btn,
+.account-disconnect,
+.account-confirm button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--pill-h);
+  padding: var(--pill-pad);
+  border-radius: var(--pill-r);
+}
+
+@media (max-width: 760px) {
+  /* 좁은 화면에서는 손가락으로 누른다. 표적을 44px 로 올린다. */
+  .account-sync__btn,
+  .account-disconnect,
+  .account-confirm button {
+    min-height: var(--ctl-lg);
+  }
+}
+
+/* 움직임 — 목업에서 가져왔다. 장식이 아니라 읽는 순서를 만든다.
+ * 위의 prefers-reduced-motion 규칙 하나로 전부 꺼진다. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 하늘 위에서는 답 한 줄이 먼저, 곡선이 뒤따른다. */
+.forecast-answer {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.sky-trend {
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) 0.1s both;
+}
+
+/* 땅의 구역은 스크롤에 맞춰 드러난다. 지원하는 브라우저에서만 걸린다. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ground .sec {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 20%;
+    }
+  }
+}
+
+/* 조작에 반응이 있어야 살아 있는 화면으로 읽힌다. */
+.auth-submit,
+.account-sync__btn,
+.account-disconnect,
+.account-confirm button,
+.verify-resend,
+.tx-pager button,
+.forecast-period button {
+  transition:
+    background-color 180ms,
+    border-color 180ms,
+    color 180ms,
+    transform 180ms,
+    box-shadow 180ms;
+}
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgb(20 20 19 / 0.18);
+}
+
+/* 줄을 짚어 가며 읽는다 */
+.tx-table tbody tr,
+.account-list > li,
+.forecast-day {
+  transition: background-color 180ms;
+}
+.tx-table tbody tr:hover,
+.account-list > li:hover {
+  background: var(--ground-2);
+}
+
+/* 예보 곡선이 왼쪽에서 그려진다 — 시간이 흐르는 방향과 같다. */
+.gap-chart.is-first .gap-chart__line {
+  stroke-dasharray: var(--len);
+  stroke-dashoffset: var(--len);
+  animation: draw 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

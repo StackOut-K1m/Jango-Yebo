@@ -1,0 +1,130 @@
+/* 접으면 지갑이 이만큼 삐져나와 잡을 곳이 된다. WalletWorkspace 의 PEEK 과 같아야 한다. */
+/* gap 은 .workspace 것을 그대로 쓴다 — 0 으로 덮으면 지갑이 유리창에 붙는다.
+   지갑 컬럼은 페이지 오른쪽 끝에 붙어 있다. 그래서 **트랙이 줄어드는 것 자체가**
+   화면에서는 지갑이 오른쪽으로 밀려나가는 움직임이다 — 서랍을 따로 밀 필요가 없다.
+   손을 따라 트랙이 바뀌므로 유리창 폭도 실시간으로 함께 줄고 늘어난다. */
+.workspace.wallet-workspace {
+  position: relative;
+  --wallet-peek: 56px;
+  grid-template-columns: minmax(0, 1fr) calc(var(--wallet-peek) + (var(--wallet-width) - var(--wallet-peek)) * clamp(0, var(--wallet-reveal), 1));
+  align-items: start;
+}
+/* 접힐수록 페이지 여백만큼 더 오른쪽으로 나가 화면 끝에 붙는다 — 여백 위에 얹힌 게 아니라
+   구석에서 튀어나온 것으로 읽힌다. --page-edge 는 WalletWorkspace 가 재서 넣는다. */
+.wallet-dock { position: relative; min-width: 0; padding-bottom: 60px; transform: translateX(calc((1 - clamp(0, var(--wallet-reveal), 1)) * var(--page-edge, 0px))); }
+/* 넘쳐 나간 서랍만 자른다. 세로는 살려 둔다 — clip 은 visible 과 짝지을 수 있는 유일한 값이다. */
+.wallet-clip { overflow-x: clip; overflow-y: visible; transition: margin-left .18s ease, width .18s ease; }
+/* 활짝 열려 쉬는 동안은 자르지 않는다. 서랍이 컬럼을 꼭 채워 넘칠 게 없고,
+   자르면 카드를 왼쪽으로 끌 때(도구 여는 제스처) 경계에서 잘려 나간다. */
+.wallet-workspace[data-wallet-open='true']:not([data-dragging='true']) .wallet-clip { overflow: visible; }
+/* 호버하면 조금 더 나온다. 오른쪽 끝은 dock 에 붙여 둔 채 **왼쪽으로만** 넓어진다.
+   peek 을 키우면 트랙이 바뀌어 유리창이 밀리고, dock 을 통째로 밀면 오른쪽 페이지 여백이
+   그만큼 벌어진다. 보이는 창만 왼쪽으로 늘리면 둘 다 안 생긴다. */
+.wallet-workspace[data-wallet-open='false']:not([data-dragging='true']):has(.wallet-grab:is(:hover, :focus-visible)) .wallet-clip { margin-left: -14px; width: calc(100% + 14px); }
+.wallet-drawer { width: var(--wallet-width); }
+.wallet-workspace[data-wallet-open='false']:not([data-dragging='true']) .wallet-drawer { pointer-events: none; }
+
+/* 상자 대신 삐져나온 지갑 자체가 손잡이다. 접었을 땐 삐져나온 폭 전부,
+   펼쳤을 땐 왼쪽 가장자리만 잡는 자리로 둔다 — 안 그러면 카드 클릭을 가로챈다. */
+.wallet-grab { position: absolute; z-index: 5; top: 0; bottom: 60px; left: 0; width: 22px; padding: 0; border: 0; background: none; cursor: grab; touch-action: pan-y; }
+.wallet-workspace[data-wallet-open='false'] .wallet-grab { width: 100%; }
+.wallet-workspace[data-dragging='true'] .wallet-grab { cursor: grabbing; }
+/* 테두리를 안쪽으로 넣는다 — 바깥으로 빼면 3px 짜리 라벤더 막대가 그래프를 침범한다. */
+.wallet-grab:focus-visible { outline: 2px solid var(--lavender); outline-offset: -2px; border-radius: 12px; }
+/* 마우스를 따라다닌다. --hint-y 는 포인터가 움직일 때 JS 가 넣는다(리렌더 없음). */
+.wallet-grab-hint { position: absolute; right: calc(100% + 14px); top: var(--hint-y, 60px); transform: translateY(-50%); white-space: nowrap; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--raised-strong); color: var(--text-2); font-size: var(--fs-12, 12px); opacity: 0; transition: opacity .18s ease; pointer-events: none; }
+.wallet-grab:is(:hover, :focus-visible) .wallet-grab-hint { opacity: 1; }
+.wallet-workspace[data-dragging='true'] .wallet-grab-hint { opacity: 0; }
+
+/* 지갑이 움직이는 동안 유리창 내용물은 서로 다른 거리를 움직인다 — 왼쪽 고정은 0px,
+   오른쪽 정렬은 가장자리를 따라 360px. 흐리면 눈이 개별 요소를 쫓지 못해 흩어짐 대신
+   「판이 통째로 움직인다」로 읽힌다. 판이 아니라 안의 것만 흐린다 — 판까지 걸면
+   테두리가 페이지 배경으로 번진다.
+   data-moving 은 「이번 드래그가 한 번이라도 움직였나」다 — 잡기만 하면 안 걸리고,
+   쥔 채 손을 멈춰도 유지되며, 놓는 순간 풀린다. 판정은 WalletWorkspace 에 있다.
+   근본책은 속도를 한 그룹으로 모으는 쪽(가운데 정렬 제거)이고, 이건 그 전의 완충이다. */
+.wallet-workspace .forecast-surface > * { transition: filter .14s ease; }
+.wallet-workspace[data-moving='true'] .forecast-surface > * { filter: blur(5px); }
+/* 흐림은 그 자체가 움직임의 표현이라, 움직임을 줄여 달라는 설정에선 켜지 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .wallet-workspace[data-moving='true'] .forecast-surface > * { filter: none; }
+}
+.wallet-workspace .forecast-surface { container-type: inline-size; }
+.wallet-workspace .hero-balance > span:first-child { font-size: clamp(30px, 7cqw, 66px); }
+.wallet-workspace .balance-chart--roomy .axis-label,
+.wallet-workspace .balance-chart--roomy .date-label { font-size: var(--fs-11, 11px); }
+.wallet-workspace .balance-chart--roomy .safety-label { font-size: var(--fs-11, 11px); }
+.wallet-drawer .right-page.glass-pane { padding: 28px 18px; --card-h: max(160px, calc((100cqw - 2 * var(--inset)) / 1.95)); }
+.wallet-drawer .wallet-card { padding: 18px 16px; }
+.wallet-drawer .wallet-card-heading { flex-wrap: wrap; }
+.wallet-drawer .wallet-card-value { font-size: 15px; }
+@container (max-width: 540px) {
+  /* 좁아지면 한 줄에 못 선다. 성함 아래로 잔액·날씨가 접힌다 */
+  .wallet-workspace .dashboard-head { flex-wrap: wrap; gap: 12px; }
+  .wallet-workspace .combined-chart__controls { grid-template-columns: 1fr auto; gap: 10px; }
+  .wallet-workspace .combined-chart__period:last-child { grid-column: 1 / -1; justify-content: flex-start; }
+  .wallet-workspace .weather-panel { margin-left: auto; }
+}
+.dashboard-control { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--text); background: var(--surface); font: inherit; font-size: var(--fs-13, 13px); cursor: pointer; }
+.dashboard-control:hover:not(:disabled) { background: color-mix(in srgb, var(--text) 8%, var(--surface)); }
+/* 이 버튼은 두 곳에 놓인다. 기본 치수(43px·10px)는 어느 쪽 이웃과도 안 맞아
+   혼자 어긋나 보였다 — 유리판 안에서 10px 라디우스는 이것 하나뿐이었다.
+   그래서 놓이는 자리의 치수를 따른다. */
+.store-controls .dashboard-control { padding: 13px 15px; border-radius: 12px; }
+/* 유리판의 토착 컨트롤(기간 버튼)은 반투명 막(--veil)을 쓴다. 여기만 불투명 --surface 라
+   유리 위에 얹힌 딴 판처럼 떴다. 막으로 바꾸면 유리 안에 든 것으로 읽힌다. */
+.combined-chart__acts .dashboard-control { padding: 7px 13px; border-radius: 999px; font-size: var(--fs-12, 12px); background: var(--veil-2); border-color: var(--veil-4); }
+.combined-chart__acts .dashboard-control:hover:not(:disabled) { background: var(--veil-4); }
+/* 방패는 --mint 로 칠한다(자금 안전 화면과 같은 색). 지갑 셋째 칸(.card-loans)이 이 색을 물려받았다.
+   색은 꾸밈이고 뜻은 옆 글자가 진다 — 색만으로 상태를 말하지 않는다(도메인 규칙 6). */
+.combined-chart__acts .dashboard-control > svg:first-child { color: var(--mint); }
+.dashboard-control:disabled, .safety-editor-save:disabled { opacity: .55; cursor: wait; }
+.dashboard-control:focus-visible, .safety-editor :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.dashboard-wallet-heading, .safety-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* 껍데기 없는 글자 링크. 옆 안전선 칩과 무게가 겹치지 않게 테두리·배경을 두지 않는다. */
+.dashboard-refresh { display: inline-flex; align-items: center; gap: 6px; padding: 7px 4px; border: 0; background: none; color: var(--text-2); font: inherit; font-size: var(--fs-12, 12px); cursor: pointer; }
+.dashboard-refresh:hover:not(:disabled) { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.dashboard-refresh:disabled { opacity: .55; cursor: wait; }
+.dashboard-refresh:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 6px; }
+/* 대기 「상태」다. 본문과 같은 색에 아이콘도 없으면 그냥 설명문으로 읽히고 지나친다
+   — 화면구성도 6.1 은 색 단독을 금지하고 상태명·아이콘을 함께 요구한다.
+   안전선 버튼 바로 아래에 오도록 오른쪽에 붙인다. */
+.dashboard-pending { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin: -12px 0 16px; font-size: var(--fs-13, 13px); color: var(--peach); }
+/* 카드는 판 안쪽에서 --inset 만큼 더 들어가 있다. 머리말만 그게 없어 혼자 왼쪽에 붙었다.
+   같은 변수를 쓰면 좁은 화면(--inset: 3px)에서도 같이 따라온다. */
+.dashboard-wallet-heading { margin: 0 var(--inset, 10px) 18px; font-size: var(--fs-14, 14px); font-weight: 600; }
+/* 접히면 삐져나온 조각에 머리말이 잘려 보인다. 절반쯤 닫히는 지점부터 사라진다 —
+   상태가 아니라 reveal 에 물려 두어 손으로 끄는 중에도 같이 따라온다. 자리는 유지(opacity). */
+.wallet-drawer .dashboard-wallet-heading { opacity: clamp(0, calc((var(--wallet-reveal) - .55) * 4), 1); }
+.dashboard-error { color: var(--text); font-size: var(--fs-14, 14px); line-height: 1.6; }
+.safety-editor { width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); color: var(--text); box-shadow: 0 24px 70px #0005; }
+.safety-editor::backdrop { background: #0007; }
+.safety-editor h2 { font-size: 22px; margin: 0; }
+.safety-editor p { font-size: var(--fs-14, 14px); line-height: 1.65; margin: 18px 0; }
+.safety-editor label { display: block; margin-top: 24px; font-size: var(--fs-14, 14px); font-weight: 600; }
+.safety-editor-input { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; }
+.safety-editor-input input { width: 100%; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--surface); font: inherit; font-size: 24px; font-variant-numeric: tabular-nums; }
+.safety-editor-input span { flex-shrink: 0; }
+.safety-editor-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.safety-editor-presets [aria-pressed='true'] { outline: 2px solid var(--text); outline-offset: -2px; }
+.safety-editor-save { width: 100%; padding: 13px; border: 0; border-radius: 10px; background: var(--text); color: var(--surface); font: inherit; font-weight: 600; cursor: pointer; }
+.safety-editor-save:hover:not(:disabled) { opacity: .9; }
+@media (max-width: 760px) { .store-controls { flex-wrap: wrap; gap: 8px; } .safety-editor { padding: 20px; } }
+
+/* ---- 좁은 화면 ----
+   서랍은 마우스 장치다. 오른쪽 끝에서 끌어내고, 손잡이가 컬럼 폭을 실시간으로 바꾸고,
+   호버하면 조금 더 나온다 — 손가락에는 셋 다 없는 동작이다. 게다가 손잡이가 접힌 상태에서
+   컬럼 전체를 덮어(`.wallet-grab` width:100%) 세로 스크롤을 가로챈다.
+
+   좁은 화면에서는 장치를 통째로 끄고 지갑을 곡선 아래에 그냥 쌓는다. 위 규칙들이
+   `.workspace.wallet-workspace`(0,2,0)로 styles.css 의 900px 단일 칸 규칙(0,1,0)을
+   이기고 있으므로, 여기서 같은 무게로 되돌린다. */
+@media (max-width: 760px) {
+  .workspace.wallet-workspace { grid-template-columns: minmax(0, 1fr); }
+  /* --page-edge 로 오른쪽 끝에 붙이던 밀기. 한 칸으로 쌓이면 밀 곳이 없다 */
+  .wallet-dock { transform: none; padding-bottom: 0; }
+  /* 넘칠 서랍이 없으니 자르지 않는다 — 자르면 카드 그림자가 잘려 나간다 */
+  .wallet-clip { overflow: visible; margin-left: 0; width: auto; }
+  .wallet-drawer { width: 100%; }
+  .wallet-grab { display: none; }
+}

@@ -1,0 +1,253 @@
+/* ══════════════════════════════════════════════════════════════════
+   v7 폼 — 로그인 · 회원가입 · 사업장 등록 · 계좌 연결
+   v7 의 토큰(styles.css :root)을 쓴다. 새 색을 만들지 않는다.
+   ══════════════════════════════════════════════════════════════════ */
+
+.v7-auth {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(110% 70% at 14% -8%, color-mix(in srgb, var(--lavender) 9%, transparent), transparent 62%),
+    var(--page);
+  color: var(--text);
+  /* 글꼴 스택은 tokens.css 한 곳에 둔다. 'Pretendard' 로 적으면 실제로 적재된 이름('Pretendard Variable')과
+     달라 시스템 글꼴로 떨어지고, 대시보드와 글자 폭이 달라 상단 바가 화면을 옮길 때마다 흔들린다. */
+  font-family: var(--sans);
+  display: grid;
+  gap: 48px;
+  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  padding: 64px max(24px, 6vw);
+  word-break: keep-all;
+}
+
+/* ── 왼쪽: 말 ────────────────────────────────────────────── */
+.v7-auth__lede {
+  position: relative;
+  min-width: 0;
+}
+/* 화면 왼쪽 위 모서리. 격자 흐름에서 빼야 왼쪽 글과 오른쪽 폼의 줄이 흔들리지 않는다. */
+.v7-auth__back {
+  position: absolute;
+  top: 20px;
+  left: max(16px, 2vw);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-13_5, 13.5px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.v7-auth__back:hover { background: var(--veil-3); color: var(--text); }
+.v7-auth__back:focus-visible { outline: 2px solid var(--lavender); outline-offset: 2px; }
+.v7-auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.v7-auth__brand .brand-en {
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+  margin-left: 2px;
+}
+.v7-auth__brand .brand-symbol {
+  display: flex;
+  gap: 3px;
+}
+.v7-auth__brand .brand-symbol i {
+  width: 7px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--lavender);
+}
+.v7-auth__brand .brand-symbol i:last-child {
+  height: 14px;
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--lavender) 45%, transparent);
+}
+.v7-auth__lede h1 {
+  margin: 28px 0 0;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.24;
+  font-weight: 700;
+  letter-spacing: -0.038em;
+}
+.v7-auth__sub {
+  margin: 16px 0 0;
+  font-size: var(--fs-14_5, 14.5px);
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 40ch;
+}
+
+/* 관측 원 — 로그인 전에는 상태를 모른다. 색으로 아무것도 말하지 않는다. */
+.v7-auth__scope {
+  position: relative;
+  width: min(260px, 60%);
+  aspect-ratio: 1;
+  margin-top: 40px;
+}
+.v7-auth__scope span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--w-cloud) 16%, transparent);
+  border-radius: 50%;
+}
+.v7-auth__scope span:nth-child(2) { inset: 16%; }
+.v7-auth__scope span:nth-child(3) { inset: 32%; }
+.v7-auth__scope .sweep {
+  border: 0;
+  background: conic-gradient(from 0deg, color-mix(in srgb, var(--lavender) 18%, transparent), transparent 60%);
+  animation: v7-auth-sweep 9s linear infinite;
+}
+@keyframes v7-auth-sweep { to { transform: rotate(360deg); } }
+
+/* ── 오른쪽: 폼 판 ───────────────────────────────────────── */
+.v7-auth__panel {
+  justify-self: end;
+  width: min(440px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 34px 34px 30px;
+  box-shadow: 0 30px 70px -30px var(--shadow-3);
+  min-width: 0;
+}
+@media (max-width: 860px) {
+  .v7-auth { padding: 40px 20px 56px; }
+  /* 좁으면 위쪽 여백이 줄어 모서리의 뒤로가기가 로고에 겹친다 */
+  .v7-auth:has(> .v7-auth__back) { padding-top: 72px; }
+  .v7-auth__panel { justify-self: stretch; padding: 26px 22px 24px; }
+  .v7-auth__scope { display: none; }
+}
+
+/* ── 칸 ─────────────────────────────────────────────────── */
+.v7-auth .auth-field,
+.v7-auth__panel .auth-field {
+  display: block;
+}
+.v7-auth .auth-field + .auth-field { margin-top: 18px; }
+.v7-auth .auth-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: var(--fs-12_5, 12.5px);
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+}
+.v7-auth input:not([type='checkbox'], [type='radio'], [type='file']),
+.v7-auth .auth-field select,
+.v7-auth select,
+.v7-auth textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--control-line);
+  background: var(--veil-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14_5, 14.5px);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.v7-auth input:hover,
+.v7-auth select:hover { background: var(--veil-3); }
+.v7-auth input:focus-visible,
+.v7-auth select:focus-visible,
+.v7-auth textarea:focus-visible {
+  outline: none;
+  border-color: var(--lavender);
+  background: var(--veil-4);
+}
+.v7-auth ::placeholder { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+.v7-auth .auth-hint {
+  display: block;
+  margin-top: 7px;
+  font-size: var(--fs-11_5, 11.5px);
+  line-height: 1.7;
+  color: var(--muted);
+}
+.v7-auth .auth-error,
+.v7-auth .auth-form-error {
+  display: block;
+  margin-top: 8px;
+  font-size: var(--fs-12, 12px);
+  line-height: 1.65;
+  color: var(--w-rain);
+}
+.v7-auth .auth-form-error {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--w-rain) 42%, transparent);
+  background: color-mix(in srgb, var(--w-rain) 11%, transparent);
+}
+
+/* ── 버튼 ───────────────────────────────────────────────── */
+.v7-auth .auth-submit {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 26px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--lavender);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s var(--ease);
+}
+.v7-auth .auth-submit:hover:not(:disabled) {
+  background: var(--accent-lite);
+  transform: translateY(-1px);
+}
+.v7-auth .auth-submit:disabled { opacity: 0.55; cursor: default; }
+.v7-auth .auth-submit:focus-visible { outline: 2px solid var(--lavender); outline-offset: 3px; }
+
+.v7-auth .auth-alt {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-13, 13px);
+  color: var(--muted);
+  text-align: center;
+}
+.v7-auth .auth-alt a {
+  color: var(--lavender);
+  font-weight: 600;
+  text-decoration: none;
+}
+.v7-auth .auth-alt a:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .v7-auth__scope .sweep { animation: none; }
+  .v7-auth .auth-submit { transition: none; }
+}
+
+/* ══ 등장 연출 ═══════════════════════════════════════════════
+   **위치만** 움직인다. 투명도를 애니메이션에 맡기면 그것이 멈추는 순간
+   화면이 통째로 사라진다 — 실제로 로그인 화면이 opacity 0 으로 남았다.
+   위치가 멈추면 18px 어긋날 뿐 내용은 읽힌다. 연출보다 보이는 게 먼저다. */
+.v7-rise {
+  animation: v7-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes v7-rise {
+  from { transform: translateY(18px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v7-rise { animation: none; }
+}

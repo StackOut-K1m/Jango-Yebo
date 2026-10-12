@@ -1,0 +1,676 @@
+/* ============================================================================
+   잔고예보 디자인 시스템 · 단일 원본
+   docs/와이어프레임_디자인_검토보고서.md §6 권장안 구현
+
+   기존본(wireframe/)과 보강본(wireframe/v2/)이 이 파일 하나를 함께 쓴다.
+   여기 없는 값은 화면에서 쓰지 않는다. 새 값이 필요하면 토큰을 먼저 추가한다.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- Token -- */
+:root{
+  /* Neutral · 보라 기운을 살짝 넣은 중립색 -------------------------------- */
+  /* 되돌리려면 주석의 이전 값으로 바꾸면 된다. 이 블록 하나가 전 화면을 지배한다. */
+  --ink:#1a1a2e;          /* 본문 · 제목 · 모든 금액        (← #1c1d1f) */
+  --ink-2:#3a3a4f;        /* 보조 본문                     (← #3d4147) */
+  --muted:#6b6b7b;        /* 설명 · 라벨       흰 5.23      (← #6b7076) */
+  --faint:#6e6e80;        /* 비활성 텍스트     흰 4.99      (← #6e7379) */
+  /* 카드 테두리·구분선. 정보를 지고 있지 않으므로 3:1을 요구하지 않는다. */
+  --line:#e3e2ee;         /* 흰 대비 1.24                  (← #d0d4d9) */
+  --line-2:#eeedf6;       /* 내부 구분선                   (← #eceef1) */
+  /* 조작 가능한 요소의 경계선. 이것만이 컨트롤을 식별시키므로 WCAG 1.4.11의
+     3:1을 지킨다 — Secondary 버튼 · 입력 · 칩에 쓴다. */
+  --line-strong:#848496;  /* 흰 3.67 / surface-2 3.39 / canvas 3.27  (← #8b9096) */
+  --surface:#fff;
+  --surface-2:#f6f5fc;    /* 표 헤더 · 합계 행 · 입력 채움  (← #f7f8fa) */
+  --canvas:#f2f1fa;       /* 본문 바탕                     (← #eef0f3) */
+  /* 예보 판 배경 — 아주 옅은 하늘. 상자를 없앤 자리를 이 면 하나가 대신한다. */
+  --sky-1:#eaf0fc; --sky-2:#f7f8fc;   /* muted 4.58 / caution 4.68 (← #e6ecfb 4.42 미달) */
+
+  /* Brand / Semantic ------------------------------------------------------ */
+  --accent:#2b5ce7;  --accent-bg:#eaeeff;  --accent-line:#c5cffb;   /* ← #1f5fd0 */
+  --safe:#047857;    --safe-bg:#e9f6ef;    --safe-line:#b9ddca;   /* ← #059669 3.58 */
+  --caution:#8a6420; --caution-bg:#fdf4e3; --caution-line:#ecdcb8;
+  --warn:#9a4718;    --warn-bg:#fdf0e7;    --warn-line:#f0d5c2;   /* ← #b3541e 4.47 */
+  --risk:#b32d2d;    --risk-bg:#fceeee;    --risk-line:#f0cccc;
+  --ai:#5b3fb5;      --ai-bg:#f2edff;      --ai-line:#ddd2f7;     /* 두 값 통합 */
+
+  /* 색 위에 얹는 글자 — 각 tint 배경에서 4.5:1 이상 */
+  --accent-ink:#20399c; --accent-hover:#2349c9;
+  --safe-ink:#155f3b; --warn-ink:#7c3a13; --risk-ink:#8f2323;
+  --on-ink-link:#8fb6ff;  /* 검정 배경(Toast) 위 링크 */
+  --skel-1:#eef0f3; --skel-2:#e3e6ea;
+
+  /* Navigation · 밝은 레일 ------------------------------------------------ */
+  --nav-bg:#fff;          /* (← #15181d 어두운 사이드바) */
+  --nav-fg:#4a4a5e;       /* 흰 대비 8.13 */
+  --nav-on:var(--accent-bg);
+  --nav-group:#6e6e80;    /* 흰 대비 4.99 */
+  --nav-line:#eeedf6;
+
+  /* Spacing · 4 / 8 / 12 / 16 / 24 / 32 ----------------------------------- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px;
+
+  /* Radius ---------------------------------------------------------------- */
+  --r-sm:8px;    /* 배지 · 태그        (← 6px) */
+  --r-md:10px;   /* 버튼 · 입력 */
+  --r-lg:14px;   /* 카드 · 목록 · 모달  (← 12px) */
+  --r-full:99px; /* 카운트 알약 · 프로그레스 */
+
+  /* Elevation · Base는 그림자 없음 ---------------------------------------- */
+  --e-raised:0 4px 12px rgba(20,24,31,.10);
+  --e-overlay:0 12px 32px rgba(20,24,31,.18);
+
+  /* Typography ------------------------------------------------------------ */
+  --fs-display:32px;  /* Display — 화면의 대표 지표 하나에만. 텍스트에는 쓰지 않는다. */
+  --fs-page:24px;     /* Page Title    700 / 1.35 — 화면에서 가장 큰 '텍스트' */
+  --fs-section:17px;  /* Section Title 700 / 1.4  */
+  --fs-card:14px;     /* Card Title · 목록 제목 · 입력값 · 본문 700|400 / 1.5 */
+  --fs-body:12px;     /* 보조 설명 · 폼 라벨 · 표 셀  400 / 1.65 */
+  --fs-caption:11px;  /* 캡션 · 배지 · 시각          500 / 1.5  */
+
+  /* Layout ---------------------------------------------------------------- */
+  --nav-w:216px;
+  --drawer-w:400px;
+  --tap:36px;         /* PC 최소 높이 (모바일은 44px로 승격) */
+  --tap-sm:32px;      /* 작은 버튼. 모바일에서는 --tap 과 같아진다 */
+
+  font-family:"Pretendard Variable","Pretendard","Noto Sans KR",system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+
+/* 모든 인터랙티브 요소에 동일한 포커스 링 */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-sm)}
+
+/* ------------------------------------------------------------ Typography -- */
+.t-page{font-size:var(--fs-page);font-weight:700;line-height:1.35;letter-spacing:-.02em;margin:0}
+.t-section{font-size:var(--fs-section);font-weight:700;line-height:1.4;letter-spacing:-.01em;margin:0}
+.t-card{font-size:var(--fs-card);font-weight:700;line-height:1.5;margin:0}
+.t-body{font-size:var(--fs-card);font-weight:400;line-height:1.6;margin:0}
+.sub{font-size:var(--fs-body);font-weight:400;line-height:1.65;color:var(--muted);margin:0}
+.cap{font-size:var(--fs-caption);font-weight:500;line-height:1.5;color:var(--muted)}
+
+/* 섹션 라벨 — 사이드바 그룹과 모바일 더보기 그룹이 같은 값을 쓴다 */
+.section-label{font-size:var(--fs-caption);font-weight:800;letter-spacing:.06em;color:var(--ink);margin:0 0 var(--sp-2)}
+
+/* 금액 — 색으로 방향을 말하지 않는다. 부호와 우측 정렬로 말한다. */
+.money{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink);white-space:nowrap}
+/* 대표 지표 하나만 Display. 나머지 금액은 본문 스케일을 재사용한다. */
+.money.xl{font-size:var(--fs-display);line-height:1.2}
+.money.lg{font-size:var(--fs-page)}
+.money.md{font-size:var(--fs-section)}
+/* 색은 이상 신호에만. 정상 지출에는 쓰지 않는다. */
+.money.is-risk{color:var(--risk)}
+.money.is-warn{color:var(--warn)}
+
+/* --------------------------------------------------------------- Layout -- */
+.row{display:flex;align-items:center;gap:var(--sp-3)}
+.spread{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-4)}
+.pushright{margin-left:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3)}
+.stack-sm{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-2);align-content:start}
+.stack-md{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-3);align-content:start}
+.stack-lg{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-content:start}
+.sep{border:0;border-top:1px solid var(--line-2);margin:var(--sp-4) 0}
+.grow{flex:1;min-width:0}
+.row.wrap{flex-wrap:wrap}
+.row.bottom{align-items:flex-end}
+.row.baseline{align-items:baseline}
+.block{display:block}
+.center{text-align:center}
+.centered{max-width:560px;margin:0 auto}
+.narrow{max-width:640px}
+.was{text-decoration:line-through}
+.self-start{justify-self:start}
+
+/* 간격 유틸 — 값은 반드시 토큰이고, 이 넷 말고는 만들지 않는다.
+   형제 사이 간격은 부모의 gap으로 만들고, 이 유틸은 예외적인 한 곳에만 쓴다. */
+.mt-1{margin-top:var(--sp-1)}
+.mt-2{margin-top:var(--sp-2)}
+.mt-3{margin-top:var(--sp-3)}
+.mt-4{margin-top:var(--sp-4)}
+.mt-6{margin-top:var(--sp-6)}
+/* 제목 바로 뒤에 오는 보조 설명은 언제나 같은 간격. 매번 적지 않는다. */
+.t-page+.sub,.t-section+.sub,.t-card+.sub,h1+.sub,h2+.sub{margin-top:var(--sp-1)}
+
+/* 목록 안 필터 영역 · 접힘 요약 */
+.list-filter{padding:var(--sp-3);border-bottom:1px solid var(--line-2);display:grid;gap:var(--sp-2)}
+.disclose{cursor:pointer;min-height:var(--tap);display:flex;align-items:center;gap:var(--sp-2);font-weight:700;color:var(--accent);font-size:var(--fs-body)}
+
+/* --------------------------------------------------------------- Button -- */
+/* Primary는 화면당 1개. Variant는 이 4종에서 늘리지 않는다. */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  min-height:var(--tap);padding:0 var(--sp-3);
+  border:1px solid transparent;border-radius:var(--r-md);
+  font-size:var(--fs-body);font-weight:700;
+  background:var(--surface);color:var(--ink);text-align:center;white-space:nowrap;
+}
+.btn.pri{background:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-hover)}
+.btn.sec{border-color:var(--line-strong);background:var(--surface)}
+.btn.sec:hover{background:var(--surface-2)}
+.btn.sec.on{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding:0 var(--sp-1)}
+.btn.ghost:hover{background:var(--accent-bg)}
+.btn.danger{border-color:var(--risk);color:var(--risk);background:var(--surface)}
+.btn.danger:hover{background:var(--risk-bg)}
+.btn.sm{min-height:var(--tap-sm);padding:0 var(--sp-2);font-size:var(--fs-caption)}
+.btn.wide{width:100%;white-space:normal}
+.btn.start{justify-content:flex-start;text-align:left;white-space:normal}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+/* Disabled는 회색으로만 두지 않는다. 왜 못 누르는지·어떻게 하면 눌리는지 적는다. */
+.btn-why{display:block;font-size:var(--fs-caption);color:var(--muted);line-height:1.5;margin-top:var(--sp-1)}
+.btn .sub{color:inherit;opacity:.8;font-weight:500}
+
+/* ---------------------------------------------------------------- Badge -- */
+/* 상태만 뜻한다. 클릭 요소로 쓰지 않는다. 색 없이도 테두리로 구분된다. */
+.badge{
+  display:inline-flex;align-items:center;gap:var(--sp-1);
+  padding:var(--sp-1) var(--sp-2);border-radius:var(--r-sm);border:1px solid transparent;
+  font-size:var(--fs-caption);font-weight:800;white-space:nowrap;width:max-content;
+}
+.badge.safe{background:var(--safe-bg);color:var(--safe);border-color:var(--safe-line)}
+.badge.caution{background:var(--caution-bg);color:var(--caution);border-color:var(--caution-line)}
+.badge.warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn-line)}
+.badge.risk{background:var(--risk-bg);color:var(--risk);border-color:var(--risk-line)}
+.badge.mute{background:var(--surface-2);color:var(--muted);border-color:var(--line)}
+.badge.accent{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-line)}
+.badge.ai{background:var(--ai-bg);color:var(--ai);border-color:var(--ai-line)}
+/* 로고 자리처럼 정사각형이 필요한 배지 */
+.badge.sq{width:40px;height:40px;justify-content:center;padding:0}
+/* 시연용 기능 추적 태그 — 이 블록이 명세의 어떤 기능인지 표시한다 */
+.feat{
+  display:inline-flex;align-items:center;gap:var(--sp-1);
+  font-family:ui-monospace,SFMono-Regular,monospace;font-size:var(--fs-caption);font-weight:700;
+  color:var(--muted);background:var(--surface-2);border:1px dashed var(--line-strong);
+  border-radius:var(--r-sm);padding:1px var(--sp-1);white-space:nowrap
+}
+.badge.sq.lg{width:44px;height:44px}
+
+/* 카운트만 알약을 유지해 상태 배지와 형태로 구분한다 */
+.count{
+  display:inline-flex;align-items:center;justify-content:center;min-width:20px;
+  padding:1px var(--sp-2);border-radius:var(--r-full);
+  background:var(--surface-2);border:1px solid var(--line);
+  font-size:var(--fs-caption);font-weight:800;font-style:normal;color:var(--ink-2);
+}
+.count.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent)}
+.count.solid{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ----------------------------------------------------------------- Card -- */
+/* Elevation Base — 그림자 없이 테두리만. 카드는 중첩하지 않는다. */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-6)}
+.card.tight{padding:var(--sp-4)}
+/* 강조는 그림자를 더하지 않고 좌측 액센트 바로만 한다 */
+.card.mark-accent{border-left:3px solid var(--accent)}
+.card.mark-caution{border-left:3px solid var(--caution)}
+.card.mark-risk{border-left:3px solid var(--risk)}
+.card.mark-ai{border-left:3px solid var(--ai);background:var(--ai-bg)}
+/* 클릭 가능한 카드만 반응한다. 정보 카드는 아무 반응이 없다. */
+.card.clickable{width:100%;text-align:left;cursor:pointer}
+.card.clickable:hover{background:var(--surface-2);border-color:var(--accent-line)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-3)}
+
+/* ----------------------------------------------------------------- List -- */
+/* 열 계약은 .list가 --cols 하나로 갖는다. 행마다 정의하지 않는다. */
+.list{--cols:1fr;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--surface)}
+/* 카드 안에 들어갈 때는 테두리를 없애고 구분선만 남긴다 */
+.list.bare{border:0;border-radius:0;background:transparent}
+.list-row{
+  display:grid;grid-template-columns:var(--cols);gap:var(--sp-3);align-items:center;
+  padding:var(--sp-3) var(--sp-4);border:0;border-bottom:1px solid var(--line-2);
+  font-size:var(--fs-body);width:100%;text-align:left;background:transparent;
+}
+.list-row:last-child{border-bottom:0}
+.list-row.head{background:var(--surface-2);color:var(--muted);font-weight:800;font-size:var(--fs-caption)}
+.list-row.total{background:var(--surface-2);font-weight:800;color:var(--ink)}
+.list-row.diff{background:var(--warn-bg);font-weight:800}
+button.list-row{min-height:var(--tap)}
+button.list-row:hover{background:var(--accent-bg)}
+button.list-row[aria-selected=true]{background:var(--accent-bg);box-shadow:inset 3px 0 0 var(--accent)}
+.list-row.unread{background:var(--accent-bg)}
+.list-row b{font-size:var(--fs-card);word-break:keep-all}
+.list-row small{display:block;color:var(--muted);font-size:var(--fs-caption);line-height:1.5;word-break:keep-all;margin-top:2px}
+/* 목록 진입은 행 전체 클릭 + 우측 › 로 통일한다. 배지가 있어도 › 를 지우지 않는다. */
+.go{color:var(--faint);font-weight:700;margin-left:var(--sp-2)}
+
+/* 열 조합은 이 프리셋 안에서 고른다. 행마다 인라인으로 정의하지 않는다. */
+.list.stack{--cols:1fr}
+.list.two{--cols:1fr auto}
+.list.three{--cols:1fr auto auto}
+.list.icon{--cols:12px 1fr auto}
+.list.thumb-list{--cols:56px 1fr auto}
+.list.wide{--cols:1.3fr 1.3fr auto auto}
+.list.stack .list-row{align-items:start;gap:var(--sp-2)}
+
+/* 목록 + 상세 2단 — 증빙·정산·거래가 같은 골격을 쓴다 */
+.split{display:grid;grid-template-columns:340px 1fr;gap:var(--sp-4);align-items:start}
+
+/* 영수증 썸네일 · 원본 미리보기 — 장식 그림자를 쓰지 않는다 */
+.thumb{
+  height:52px;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-sm);
+  display:grid;place-items:center;text-align:center;font-size:var(--fs-caption);color:var(--muted);font-weight:700
+}
+.doc-preview{height:200px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);display:grid;place-items:center;margin-bottom:var(--sp-3)}
+.doc-preview>div{width:180px;background:var(--surface);border:1px solid var(--line);padding:var(--sp-4);font-family:ui-monospace,monospace;font-size:var(--fs-caption);line-height:1.9}
+
+/* ---------------------------------------------------------------- Field -- */
+/* 라벨을 placeholder로 대체하지 않는다. */
+.field{display:grid;gap:var(--sp-1);font-size:var(--fs-body);font-weight:700;min-width:0}
+/* 입력 요소는 .field 안에 있든 밖에 있든 같은 규칙을 받는다.
+   클래스에만 걸어 두면 맨 select 하나가 규칙 밖으로 빠져나간다 (실제로 그랬다). */
+input:not([type=checkbox]):not([type=radio]):not([type=range]),
+select,textarea{
+  border:1px solid var(--line-strong);border-radius:var(--r-md);
+  padding:0 var(--sp-3);min-height:var(--tap);
+  font-size:var(--fs-card);font-weight:400;background:var(--surface-2);max-width:100%;
+}
+.field input,.field select,.field textarea{width:100%}
+/* 슬라이더는 손가락이 닿을 높이를 따로 확보한다 */
+input[type=range]{min-height:var(--tap);width:100%;accent-color:var(--accent)}
+.field textarea{min-height:72px;padding:var(--sp-3);resize:vertical;line-height:1.6}
+.field .hint{font-weight:400;color:var(--muted);font-size:var(--fs-caption);line-height:1.5}
+/* 인증번호처럼 또박또박 읽어야 하는 입력. 크기는 Section 단계를 재사용한다. */
+.field.code input{font-size:var(--fs-section);font-weight:800;letter-spacing:.4em;text-align:center;min-height:48px}
+.field.invalid input,.field.invalid select{border-color:var(--risk);background:var(--risk-bg)}
+.req{color:var(--risk);font-weight:800;font-size:var(--fs-caption)}
+.opt{color:var(--faint);font-weight:600;font-size:var(--fs-caption)}
+/* 오류는 원인 필드 바로 아래에 붙인다 */
+.err{display:flex;gap:var(--sp-1);align-items:flex-start;font-size:var(--fs-caption);color:var(--risk);font-weight:600;line-height:1.5;margin:0}
+.err b{font-weight:800}
+.check{display:flex;align-items:center;gap:var(--sp-2);min-height:var(--tap);font-size:var(--fs-body);font-weight:400}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+
+/* ----------------------------------------------------------------- Tabs -- */
+.tabs{display:flex;gap:var(--sp-1);border-bottom:1px solid var(--line);background:var(--surface);padding:0 var(--sp-1)}
+.tabs button{
+  display:flex;align-items:center;gap:var(--sp-2);
+  border:0;border-bottom:2px solid transparent;background:transparent;
+  min-height:44px;padding:0 var(--sp-3);font-size:var(--fs-card);color:var(--muted);
+}
+.tabs button.on{color:var(--accent);border-color:var(--accent);font-weight:800}
+.tabpanel{display:none}
+.tabpanel.on{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-content:start}
+
+/* 세그먼트 · 칩 — 필터 UI는 이 하나로 통일한다 */
+.chips{display:flex;gap:var(--sp-2);overflow-x:auto;padding-bottom:2px}
+.chips button{
+  flex:0 0 auto;min-height:var(--tap);padding:0 var(--sp-3);
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-full);
+  font-size:var(--fs-body);color:var(--ink-2);
+}
+/* 선택은 검정 면이 아니라 액센트로. 필터가 콘텐츠보다 강해지지 않는다. */
+.chips button.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:700}
+
+/* --------------------------------------------------------------- Notice -- */
+.notice{display:flex;gap:var(--sp-3);align-items:flex-start;border-radius:var(--r-md);padding:var(--sp-3);font-size:var(--fs-body);line-height:1.6;border:1px solid}
+.notice i{font-style:normal;font-weight:800;flex:0 0 auto}
+.notice b{font-weight:800}
+.notice.info{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent-ink)}
+.notice.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+.notice.risk{background:var(--risk-bg);border-color:var(--risk-line);color:var(--risk-ink)}
+.notice.ok{background:var(--safe-bg);border-color:var(--safe-line);color:var(--safe-ink)}
+/* 화면 상단에 붙는 띠 */
+.notice.band{border-radius:0;border-width:0 0 1px}
+
+/* ---------------------------------------------------------------- State -- */
+.skel{background:linear-gradient(90deg,var(--skel-1) 25%,var(--skel-2) 37%,var(--skel-1) 63%);background-size:400% 100%;animation:sh 1.4s ease infinite;border-radius:var(--r-sm);height:12px}
+@keyframes sh{0%{background-position:100% 50%}100%{background-position:0 50%}}
+@media(prefers-reduced-motion:reduce){.skel{animation:none}}
+
+/* 빈 화면으로 두지 않는다. 왜 비었는지 + 무엇을 하면 되는지를 함께 적는다. */
+.empty{text-align:center;padding:var(--sp-8) var(--sp-6)}
+.empty .ico{width:44px;height:44px;border-radius:var(--r-lg);background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto var(--sp-3);font-size:var(--fs-section);color:var(--muted)}
+.empty .ico.ok{background:var(--safe-bg);border-color:var(--safe-line);color:var(--safe)}
+.empty b{display:block;font-size:var(--fs-card);margin-bottom:var(--sp-1)}
+.empty p{margin:0 auto var(--sp-3);font-size:var(--fs-body);color:var(--muted);max-width:320px;line-height:1.65}
+
+.bar{height:8px;border-radius:var(--r-full);background:var(--line-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:inherit}
+.bar.ok i{background:var(--safe)}
+.bar.thin{height:5px}
+
+/* 되돌릴 수 있는 일에는 확인 창 대신 5초짜리 되돌리기 */
+.toast{display:flex;align-items:center;gap:var(--sp-3);background:var(--ink);color:#fff;border-radius:var(--r-md);padding:var(--sp-3);font-size:var(--fs-body)}
+.toast button{margin-left:auto;background:transparent;border:0;color:var(--on-ink-link);font-weight:800;font-size:var(--fs-body);min-height:var(--tap);padding:0 var(--sp-2)}
+
+/* 단계 표시 */
+.steps{display:flex;align-items:center}
+.step{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-body);color:var(--faint);font-weight:700}
+.step .no{width:22px;height:22px;border-radius:var(--r-full);border:1.5px solid var(--line);display:grid;place-items:center;font-size:var(--fs-caption);background:var(--surface)}
+.step.on{color:var(--ink)}
+.step.on .no{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.done{color:var(--safe)}
+.step.done .no{background:var(--safe-bg);border-color:var(--safe-line);color:var(--safe)}
+.step-line{flex:1;height:1.5px;background:var(--line);margin:0 var(--sp-3);min-width:20px}
+
+/* ------------------------------------------------------- Drawer / Modal -- */
+.drawer{
+  display:flex;flex-direction:column;width:var(--drawer-w);
+  background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--e-overlay);
+}
+.drawer-head{padding:var(--sp-4);border-bottom:1px solid var(--line);flex:0 0 auto}
+.drawer-body{overflow:auto;flex:1;min-height:0;padding:var(--sp-4)}
+.drawer-foot{padding:var(--sp-4);border-top:1px solid var(--line);flex:0 0 auto}
+.scrim{background:rgba(20,24,31,.28)}
+.modal{width:min(560px,100%);background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--e-overlay);display:flex;flex-direction:column;max-height:90vh}
+
+/* --------------------------------------------------------- App shell PC -- */
+/* 컨테이너는 자기 자신을 @container로 질의할 수 없다. 래퍼에 선언한다.
+   오버레이(Drawer·Modal·Toast)는 .shell 밖에 두어야 position:fixed가 뷰포트 기준으로 동작한다. */
+.shell{container-type:inline-size;container-name:shell}
+.app{display:grid;grid-template-columns:var(--nav-w) 1fr;min-height:100vh}
+.aside{background:var(--nav-bg);color:var(--nav-fg);padding:var(--sp-4) var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-3);border-right:1px solid var(--line)}
+.brandline{display:flex;align-items:center;gap:var(--sp-2);padding:2px var(--sp-2) var(--sp-3)}
+.brandmark{width:26px;height:26px;border-radius:var(--r-sm);background:var(--accent);color:#fff;display:grid;place-items:center;font-size:var(--fs-caption);font-weight:800;flex:0 0 auto}
+.brandline b{font-size:var(--fs-card);color:var(--ink)}
+.aside nav{display:grid;gap:2px}
+.aside .navgroup{font-size:var(--fs-caption);letter-spacing:.06em;color:var(--nav-group);font-weight:800;padding:var(--sp-3) var(--sp-2) var(--sp-1)}
+.aside a{display:flex;align-items:center;gap:var(--sp-2);min-height:var(--tap);padding:0 var(--sp-2);border-radius:var(--r-md);color:var(--nav-fg);text-decoration:none;font-size:var(--fs-body)}
+.aside a i{font-style:normal;width:18px;text-align:center;opacity:.85;flex:0 0 auto}
+.aside a.on{background:var(--nav-on);color:var(--accent);font-weight:700}
+.aside a:hover{background:var(--nav-on)}
+.aside a .count{margin-left:auto}
+/* 동작하지 않는 메뉴를 활성처럼 두지 않는다. 링크가 아니라 텍스트로 둔다. */
+.aside .soon{display:flex;align-items:center;gap:var(--sp-2);min-height:var(--tap);padding:0 var(--sp-2);font-size:var(--fs-body);color:var(--nav-group)}
+.aside .soon i{font-style:normal;width:18px;text-align:center;opacity:.6;flex:0 0 auto}
+.aside .soon .badge{margin-left:auto;background:transparent;border-color:var(--nav-line);color:var(--nav-group);font-weight:600;font-style:normal}
+.shop{margin-top:auto;border-top:1px solid var(--nav-line);padding:var(--sp-3) var(--sp-2) 0}
+.shop b{display:block;font-size:var(--fs-body);color:var(--ink)}
+.shop small{display:block;font-size:var(--fs-caption);color:var(--nav-group);margin-top:2px}
+
+/* 상자를 걷어냈으므로 본문은 흰 바탕이다. 옅은 회색면(surface-2)이
+   소그룹 구분을 맡고, 하늘 그라디언트는 예보 판에만 쓴다. */
+.main{background:var(--surface);display:flex;flex-direction:column;min-width:0}
+/* topbar에는 사업장·기준시각·전역 액션만. 페이지 타이틀은 콘텐츠 최상단에 둔다. */
+.topbar{background:var(--surface);border-bottom:1px solid var(--line);padding:var(--sp-2) var(--sp-6);display:flex;align-items:center;gap:var(--sp-3);min-height:56px}
+.topbar .tb-right{margin-left:auto;display:flex;align-items:center;gap:var(--sp-2)}
+.pane{padding:var(--sp-6);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-content:start}
+/* Page Title — 항상 콘텐츠 영역 최상단, 화면에서 가장 큰 글자 */
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-4);margin-bottom:var(--sp-2)}
+.page-head h1{font-size:var(--fs-page);font-weight:700;line-height:1.35;letter-spacing:-.02em;margin:0}
+.page-head .sub{margin-top:var(--sp-1)}
+/* 모바일 하단 탭 — .mo-nav와 같은 부품을 쓴다 */
+.mo-nav.app-tabs{display:none;position:sticky;bottom:0;z-index:40}
+.sheet{position:fixed;inset:0;z-index:150;display:none}
+.sheet.open{display:block}
+.sheet .scrim{position:absolute;inset:0}
+.sheet-panel{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;box-shadow:var(--e-overlay);padding:var(--sp-4);max-height:80vh;overflow:auto}
+
+/* --------------------------------------------------- App shell 모바일 -- */
+.mo-shell{display:flex;flex-direction:column;background:var(--surface-2)}
+/* 모바일 헤더는 [뒤로/브랜드] [타이틀] [가게명] [액션] 4슬롯 고정 */
+.mo-head{background:var(--surface);border-bottom:1px solid var(--line);padding:var(--sp-2) var(--sp-3);display:flex;align-items:center;gap:var(--sp-2);min-height:48px}
+.mo-head b{font-size:var(--fs-card)}
+.mo-head .shopname{font-size:var(--fs-caption);color:var(--muted);border:1px solid var(--line);border-radius:var(--r-full);padding:2px var(--sp-2)}
+.mo-body{padding:var(--sp-3);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-3);align-content:start;flex:1}
+.mo-foot{margin-top:auto;display:grid;gap:var(--sp-2)}
+.mo-nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface)}
+.mo-nav a{display:grid;justify-items:center;align-content:center;gap:2px;min-height:52px;font-size:var(--fs-caption);color:var(--muted);text-decoration:none}
+.mo-nav a i{font-style:normal;font-size:var(--fs-card)}
+.mo-nav a.on{color:var(--accent);font-weight:800}
+/* 모바일에서는 손가락 기준 44px */
+.mo-shell{--tap:44px;--tap-sm:44px}
+
+/* 거래 카드 — 좁은 화면에서 표의 열을 자르는 대신 이 카드를 쓴다 */
+.txcard{display:grid;gap:var(--sp-2);padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);text-align:left;width:100%}
+.txcard .l1{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3)}
+.txcard .l1 b{font-size:var(--fs-card);word-break:keep-all}
+.txcard .l2{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-caption);color:var(--muted)}
+.txcard .l3{display:flex;gap:var(--sp-1);flex-wrap:wrap}
+.txcard:hover{border-color:var(--accent-line);background:var(--accent-bg)}
+
+/* ----------------------------------------------------------- Responsive -- */
+/* 정보를 숨겨서 좁히지 않는다. 기준 시각과 재시도 버튼은 어느 폭에서도 남긴다. */
+
+/* 태블릿 760~1099 — 사이드바를 아이콘만으로 */
+@container shell (max-width:1099px){
+  .app{grid-template-columns:64px 1fr}
+  .aside{padding:var(--sp-4) var(--sp-2);align-items:center;overflow:hidden}
+  .aside a{justify-content:center;padding:0;position:relative}
+  .aside a span,.aside .soon span,.aside .navgroup,.brandline b,.shop b,.shop small{display:none}
+  /* 준비 중 항목은 아이콘 레일에서 숨긴다. 아이콘만으로는 뜻이 서지 않는다. */
+  .aside .soon{display:none}
+  /* 카운트는 아이콘 위 오른쪽 모서리에. 레일 밖으로 나가지 않는다. */
+  .aside a .count{position:absolute;top:2px;right:6px;margin:0;min-width:16px;padding:0 var(--sp-1);font-size:var(--fs-caption);line-height:15px}
+  .pane{padding:var(--sp-4)}
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+}
+
+/* 모바일 <760 — 사이드바를 하단 탭으로, 표를 카드로 */
+@container shell (max-width:759px){
+  .app,.drawer-host,.modal-backdrop,.sheet{--tap:44px;--tap-sm:44px}
+  .app{grid-template-columns:1fr}
+  /* 사이드바를 슬라이드 오버레이로 두지 않는다. 하단 탭 4개 + 더보기로 바꾼다. */
+  .aside{display:none}
+  .mo-nav.app-tabs{display:grid}
+  .main{padding-bottom:56px}
+  .topbar{padding:var(--sp-2) var(--sp-3);flex-wrap:wrap;row-gap:var(--sp-2)}
+  .topbar .tb-right{width:100%;margin-left:0;justify-content:flex-start}
+  .topbar .cap{flex:1;min-width:0}
+  .pane{padding:var(--sp-3);gap:var(--sp-3)}
+  .grid2,.grid3,.split{grid-template-columns:1fr}
+  .row{flex-wrap:wrap}
+  .steps{flex-wrap:wrap;row-gap:var(--sp-2)}
+  .step-line{display:none}
+  /* 좁으면 표 대신 세로 쌓기. 헤더 행은 뜻이 없어지므로 숨긴다. */
+  .list.wide,.list.three{--cols:1fr}
+  .list.wide .list-row.head,.list.three .list-row.head{display:none}
+  .list.wide .list-row,.list.three .list-row{align-items:start;gap:var(--sp-1)}
+  .grid4{grid-template-columns:1fr 1fr}
+  .drawer{width:100%;border-left:0}
+  .modal{width:100%;border-radius:var(--r-lg) var(--r-lg) 0 0}
+}
+
+@media(max-width:759px){
+  :root{--tap:44px;--tap-sm:44px}
+}
+
+/* ============================================================================
+   예보(Forecast) 레이어
+   ---------------------------------------------------------------------------
+   일기예보의 정보 구조를 빌린다. 이 제품은 이름부터 '예보'이고,
+   일기예보의 최고/최저가 우리 예상 범위와 그대로 대응한다.
+
+     기상특보 배너   → 부족 경보
+     현재 기온       → 지금 잔고
+     체감온도        → 지금 써도 되는 돈
+     시간별 예보 띠  → 날짜별 잔고 띠
+     주간 예보 목록  → 30일 예보 목록
+     최고/최저 막대  → 최소~최대 예상 범위
+
+   다만 날씨 앱의 장난스러움은 가져오지 않는다. 금융 화면이므로
+   숫자는 tabular, 상태는 글자 병기, 색은 이상 신호에만 쓴다는 규칙을 그대로 지킨다.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- Panel -- */
+/* 기본 묶음은 상자가 아니라 '구획'이다. 테두리·배경 없이 제목과 여백으로만 나눈다.
+   .card 는 그 자체가 하나의 대상일 때만 쓴다 — 누를 수 있는 것, 낱개로 존재하는 것. */
+.panel{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-3);align-content:start}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap}
+.panel-head h2{font-size:var(--fs-section);font-weight:700;letter-spacing:-.01em;margin:0}
+/* 구획끼리는 얇은 선으로만 나눈다 */
+.panel + .panel{padding-top:var(--sp-6);border-top:1px solid var(--line-2)}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-8)}
+
+/* -------------------------------------------------------------- 예보 판 -- */
+/* 화면 맨 위. 배경은 아주 옅은 하늘 그라디언트 하나뿐, 테두리는 없다. */
+.wx{
+  position:relative;overflow:hidden;
+  margin:calc(var(--sp-6) * -1) calc(var(--sp-6) * -1) 0;
+  padding:var(--sp-6) var(--sp-6) 84px;   /* 아래 84px는 곡선 자리 */
+  background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 100%);
+  border-bottom:1px solid var(--line-2);
+}
+.wx > *{position:relative;z-index:1}
+/* 30일 흐름을 판 아래쪽 띠에 깔아 둔다. 일기예보에서 하늘이 하는 역할이다.
+   장식이 아니라 '어떤 모양으로 움직이는가'를 한눈에 보여 주는 정보다.
+   글자 뒤로 올라오면 숫자를 가리므로, 본문 아래 자기 띠 안에만 머문다. */
+.wx-curve{position:absolute;left:0;right:0;bottom:0;height:76px;width:100%;z-index:0;pointer-events:none}
+/* SVG 색도 토큰으로 둔다. 하드코딩하면 와이어프레임에서 색이 새어 나온다. */
+.wx-curve .s0{stop-color:var(--accent);stop-opacity:.12}
+.wx-curve .s1{stop-color:var(--accent);stop-opacity:0}
+.wx-curve .line{fill:none;stroke:var(--accent);stroke-opacity:.32;stroke-width:2}
+.wx-curve .dot{fill:var(--risk);stroke:var(--surface);stroke-width:2.5}
+
+/* 30일 최저·최고 — 일기예보의 최고/최저 기온 자리 */
+.wx-hilo{display:grid;gap:var(--sp-3);min-width:280px}
+.wx-hilo .pair{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;
+  column-gap:var(--sp-6);row-gap:2px}
+.wx-hilo .pair>div{display:grid;grid-row:span 2;grid-template-rows:subgrid}
+.wx-hilo dt{font-size:var(--fs-caption);color:var(--muted);display:flex;align-items:center;gap:var(--sp-1)}
+.wx-hilo dd{margin:0;font-size:var(--fs-card);font-weight:700;font-variant-numeric:tabular-nums}
+.wx-hilo dd span{font-weight:400;color:var(--muted);font-size:var(--fs-caption);margin-left:var(--sp-1)}
+.wx-hilo .lo dd{color:var(--risk)}
+/* 최저~최고 사이에서 지금이 어디쯤인지 */
+.wx-hilo .track{position:relative;height:6px;border-radius:var(--r-full);
+  background:linear-gradient(90deg,var(--risk-bg),var(--accent-bg));border:1px solid var(--line)}
+.wx-hilo .track i{position:absolute;top:-4px;width:12px;height:12px;border-radius:var(--r-full);
+  background:var(--surface);border:3px solid var(--accent);transform:translateX(-50%)}
+.wx-hilo .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink-2)}
+/* 기준선 라벨은 표식 바로 아래에 붙인다. 가운데 두면 실제 위치와 어긋나 거짓말이 된다. */
+.wx-hilo .track{margin-bottom:22px}
+.wx-hilo .track em{position:absolute;top:12px;transform:translateX(-50%);white-space:nowrap;
+  font-style:normal;font-size:var(--fs-caption);color:var(--ink-2);font-weight:700}
+.wx-hilo .track-cap{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--muted)}
+.wx-now{display:flex;align-items:flex-end;gap:var(--sp-8);flex-wrap:wrap}
+.wx-main{display:grid;gap:var(--sp-1)}
+.wx-label{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-body);color:var(--muted)}
+/* 예보 숫자는 크되 가볍게. 청구서가 아니라 예보로 읽히게 한다. */
+.wx-now .amount{font-size:52px;font-weight:600;line-height:1.05;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+/* 위 트랙의 '안전잔고' 라벨이 아래로 22px 내려오므로 그만큼 띄운다 */
+.wx-sub{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;
+  grid-template-rows:auto auto;column-gap:var(--sp-8);row-gap:2px;margin:var(--sp-8) 0 0}
+.wx-sub>div{display:grid;grid-row:span 2;grid-template-rows:subgrid}
+.wx-sub dt{font-size:var(--fs-caption);color:var(--muted)}
+.wx-sub dd{margin:0;font-size:var(--fs-section);font-weight:700;font-variant-numeric:tabular-nums;align-self:end}
+.wx-sub .lead{padding-left:var(--sp-3);border-left:3px solid var(--accent)}
+.wx-sub .lead dt{color:var(--accent);font-weight:700}
+.wx-sub .lead dd{font-size:var(--fs-page)}
+
+/* 기상특보식 경보 띠 — 카드가 아니라 폭 전체를 가로지르는 띠 */
+.alertband{
+  display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;
+  margin:0 calc(var(--sp-6) * -1);padding:var(--sp-3) var(--sp-6);
+  border-top:1px solid;border-bottom:1px solid;font-size:var(--fs-card);
+}
+.alertband.risk{background:var(--risk-bg);border-color:var(--risk-line);color:var(--risk-ink)}
+.alertband.caution{background:var(--caution-bg);border-color:var(--caution-line);color:var(--caution)}
+.alertband b{font-weight:800}
+.alertband .when{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.alertband .btn{margin-left:auto}
+/* 예보 판 → 경보 띠 → 날짜 띠는 서로 붙어 하나의 머리처럼 읽힌다 */
+.wx + .alertband,.alertband + .daystrip,.wx + .daystrip{margin-top:calc(var(--sp-4) * -1)}
+.daystrip{border-bottom:1px solid var(--line-2)}
+
+/* ------------------------------------------------------- 상태 (날씨 등급) -- */
+/* 색만으로 뜻을 전하지 않는다. 표시 + 글자를 항상 함께 쓴다. */
+.lv{display:inline-flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-body);font-weight:700;white-space:nowrap}
+.lv i{width:14px;height:14px;border-radius:var(--r-full);flex:0 0 auto;border:2px solid currentColor}
+.lv.easy{color:var(--accent)}
+.lv.easy i{background:currentColor}
+.lv.watch{color:var(--caution)}
+.lv.watch i{background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.lv.short{color:var(--risk)}
+.lv.short i{background:transparent;position:relative}
+.lv.short i::after{content:"";position:absolute;left:1px;right:1px;top:4px;height:2px;background:currentColor}
+
+/* --------------------------------------------------------- 날짜별 예보 띠 -- */
+/* 시간별 예보처럼 가로로 흐른다. 오늘이 맨 왼쪽, 부족한 날은 면으로 표시. */
+/* 스냅을 쓰면 첫 칸이 본문 열보다 왼쪽으로 밀린다. 훑어보는 띠라 스냅이 필요 없다. */
+.daystrip{display:flex;gap:0;overflow-x:auto;
+  margin:0 calc(var(--sp-6) * -1);padding:var(--sp-4) var(--sp-6)}
+.day{flex:0 0 84px;display:grid;gap:var(--sp-2);justify-items:center;
+  padding:var(--sp-2) var(--sp-1);border-radius:var(--r-md);position:relative}
+.day .d{font-size:var(--fs-caption);color:var(--muted);white-space:nowrap;text-align:center}
+.day .v{font-size:var(--fs-body);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.day .mark{width:12px;height:12px;border-radius:var(--r-full);border:2px solid var(--accent);background:var(--accent)}
+.day.watch .mark{border-color:var(--caution);background:linear-gradient(90deg,var(--caution) 50%,transparent 50%)}
+.day.short .mark{border-color:var(--risk);background:transparent}
+.day.short{background:var(--risk-bg)}
+.day.short .v{color:var(--risk)}
+.day.today{background:var(--accent-bg)}
+.day.today .d{color:var(--accent);font-weight:800}
+/* 하루치 세로 막대 */
+.day .rail{display:grid;align-items:end;height:56px}
+.day .col{width:6px;border-radius:var(--r-full);background:var(--accent);align-self:end;justify-self:center}
+.day.watch .col{background:var(--caution)}
+.day.short .col{background:var(--risk)}
+
+/* -------------------------------------------------- 예보 목록 (주간 예보식) -- */
+/* 한 행이 하루. 최소~최대를 공통 눈금 위 막대로 그린다. */
+.fc-list{display:grid}
+.fc-row{display:grid;grid-template-columns:112px 96px 1fr 132px;gap:var(--sp-3);align-items:center;
+  padding:var(--sp-3) 0;border-bottom:1px solid var(--line-2);font-size:var(--fs-body);width:100%;
+  background:transparent;border-left:0;border-right:0;border-top:0;text-align:left}
+.fc-row:last-child{border-bottom:0}
+button.fc-row{min-height:var(--tap)}
+button.fc-row:hover{background:var(--surface-2)}
+.fc-row .date{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fc-row .date small{color:var(--muted);font-weight:400;font-size:var(--fs-caption);margin-left:var(--sp-1)}
+.fc-row .val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;font-size:var(--fs-card)}
+.fc-row.short .val{color:var(--risk)}
+/* 범위 막대 — 모든 행이 같은 눈금을 쓴다 */
+/* 트랙은 눈금 안내일 뿐이고 값은 글자로도 적는다. 그래서 옅게 둔다. */
+.range{position:relative;height:8px;border-radius:var(--r-full);background:var(--line)}
+.range i{position:absolute;top:0;height:100%;border-radius:var(--r-full);background:var(--accent);opacity:.85}
+.range.watch i{background:var(--caution)}
+.range.short i{background:var(--risk)}
+/* 안전잔고 기준선 — 이 선이 '부족한가'를 판단하는 기준이므로 흐리게 두지 않는다 */
+.range b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink-2);border-radius:1px}
+.range-scale{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--muted);
+  padding-top:var(--sp-1)}
+
+/* -------------------------------------------------------- 지표 (상자 없이) -- */
+/* 지표 네 개를 카드 네 장으로 만들지 않는다. 세로 구분선만 둔다. */
+/* dt / dd / small 이 열마다 같은 줄에 오도록 subgrid 로 묶는다.
+   라벨에 기능 태그가 붙어 높이가 달라져도 값 줄이 어긋나지 않는다. */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:auto auto auto;
+  column-gap:0;row-gap:var(--sp-1);margin:0}
+.stats>div{display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start;
+  padding:0 var(--sp-4);border-left:1px solid var(--line-2)}
+.stats>div:first-child{padding-left:0;border-left:0}
+.stats dt{font-size:var(--fs-body);color:var(--muted);display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.stats dd{margin:0;font-size:var(--fs-section);font-weight:700;font-variant-numeric:tabular-nums}
+.stats small{font-size:var(--fs-caption);color:var(--muted)}
+/* 이상 신호인 지표만 색을 쓴다 */
+.stats>div.short dd{color:var(--risk)}
+.stats>div.short dt{color:var(--risk)}
+
+@container shell (max-width:1099px){
+  .stats{grid-template-columns:repeat(2,1fr);gap:var(--sp-4) 0}
+  .stats>div:nth-child(3){padding-left:0;border-left:0}
+  .panel-grid{grid-template-columns:1fr}
+}
+@container shell (max-width:759px){
+  .wx{margin:calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) 0;padding:var(--sp-4) var(--sp-3) 68px}
+  .wx-now .amount{font-size:40px}
+  .wx-now{gap:var(--sp-4)}
+  .wx-hilo{min-width:0;width:100%}
+  /* 세로로 여섯 덩이가 쌓이면 경보 띠가 화면 밖으로 밀린다. 아래 둘은 나란히 둔다. */
+  .wx-sub{grid-auto-flow:row;grid-template-columns:1fr 1fr;grid-auto-columns:auto;
+    grid-template-rows:none;gap:var(--sp-3) var(--sp-4)}
+  .wx-sub>div{grid-row:auto;grid-template-rows:none}
+  .wx-sub .lead{grid-column:1 / -1}
+  .wx-sub .lead dd{font-size:var(--fs-section)}
+  /* 판이 길어지면 곡선이 숫자를 가로지른다. 선은 빼고 옅은 면만 남긴다. */
+  .wx-curve{height:62px;opacity:.6}
+  .wx-curve path[stroke],.wx-curve circle{display:none}
+  .alertband{margin:0 calc(var(--sp-3) * -1);padding:var(--sp-3)}
+  .daystrip{margin:0 calc(var(--sp-3) * -1);padding:var(--sp-3)}
+  .stats{grid-template-columns:1fr 1fr}
+  .fc-row{grid-template-columns:100px 1fr;gap:var(--sp-2) var(--sp-3)}
+  .fc-row .lv{grid-column:2}
+  .fc-row .range{grid-column:1 / -1}
+  .fc-row .val{grid-column:2;text-align:left}
+}

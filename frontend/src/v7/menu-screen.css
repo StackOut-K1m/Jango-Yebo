@@ -1,0 +1,29 @@
+/* 전체 메뉴 — 줄 목록. 항목마다 상자를 두르면 스무 개가 스무 개의 카드가 된다 */
+.m-menu { display: grid; gap: 26px; }
+.m-menu h2 {
+  margin: 0 0 6px;
+  font-size: var(--fs-12_5, 12.5px);
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.m-menu ul { margin: 0; padding: 0; list-style: none; }
+/* 구분선만 화면 끝까지 빼낸다. 글은 본문 여백 안에 서고 선은 끝까지 가는 것이 줄 목록의 모양이다 */
+.m-menu li + li { border-top: 1px solid var(--line); }
+.m-menu ul { margin-inline: calc(var(--m-gut, 0px) * -1); }
+.m-menu li > a { padding-inline: var(--m-gut, 4px); }
+.m-menu a {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  /* 손가락이 닿는 최소 높이 */
+  min-height: 52px;
+  padding-block: 8px;
+  color: var(--text);
+  font-size: 15px;
+  text-decoration: none;
+}
+.m-menu a svg:first-child { flex: none; color: var(--lavender); }
+/* 오른쪽 꺾쇠는 「더 있다」는 신호다. 자리는 남는 폭이 다 가진다 */
+.m-menu a svg:last-child { margin-left: auto; color: var(--text-3); }
+.m-menu a:active { background: var(--veil-2); }

@@ -1,0 +1,117 @@
+/* ── 서식 종이 (별지 제74호서식 · 부표) ──
+   신고서 초안(pc-docs)과 증빙·신고의 「올린 원본」(pc-evidences)이 같은 종이를 그립니다.
+   두 화면에 각자 CSS 를 두면 한쪽만 고쳐집니다.
+
+   이름을 .fpaper · .frow 로 둔 까닭: 증빙 화면에는 이미 영수증 종이(.paper)와
+   입력 칸(.fld)이 있습니다. 같은 이름을 쓰면 서로를 덮습니다. */
+.fpaper { border:1px solid var(--hair); border-radius:10px; background:#fff; padding:var(--s7) var(--s8);
+          box-shadow:0 1px 0 var(--hair), 0 10px 30px rgb(20 20 19 / .06); }
+.fpaper + .fpaper { margin-top:var(--s7); }
+.fpaper .ttl { font-family:var(--serif); font-size:17px; font-weight:700; letter-spacing:-.01em; }
+.fpaper .off { font-size:11px; color:var(--ink-3); margin-top:3px; line-height:1.5; }
+.fpaper h3 { font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--ink-3); margin-top:var(--s7); }
+
+.fpaper .frow { display:grid; grid-template-columns:34px minmax(0,1fr) 150px 108px; gap:var(--s4); align-items:baseline;
+                padding:var(--s3) 0; position:relative; font-size:13px; }
+.fpaper .frow + .frow::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.fpaper .no { font-weight:800; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.fpaper .lb { font-weight:600; }
+.fpaper .lb .sub { display:block; font-size:11px; color:var(--ink-3); font-weight:400; margin-top:2px; line-height:1.5; }
+.fpaper .val { text-align:right; font-variant-numeric:tabular-nums; letter-spacing:-.02em; font-weight:800; font-size:14px; }
+.fpaper .val.empty { color:var(--ink-3); font-weight:400; font-size:12px; }
+.fpaper .val.calc { color:var(--ink-2); }
+.fpaper .val.mask { letter-spacing:.08em; color:var(--ink-3); font-weight:400; }
+.fpaper .src { font-size:10.5px; text-align:right; }
+.fpaper .src-k { display:block; font-size:10px; color:var(--ink-3); margin-top:2px; font-variant-numeric:tabular-nums; }
+.fpaper .frow.sum { padding-top:var(--s5); }
+.fpaper .frow.sum::before { height:1.5px; background:var(--ink); }
+.fpaper .frow.sum .lb, .fpaper .frow.sum .val { font-weight:800; }
+.fpaper .note { grid-column:2 / -1; font-size:11px; color:var(--ink-2); line-height:1.6; margin-top:2px;
+                padding-left:var(--s3); border-left:2px solid var(--caution); }
+.fpaper .basis { grid-column:2 / -1; font-size:10.5px; color:var(--ink-3); margin-top:2px; }
+.fpaper .basis b { color:var(--ink-2); font-weight:700; }
+
+/* 상태 — 색과 글자를 함께 씁니다. 색만으로는 구분되지 않습니다 */
+.fpaper .stt { display:inline-flex; align-items:center; gap:4px; height:18px; padding:0 6px; border-radius:4px;
+               font-size:10.5px; font-weight:700; white-space:nowrap; }
+.fpaper .stt.filled { background:#e7f0e9; color:#0d5c3a; }
+.fpaper .stt.review { background:#f8f1dc; color:#7a6210; }
+.fpaper .stt.empty  { background:var(--ground-2); color:var(--ink-3); }
+.fpaper .stt.sens   { background:#efe9f5; color:#5b4380; }
+
+/* 좁은 칸에 얹을 때 — 증빙 화면은 가운데를 반으로 나눠 씁니다.
+   출처와 근거는 접습니다. 신고서 초안 화면에서 온전히 봅니다. */
+.fpaper.tight { padding:var(--s6); }
+.fpaper.tight .ttl { font-size:14px; }
+.fpaper.tight .frow { grid-template-columns:22px minmax(0,1fr) auto auto; gap:var(--s2); font-size:11.5px; padding:var(--s2) 0; }
+.fpaper.tight .val { font-size:12px; }
+.fpaper.tight .val.empty { font-size:11px; }
+.fpaper.tight .lb .sub,
+.fpaper.tight .src-k,
+.fpaper.tight .note,
+.fpaper.tight .basis { display:none; }
+
+/* ══ 관보 서식처럼 ══
+   원본 PDF 두 장은 글자가 곡선으로 바뀌어 들어 있어(글꼴 0 · 텍스트 연산자 0) 글자를 읽을 수 없었습니다.
+   표 눈금과 여백 비율은 PDF 의 선 좌표에서 뽑고, 항목 이름과 번호는 API 14.3 을 따랐습니다.
+   A4 폭 794px(210mm · 96dpi)을 그대로 씁니다. 좁은 칸에서는 zoom 으로 줄입니다. */
+.gvsheet { position:relative; width:794px; background:#fff; color:#111; padding:22px 26px 16px;
+           border:1px solid #c9c3b6; box-shadow:0 8px 26px rgb(20 20 19 / .10);
+           font-family:'Malgun Gothic','맑은 고딕',system-ui,sans-serif; font-size:10.5px; line-height:1.3; }
+.gvsheet * { box-sizing:border-box; }
+.gv-top { display:flex; align-items:baseline; font-size:9.5px; margin-bottom:6px; }
+.gv-law { font-weight:700; }
+.gv-side { margin-left:auto; }
+
+.gv-t { width:100%; border-collapse:collapse; table-layout:fixed; }
+.gv-t td, .gv-t th { border:1px solid #222; padding:2px 4px; vertical-align:middle; }
+.gv-title { border:1px solid #222; border-bottom-width:1px; text-align:center; font-size:16px; font-weight:800;
+            letter-spacing:.06em; padding:9px 0 !important; }
+.gv-t th { background:#f4f2ec; font-weight:700; font-size:10px; text-align:center; }
+.gv-id th { letter-spacing:.02em; }
+.gv-id td { height:21px; }
+.gv-g { width:26px; font-size:10px; line-height:1.1; letter-spacing:0; padding:2px 1px !important; }
+.gv-no { text-align:center; font-size:9.5px; color:#333; width:22px; }
+.gv-lb { font-size:10.5px; }
+.gv-lb .gv-calc { display:block; font-size:9px; color:#444; letter-spacing:.02em; }
+.gv-c { height:20px; text-align:right; font-variant-numeric:tabular-nums; }
+.gv-c b { font-weight:600; letter-spacing:-.01em; }
+.gv-c .gv-mk { float:left; font-style:normal; font-size:9px; color:#5b4380; line-height:1.6; }
+.gv-c .gv-e { font-weight:400; color:#999; }
+.gv-c.txt { text-align:center; font-size:9.5px; line-height:1.3; }
+.gv-c.txt-l { text-align:left; }
+.gv-c.tot { background:#f7f5ef; }
+.gv-c.tot b { font-weight:800; }
+.gv-blank { background:#fff; color:#8b8b8b; }
+.gv-sum .gv-lb, .gv-sum .gv-no { background:#f7f5ef; font-weight:800; }
+.gv-sum .gv-c { background:#f7f5ef; }
+.gv-sum .gv-c b { font-weight:800; }
+
+.gv-foot { font-size:10px; margin-top:10px; }
+.gv-decl { text-align:center; }
+.gv-date { text-align:right; margin-top:10px; letter-spacing:.06em; }
+.gv-sign { display:flex; align-items:baseline; gap:10px; margin-top:6px; padding-left:56px; }
+.gv-sign span:first-child { letter-spacing:.28em; font-weight:600; }
+.gv-seal { margin-left:auto; }
+.gv-to { font-size:13px; font-weight:800; letter-spacing:.3em; margin-top:12px; }
+.gv-to small { font-size:9.5px; font-weight:400; letter-spacing:0; }
+.gv-spec { text-align:center; margin-top:12px; padding-top:4px; border-top:1px solid #222; font-size:8.5px; color:#444; }
+
+/* 제출용이 아니라는 표시. 실물처럼 보이는 서식에는 이 말이 종이 위에 있어야 합니다 */
+.gv-stamp { position:absolute; top:64px; right:36px; transform:rotate(-7deg);
+            border:2px solid #b3352c; color:#b3352c; border-radius:4px; padding:3px 9px;
+            font-size:11.5px; font-weight:800; letter-spacing:.04em; opacity:.82; pointer-events:none; }
+
+/* 좁은 칸에 넣을 때 — A4 폭을 칸 폭에 맞춰 줄입니다 */
+.gvbox { overflow:hidden; }
+.gvbox .gvsheet { zoom:.42; }
+@media (max-width:1359px) { .gvbox .gvsheet { zoom:.38; } }
+
+/* 출처 기호 범례. 기호만 두면 무슨 뜻인지 알 수 없습니다 */
+.mklist { display:grid; gap:var(--s3); margin-top:var(--s4); }
+.mkrow { display:grid; grid-template-columns:auto minmax(0,1fr); gap:var(--s3); align-items:baseline; font-size:11.5px; }
+.mkrow .mkc { width:52px; flex:none; font-size:10px; font-weight:800; text-align:center; padding:1px 0;
+              border-radius:4px; background:var(--ground-2); color:var(--ink-2); }
+.mkrow .mkc i { font-style:normal; margin-right:3px; }
+.mkrow .mkt { font-weight:600; }
+.mkrow .mks { display:block; font-size:10.5px; color:var(--ink-3); font-weight:400; margin-top:1px; line-height:1.5; }

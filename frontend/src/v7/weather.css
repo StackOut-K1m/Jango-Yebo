@@ -1,0 +1,224 @@
+/* ══════════════════════════════════════════════════════════════
+   날씨 · 예보 재생 · 색 배합 — v7 위에 얹는 층
+   experiments 랩의 날씨 연출을 v7 의 어두운 면과 토큰에 맞춰 옮겼다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 화면에는 안 보이지만 읽어 주는 글자. 상태를 색으로만 알리지 않기 위한 것이다. */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── 큰 날씨 그림 ───────────────────────────────────────────── */
+/* 머리말에 놓이는 작은 꼴. 168x132 는 60px 짜리 금액보다 두 배 커서, 이 화면에서 가장
+   중요한 것(숫자)보다 그림이 먼저 눈에 들어왔다. 그림 안의 비율은 % 라 그대로 따라간다. */
+.weather-visual.is-compact { width: 88px; height: 70px; }
+.weather-visual {
+  position: relative;
+  width: 168px;
+  height: 132px;
+  isolation: isolate;
+  pointer-events: none;
+  flex: none;
+}
+.weather-visual .sun-position {
+  position: absolute;
+  left: 27%;
+  top: 9%;
+  width: 46%;
+  aspect-ratio: 1;
+  transition: transform 850ms cubic-bezier(.16, 1, .3, 1), opacity 750ms;
+}
+.weather-sun {
+  width: 100%;
+  height: 100%;
+  color: var(--w-sun);
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--w-sun) 58%, transparent));
+  animation: weather-spin 50s linear infinite;
+}
+.weather-sun circle { fill: color-mix(in srgb, var(--w-sun) 82%, #ffffff); }
+@keyframes weather-spin { to { transform: rotate(360deg); } }
+
+.weather-cloud {
+  position: absolute;
+  transition: transform 850ms cubic-bezier(.16, 1, .3, 1), opacity 700ms, fill 900ms, stroke 900ms;
+  color: var(--w-cloud);
+  fill: color-mix(in srgb, var(--w-cloud) 26%, transparent);
+  filter: drop-shadow(0 8px 10px var(--shadow-1));
+}
+.cloud-front {
+  width: 56%; height: 60%; left: 31%; top: 27%; z-index: 3;
+  transform: translateX(22px) scale(.88);
+  opacity: 0;
+}
+.cloud-back {
+  width: 40%; height: 48%; left: 12%; top: 24%; z-index: 2;
+  color: color-mix(in srgb, var(--w-cloud) 72%, var(--w-cloud-deep));
+  fill: color-mix(in srgb, var(--w-cloud) 16%, transparent);
+  transform: translateX(-18px) scale(.88);
+  opacity: 0;
+}
+.weather-orbit {
+  position: absolute;
+  border: 1px solid color-mix(in srgb, var(--w-cloud) 22%, transparent);
+  border-radius: 50%;
+  width: 63%; aspect-ratio: 1; left: 18.5%; top: 0;
+  transform: scale(.9);
+  animation: weather-ring 5s ease-out infinite;
+}
+.orbit-two { animation-delay: -2.5s; }
+@keyframes weather-ring {
+  from { transform: scale(.62); opacity: .85; }
+  to { transform: scale(1.18); opacity: 0; }
+}
+
+.weather-cloudy .sun-position { transform: translate(-24%, -3%) scale(.8); opacity: .8; }
+.weather-cloudy .weather-cloud,
+.weather-rainy .weather-cloud { opacity: 1; transform: translateX(0) scale(1); }
+.weather-cloudy .cloud-back { transform: translate(-3%, -3%) scale(1); }
+.weather-rainy .sun-position { transform: translate(-10%, -25%) scale(.6); opacity: 0; }
+.weather-rainy .cloud-front {
+  color: var(--w-rain);
+  fill: color-mix(in srgb, var(--w-rain) 32%, transparent);
+  transform: translateY(-6%);
+}
+.weather-rainy .cloud-back {
+  color: color-mix(in srgb, var(--w-rain) 72%, var(--w-rain-deep));
+  fill: color-mix(in srgb, var(--w-rain) 20%, transparent);
+}
+.weather-rainy .weather-orbit {
+  opacity: .3;
+  border-color: color-mix(in srgb, var(--w-rain) 32%, transparent);
+}
+.weather-rainy .weather-horizon {
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--w-rain) 52%, transparent), transparent);
+}
+
+.rain-field {
+  position: absolute; inset: 52% 0 0; overflow: hidden; z-index: 1;
+  opacity: 0; transition: opacity 600ms;
+}
+.rain-field > i {
+  position: absolute; top: -22px; left: var(--drop-x);
+  height: 18px; width: 1.5px; border-radius: 2px;
+  background: linear-gradient(transparent, var(--w-rain));
+  animation: rainfall var(--duration) var(--delay) linear infinite;
+}
+.weather-rainy .rain-field { opacity: 1; }
+@keyframes rainfall { to { transform: translateY(84px); } }
+
+.weather-horizon {
+  position: absolute; left: 20%; width: 60%; bottom: 4%; height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--w-cloud) 48%, transparent), transparent);
+  transform: scaleX(.7); transition: transform 1s;
+}
+.weather-rainy .weather-horizon { transform: scaleX(1); }
+
+/* ── 잔액 옆 날씨 판 ────────────────────────────────────────── */
+.weather-panel { display: flex; align-items: center; gap: 4px; }
+.weather-readout { text-align: right; }
+.weather-readout .state {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: var(--fs-13, 13px); font-weight: 600; letter-spacing: -.01em;
+  padding: 5px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--veil-2);
+}
+.weather-readout .state i {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--w-sun);
+}
+.weather-readout.is-cloudy .state i { background: var(--w-cloud); }
+.weather-readout.is-rainy .state i { background: var(--w-rain); }
+
+/* ── 날짜별 예보 띠 ─────────────────────────────────────────── */
+.daily-strip {
+  display: grid; gap: 4px; margin-top: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+.daily-strip > button {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 2px 9px; min-width: 0;
+  border: 1px solid transparent; border-radius: 11px;
+  background: none; color: var(--muted); cursor: pointer;
+  font-family: inherit; font-size: var(--fs-11, 11px);
+  transition: background .18s, border-color .18s, color .18s, transform .18s var(--ease);
+}
+.daily-strip > button:hover { background: var(--veil-2); color: var(--text); }
+.daily-strip > button[aria-pressed='true'] {
+  background: var(--veil-3); border-color: var(--line); color: var(--text);
+  transform: translateY(-3px);
+}
+.daily-strip .glyph { width: 21px; height: 21px; }
+.daily-strip .glyph-sunny { color: var(--w-sun); }
+.daily-strip .glyph-cloudy { color: var(--w-cloud); }
+.daily-strip .glyph-rainy { color: var(--w-rain); }
+.daily-strip .cash { font-size: var(--fs-11, 11px); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.daily-strip > button[aria-pressed='true'] .cash { font-weight: 700; }
+
+/* 하루 단위 카드: 기본 휠과 터치로 가로 이동 */
+/* 아래 여백들은 1366x660 에서 곡선과 띠를 한 화면에 담으려고 한 단계씩 줄인 값이다.
+   머리말을 한 줄로 모아 86px 을 줄이고도 24px 이 모자랐다. */
+.day-cards { min-width: 0; margin-top: 8px; }
+.day-cards__scroll {
+  position: relative; display: flex; gap: 6px; margin-top: 0;
+  overflow-x: auto; padding: 4px 3px 8px;
+  scrollbar-width: thin; scrollbar-color: var(--lavender) transparent;
+}
+/* 날짜 카드는 반투명 판, 선택만 강조색. 유리판(하늘빛)과 같은 색이면 구분이 안 된다. 라이트는 light-palette.css */
+.day-cards {
+  --day-sky: #ffffff0d;
+  --day-sky-line: #ffffff1f;
+  --day-sky-strong: #ffffff1a;
+  /* hover 보다 한 단계 위. 고른 것과 스친 것이 같은 칠이면 갈리지 않는다 */
+  --day-sky-pick: #ffffff2e;
+  --day-sky-edge: var(--lavender);
+}
+.day-cards__scroll > button {
+  flex: 0 0 max(76px, calc((100% - 36px) / 7)); gap: 3px;
+  padding: 7px 6px 6px; background: var(--day-sky); border-color: var(--day-sky-line); color: var(--text-2);
+}
+.day-cards__scroll > button:hover { background: var(--day-sky-strong); }
+/* 고른 날. 전에는 배경이 hover 와 **같은 값**이라 테두리 하나로만 갈렸고, 오늘 카드의
+   안쪽 테두리와도 헷갈렸다. 칠을 한 단계 더 올리고 글자를 진하게 해 셋을 갈라 둔다.
+   색만으로 말하지 않는다 — 들림(translateY)과 글자 굵기가 함께 말한다(도메인 규칙 6). */
+.day-cards__scroll > button[aria-pressed='true'] {
+  background: var(--day-sky-pick); border-color: var(--day-sky-edge); color: var(--text);
+  box-shadow: 0 0 0 1px var(--day-sky-edge);
+}
+.day-cards__scroll > button[aria-pressed='true'] .day { font-weight: 700; }
+/* 고르지 않은 날은 한 단계 물러선다. 고른 것을 밝히는 것만으로는 띠 전체가 밝아 덜 갈린다 */
+.day-cards__scroll:has(> button[aria-pressed='true']) > button:not([aria-pressed='true']) { opacity: .62; }
+.day-cards__scroll > button:not([aria-pressed='true']):hover { opacity: 1; }
+/* 오늘은 고른 날과 다른 단서다 — 안쪽 실선 하나. 둘이 겹치면 바깥 테두리가 이긴다 */
+.day-cards__scroll > button.is-today { box-shadow: inset 0 0 0 1px var(--day-sky-edge); }
+.day-cards__scroll .day { font-size: var(--fs-11_5, 11.5px); font-weight: 600; color: var(--text); }
+/* 요일·기간은 날짜를 거드는 말이라 한 단계 내린다. 그만큼을 금액이 받는다 —
+   카드를 훑을 때 눈이 먼저 닿아야 하는 것은 그날 얼마냐다. */
+.day-cards__scroll .weekday { font-size: 9px; }
+.day-cards__scroll .glyph { width: 17px; height: 17px; }
+.day-cards__scroll .cash { font-size: var(--fs-14, 14px); font-weight: 600; color: var(--text); }
+.day-cards__scroll > button[aria-pressed='true'] .cash { font-weight: 800; }
+.day-cards__scroll > button:focus-visible { outline: 2px solid var(--lavender); outline-offset: 2px; }
+/* ── 예보 재생 ──────────────────────────────────────────────── */
+.play-row {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  font-size: var(--fs-12, 12px); color: var(--muted);
+}
+.play-row button {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 34px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--veil-2); color: var(--text);
+  font-family: inherit; font-size: var(--fs-12_5, 12.5px); font-weight: 600; cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+.play-row button:hover { background: var(--veil-5); border-color: var(--accent-dim); }
+.play-row button[data-on='true'] { border-color: var(--lavender); color: var(--lavender); }
+.play-row .bar {
+  flex: 1; min-width: 0; height: 3px; border-radius: 2px; background: var(--line);
+  overflow: hidden;
+}
+.play-row .bar > i {
+  display: block; height: 100%; border-radius: 2px; background: var(--lavender);
+  transition: width .28s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-sun, .weather-orbit, .rain-field > i { animation: none; }
+  .weather-visual *, .daily-strip > button { transition: none; }
+}

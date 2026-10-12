@@ -1,0 +1,2130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="잔고예보 · 소상공인 현금흐름 예측 서비스 목업 (P0 13개 · P1 18개 전 기능)" />
+  <title>잔고예보 목업</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="./design-system.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<div class="shell">
+<div class="app">
+
+  <!-- ══════════════════════════ 사이드바 ══════════════════════════ -->
+  <aside class="aside" id="sidebar">
+    <div class="brandline"><span class="brandmark">잔고</span><b>잔고예보</b></div>
+
+    <nav aria-label="주요 메뉴">
+      <div class="navgroup">매일 보는 것</div>
+      <a href="#today" class="on" data-view="today"><i>⌂</i><span>대시보드</span></a>
+      <a href="#forecast" data-view="forecast"><i>⌁</i><span>자금 흐름</span></a>
+      <a href="#calendar" data-view="calendar"><i>▦</i><span>캘린더</span></a>
+      <a href="#transactions" data-view="transactions"><i>≡</i><span>거래</span><em class="count solid">8</em></a>
+      <a href="#recurring" data-view="recurring"><i>↻</i><span>반복·예정 거래</span><em class="count">2</em></a>
+
+      <div class="navgroup">서류와 자료</div>
+      <a href="#evidence" data-view="evidence"><i>▣</i><span>증빙과 신고자료</span><em class="count">3</em></a>
+
+      <div class="navgroup">대응</div>
+      <a href="#scenario" data-view="scenario"><i>◇</i><span>시뮬레이션</span></a>
+      <a href="#finance" data-view="finance"><i>◈</i><span>대출과 지원제도</span><em class="count">2</em></a>
+      <a href="#reports" data-view="reports"><i>✎</i><span>브리핑</span></a>
+
+      <div class="navgroup">전체</div>
+      <a href="#multi" data-view="multi"><i>⊞</i><span>여러 가게</span></a>
+      <a href="#settings" data-view="settings"><i>⚙</i><span>설정</span></a>
+    </nav>
+
+    <div class="shop"><b>온기식당 성수점</b><small>성수동 · 한식</small></div>
+  </aside>
+
+  <!-- ══════════════════════════ 본문 ══════════════════════════ -->
+  <main class="main">
+
+    <header class="topbar">
+      <button class="btn sec" id="shopSwitch">온기식당 성수점 <span aria-hidden="true">⌄</span></button>
+      <div class="tb-right">
+        <span class="cap" id="syncLabel">8월 26일 09:00에 마지막으로 읽었습니다</span>
+        <button class="btn sec" id="syncBtn">다시 불러오기</button>
+        <button class="btn sec" data-view="alerts">알림 <em class="count solid">3</em></button>
+        <button class="btn sec" id="demoTab">화면 목록</button>
+      </div>
+    </header>
+
+    <div class="pane">
+
+      <!-- ═══════════════════ SC-02 대시보드 · 예보 구조 ═══════════════════ -->
+      <section class="view active" id="view-today">
+
+        <!-- 예보 판 — 상자가 아니라 면 하나. 뒤에 30일 흐름을 옅게 깐다. -->
+        <div class="wx">
+          <svg class="wx-curve" viewBox="0 0 1000 132" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="wxfill" x1="0" y1="0" x2="0" y2="1">
+                <stop class="s0" offset="0" />
+                <stop class="s1" offset="1" />
+              </linearGradient>
+            </defs>
+            <path fill="url(#wxfill)"
+              d="M0 32 C40 14 52 6 74 6 C110 6 140 42 176 68 C206 90 224 96 248 96 C276 96 296 84 318 74 C356 56 382 30 414 26 C500 16 540 44 608 40 C700 34 760 22 824 20 C910 17 960 14 1000 13 L1000 132 L0 132 Z" />
+            <path class="line"
+              d="M0 32 C40 14 52 6 74 6 C110 6 140 42 176 68 C206 90 224 96 248 96 C276 96 296 84 318 74 C356 56 382 30 414 26 C500 16 540 44 608 40 C700 34 760 22 824 20 C910 17 960 14 1000 13" />
+            <circle class="dot" cx="248" cy="96" r="5" />
+          </svg>
+
+          <div class="page-head">
+            <div>
+              <h1>오늘의 잔고예보</h1>
+              <p class="sub">8월 26일 수요일 오전 9시 기준 · 앞으로 30일</p>
+            </div>
+            <span class="feat">SC-02</span>
+          </div>
+
+          <div class="wx-now mt-6">
+            <div class="wx-main">
+              <span class="wx-label">지금 잔고</span>
+              <b class="amount">4,182,400원</b>
+              <span class="lv watch"><i></i>주의 · 8일 뒤 안전잔고 아래</span>
+            </div>
+
+            <!-- 일기예보의 최고/최저 자리. 30일 동안 어디까지 오르내리는지. -->
+            <div class="wx-hilo">
+              <dl class="pair">
+                <div class="lo">
+                  <dt>30일 최저 <span class="feat">P0-07</span></dt>
+                  <dd>1,487,600원<span>9월 3일</span></dd>
+                </div>
+                <div>
+                  <dt>30일 최고</dt>
+                  <dd>5,382,400원<span>8월 28일</span></dd>
+                </div>
+              </dl>
+              <div>
+                <div class="track" role="img" aria-label="30일 최저 1,487,600원과 최고 5,382,400원 사이에서 지금 잔고는 69% 지점, 안전잔고는 21% 지점">
+                  <b style="left:21%"></b>
+                  <em style="left:21%">안전잔고</em>
+                  <i style="left:69%"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <dl class="wx-sub">
+            <div class="lead">
+              <dt>지금 써도 되는 돈</dt>
+              <dd>1,842,400원</dd>
+            </div>
+            <div>
+              <dt>안전잔고 <span class="feat">P1-08</span></dt>
+              <dd>2,300,000원</dd>
+            </div>
+            <div>
+              <dt>부가세로 따로 둘 돈 <span class="feat">P1-11</span></dt>
+              <dd>1,140,000원</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- 기상특보식 경보 띠 -->
+        <div class="alertband risk">
+          <span class="lv short"><i></i>부족</span>
+          <span class="when">9월 3일 ~ 4일</span>
+          <span><b>안전잔고보다 812,400원 모자랍니다.</b> 추석 연휴로 배달 정산이 이틀 밀린 것이 원인입니다. 통장이 비는 것은 아닙니다.</span>
+          <button class="btn pri sm" data-goto="forecast">원인 보기</button>
+          <span class="feat">P0-08</span>
+        </div>
+
+        <!-- 날짜별 예보 띠 — 시간별 예보처럼 가로로 흐른다 -->
+        <div class="daystrip" role="img" aria-label="8월 26일부터 9월 8일까지 날짜별 예상 잔고. 9월 3일과 4일이 안전잔고 아래.">
+          <div class="day today"><span class="d">오늘<br />8/26</span><span class="rail"><i class="col" style="height:76%"></i></span><span class="mark"></span><span class="v">418만</span></div>
+          <div class="day"><span class="d">목<br />8/27</span><span class="rail"><i class="col" style="height:75%"></i></span><span class="mark"></span><span class="v">415만</span></div>
+          <div class="day"><span class="d">금<br />8/28</span><span class="rail"><i class="col" style="height:98%"></i></span><span class="mark"></span><span class="v">538만</span></div>
+          <div class="day"><span class="d">토<br />8/29</span><span class="rail"><i class="col" style="height:97%"></i></span><span class="mark"></span><span class="v">534만</span></div>
+          <div class="day"><span class="d">일<br />8/30</span><span class="rail"><i class="col" style="height:97%"></i></span><span class="mark"></span><span class="v">534만</span></div>
+          <div class="day"><span class="d">월<br />8/31</span><span class="rail"><i class="col" style="height:90%"></i></span><span class="mark"></span><span class="v">496만</span></div>
+          <div class="day watch"><span class="d">화<br />9/1</span><span class="rail"><i class="col" style="height:48%"></i></span><span class="mark"></span><span class="v">261만</span></div>
+          <div class="day"><span class="d">수<br />9/2</span><span class="rail"><i class="col" style="height:82%"></i></span><span class="mark"></span><span class="v">449만</span></div>
+          <div class="day short"><span class="d">목<br />9/3</span><span class="rail"><i class="col" style="height:27%"></i></span><span class="mark"></span><span class="v">149만</span></div>
+          <div class="day short"><span class="d">금<br />9/4</span><span class="rail"><i class="col" style="height:26%"></i></span><span class="mark"></span><span class="v">146만</span></div>
+          <div class="day watch"><span class="d">토<br />9/5</span><span class="rail"><i class="col" style="height:43%"></i></span><span class="mark"></span><span class="v">239만</span></div>
+          <div class="day watch"><span class="d">일<br />9/6</span><span class="rail"><i class="col" style="height:43%"></i></span><span class="mark"></span><span class="v">236만</span></div>
+          <div class="day"><span class="d">월<br />9/7</span><span class="rail"><i class="col" style="height:65%"></i></span><span class="mark"></span><span class="v">358만</span></div>
+          <div class="day"><span class="d">화<br />9/8</span><span class="rail"><i class="col" style="height:80%"></i></span><span class="mark"></span><span class="v">441만</span></div>
+        </div>
+
+        <!-- 오늘 들고 날 돈 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2>오늘</h2>
+            <span class="cap">8월 26일 09:00 기준</span>
+          </div>
+          <dl class="stats">
+            <div><dt>들어올 돈</dt><dd>+850,000원</dd><small>카드 정산 82만~96만</small></div>
+            <div><dt>나갈 돈</dt><dd>−30,000원</dd><small>구독료 1건</small></div>
+            <div><dt>모아둘 돈 <span class="feat">P1-09</span></dt><dd>300,000원</dd><small>9월 급여 준비</small></div>
+            <div><dt>예보가 얼마나 맞나 <span class="feat">P1-05</span></dt><dd>87%</dd><small>지난 3개월 · 표본 12회</small></div>
+          </dl>
+        </div>
+
+        <!-- 며칠간 어떻게 되나 — 주간 예보 목록 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2>며칠간 어떻게 되나</h2>
+            <button class="btn ghost" data-goto="forecast">30일 전체 보기 →</button>
+          </div>
+          <div class="range-scale">
+            <span>0원</span>
+            <span>안전잔고 230만</span>
+            <span>550만</span>
+          </div>
+          <div class="fc-list">
+            <button class="fc-row">
+              <span class="date">9월 1일<small>화</small></span>
+              <span class="lv watch"><i></i>빠듯</span>
+              <span class="range watch"><i style="left:43.8%;width:7.8%"></i><b style="left:41.8%"></b></span>
+              <span class="val">261만원</span>
+            </button>
+            <button class="fc-row">
+              <span class="date">9월 2일<small>수</small></span>
+              <span class="lv easy"><i></i>여유</span>
+              <span class="range"><i style="left:74.9%;width:13.5%"></i><b style="left:41.8%"></b></span>
+              <span class="val">449만원</span>
+            </button>
+            <button class="fc-row short">
+              <span class="date">9월 3일<small>목</small></span>
+              <span class="lv short"><i></i>부족</span>
+              <span class="range short"><i style="left:24.0%;width:6.5%"></i><b style="left:41.8%"></b></span>
+              <span class="val">149만원</span>
+            </button>
+            <button class="fc-row short">
+              <span class="date">9월 4일<small>금</small></span>
+              <span class="lv short"><i></i>부족</span>
+              <span class="range short"><i style="left:23.3%;width:6.7%"></i><b style="left:41.8%"></b></span>
+              <span class="val">146만원</span>
+            </button>
+            <button class="fc-row">
+              <span class="date">9월 5일<small>토</small></span>
+              <span class="lv watch"><i></i>회복</span>
+              <span class="range watch"><i style="left:37.8%;width:11.5%"></i><b style="left:41.8%"></b></span>
+              <span class="val">239만원</span>
+            </button>
+          </div>
+          <p class="sub">막대는 그날의 <b>최소~최대 예상 범위</b>입니다. 세로선이 안전잔고 2,300,000원입니다.</p>
+        </div>
+
+        <!-- 준비금 · 브리핑 — 구획 둘, 상자 없음 -->
+        <div class="panel">
+          <div class="panel-grid">
+            <div>
+              <div class="panel-head">
+                <h2>준비금 <span class="feat">P1-09</span></h2>
+                <button class="btn ghost" data-goto="settings">관리 →</button>
+              </div>
+              <div class="stack-md mt-3">
+                <div>
+                  <div class="progress-row"><span class="sub">9월 급여 · 6영업일 남음</span><span>1,200,000 / 3,000,000원</span></div>
+                  <div class="bar mt-2"><i style="width:40%"></i></div>
+                  <p class="sub mt-2">오늘 300,000원을 모으면 계획대로 준비할 수 있어요.</p>
+                </div>
+                <div>
+                  <div class="progress-row"><span class="sub">부가세 · 자동 생성</span><span>1,140,000 / 1,140,000원</span></div>
+                  <div class="bar ok mt-2"><i style="width:100%"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="panel-head">
+                <h2>브리핑 <span class="feat">P1-17</span></h2>
+                <button class="btn ghost" data-goto="reports">전체 보기 →</button>
+              </div>
+              <div class="mt-3">
+                <span class="badge ai">AI가 계산 결과만 가지고 쓴 글</span>
+                <p class="t-body mt-3">정산은 줄고 급여 출금을 앞두고 있어요. 지난주 배달 정산이 평소보다 <b>12% 적게</b> 들어왔습니다. 9월 5일 정산이 들어오기 전까지 큰 지출은 신중히 검토해 보세요.</p>
+                <button class="btn ghost mt-3">근거 2건 보기 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 확인할 일 -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2>확인할 일</h2>
+            <span class="cap">총 11건</span>
+          </div>
+
+          <button class="todo-lead" data-goto="transactions">
+            <span class="todo-icon" aria-hidden="true">≡</span>
+            <span><b>거래 8건을 확인해 주세요</b><small>확인하지 않은 거래는 예보에서 빠집니다. 여기부터 하시면 됩니다.</small></span>
+            <em class="count solid">8</em>
+          </button>
+
+          <div class="list bare three">
+            <button class="list-row" data-goto="recurring">
+              <span><b>반복되는 거래 후보</b><small>새로 찾은 규칙을 확인해 주세요</small></span>
+              <em class="count">2</em><span class="go" aria-hidden="true">›</span>
+            </button>
+            <button class="list-row" data-goto="evidence">
+              <span><b>거래에 안 붙은 영수증</b><small>붙이면 신고자료에 그대로 들어갑니다</small></span>
+              <em class="count">3</em><span class="go" aria-hidden="true">›</span>
+            </button>
+            <button class="list-row" data-goto="finance">
+              <span><b>조건 맞는 지원금 2건</b><small>성동구 경영안정자금은 9월 12일까지입니다</small></span>
+              <em class="count">2</em><span class="go" aria-hidden="true">›</span>
+            </button>
+            <button class="list-row" id="reconnectRow">
+              <span><b>배달의민족 자료를 6일째 못 읽고 있습니다</b><small>이대로면 잔고가 실제보다 적게 보입니다</small></span>
+              <span class="badge risk">연결 끊김</span><span class="go" aria-hidden="true">›</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-01 시작하기 ═══════════════════ -->
+      <section class="view" id="view-onboarding">
+        <div class="page-head">
+          <div>
+            <h1>시작하기</h1>
+            <p class="sub">가입부터 첫 예보가 나올 때까지 네 단계. 로그인 전 화면입니다.</p>
+          </div>
+          <span class="feat">SC-01 · P0-01</span>
+        </div>
+
+        <div class="card">
+          <div class="steps">
+            <span class="step done" data-go="1"><i class="no">✓</i>로그인</span><i class="step-line"></i>
+            <span class="step done" data-go="2"><i class="no">✓</i>가게 정보</span><i class="step-line"></i>
+            <span class="step on" data-go="3"><i class="no">3</i>자료 연결</span><i class="step-line"></i>
+            <span class="step" data-go="4"><i class="no">4</i>첫 예보 만들기</span>
+          </div>
+        </div>
+
+        <div data-panelset="ob">
+
+          <!-- 단계 1 · 로그인 -->
+          <div class="tabpanel" data-panel="1">
+            <div class="card centered">
+              <h2 class="t-section">잔고가 마르는 날, 미리 보입니다</h2>
+              <p class="sub">계좌 흐름을 읽어 돈이 모자랄 날짜를 먼저 알려 드립니다.</p>
+              <hr class="sep" />
+              <div class="stack-md">
+                <label class="field">이메일 <span class="req">필수</span><input value="jk007125@naver.com" /></label>
+                <div class="field invalid">
+                  <label for="pw">비밀번호 <span class="req">필수</span></label>
+                  <input id="pw" type="password" value="ppppppppp" aria-describedby="pw-err" />
+                  <p class="err" id="pw-err"><b>!</b> 비밀번호는 8자 이상이고 숫자를 하나 넣어야 합니다.</p>
+                </div>
+                <button class="btn pri wide" data-go="2">로그인하기</button>
+                <div class="row">
+                  <button class="btn sec grow">카카오로 시작</button>
+                  <button class="btn sec grow">네이버로 시작</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 단계 2 · 가게 정보 -->
+          <div class="tabpanel" data-panel="2">
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">가게 정보를 알려 주세요</h2><p class="sub">지원금과 대출 조건을 걸러내는 데 씁니다.</p></div>
+                <span class="badge mute">2 / 4</span>
+              </div>
+              <div class="grid2">
+                <label class="field">가게 이름 <span class="req">필수</span><input value="온기식당 성수점" /></label>
+                <label class="field">업종 <span class="req">필수</span>
+                  <select><option>한식 일반음식점</option><option>카페·디저트</option></select>
+                  <span class="hint">같은 업종 평균과 비교할 때 씁니다</span></label>
+                <label class="field">과세 유형 <span class="req">필수</span>
+                  <select><option>일반과세</option><option>간이과세</option></select>
+                  <span class="hint">부가세 준비금과 세금 일정 계산에 씁니다</span></label>
+              </div>
+              <details class="mt-4">
+                <summary class="disclose">나중에 채워도 되는 것 3개 <span class="badge mute">선택</span></summary>
+                <div class="grid2 mt-3">
+                  <label class="field">주소 <span class="opt">나중에 가능</span><input value="서울 성동구 성수동2가" /><span class="hint">지역 지원금을 찾는 데 씁니다</span></label>
+                  <label class="field">사업 시작일 <span class="opt">나중에 가능</span><input type="date" value="2019-06-14" /></label>
+                  <label class="field">직원 수 <span class="opt">나중에 가능</span><input value="2명" /></label>
+                </div>
+              </details>
+              <div class="row mt-4">
+                <button class="btn sec" data-go="1">이전</button>
+                <button class="btn pri pushright" data-go="3">자료 연결로 넘어가기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 단계 3 · 자료 연결 (P0-01) -->
+          <div class="tabpanel on" data-panel="3">
+            <div class="card-head">
+              <div><h2 class="t-section">돈이 오가는 자료를 연결해 주세요 <span class="feat">P0-01</span></h2>
+                <p class="sub">하나만 연결해도 시작할 수 있습니다. 계좌를 연결하면 가장 정확합니다.</p></div>
+              <span class="badge mute">3 / 4</span>
+            </div>
+
+            <div class="card mark-accent">
+              <div class="spread">
+                <div class="row">
+                  <span class="badge accent sq lg">국민</span>
+                  <div><h3 class="t-card">국민은행 사업자 계좌</h3><p class="sub">1234-56-789012</p></div>
+                </div>
+                <span class="badge caution">1원 인증 기다리는 중</span>
+              </div>
+              <hr class="sep" />
+              <div class="notice info"><i>1</i>
+                <span>통장에 <b>1원</b>을 보냈습니다. 입금 내역 적요의 <b>‘잔고예보 ○○○○’</b> 네 자리를 그대로 넣어 주세요.</span></div>
+              <div class="row mt-4 bottom">
+                <div class="field code invalid" style="width:200px">
+                  <label for="code">인증번호 네 자리</label>
+                  <input id="code" value="8212" aria-describedby="code-err" />
+                  <p class="err" id="code-err"><b>!</b> 맞지 않습니다. 남은 시도 2번</p>
+                </div>
+                <button class="btn sec">계좌 연결하기</button>
+                <button class="btn ghost">인증번호 다시 받기</button>
+                <span class="sub pushright"><b class="money">4분 12초</b> 남았습니다</span>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="card tight">
+                <div class="spread">
+                  <div class="row">
+                    <span class="badge mute sq">신한</span>
+                    <div><b class="t-card">신한카드 가맹점 정산</b><div class="sub">정산 예정일·금액을 읽어 예보에 넣습니다</div></div>
+                  </div>
+                  <span class="badge safe">연결됨</span>
+                </div>
+              </div>
+              <div class="card tight">
+                <div class="spread">
+                  <div class="row">
+                    <span class="badge mute sq">배민</span>
+                    <div><b class="t-card">배달의민족 사장님광장</b><div class="sub">배달 정산 주기를 읽습니다</div></div>
+                  </div>
+                  <button class="btn sec sm">연결하기</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="t-card">계좌 연결이 어려우면 이렇게도 됩니다</h3>
+              <p class="sub">아래로 넣은 자료도 똑같이 예보에 들어갑니다.</p>
+              <div class="grid2 mt-4">
+                <button class="card tight clickable">
+                  <b class="t-card">엑셀·CSV로 거래 올리기</b>
+                  <div class="sub">인터넷뱅킹에서 받은 거래내역 파일을 그대로 올리면 됩니다</div>
+                  <span class="btn ghost mt-2">파일 고르기 →</span>
+                </button>
+                <button class="card tight clickable">
+                  <b class="t-card">포스 일마감표 찍어 올리기</b>
+                  <div class="sub">자동 연결이 안 되는 기종이면 사진을 찍어 올려 주세요</div>
+                  <span class="btn ghost mt-2">찍는 방법 보기 →</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="btn sec" data-go="2">이전</button>
+              <div class="pushright row">
+                <button class="btn ghost">나중에 연결하고 둘러보기</button>
+                <button class="btn pri" data-go="4">연결 끝내고 예보 만들기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 단계 4 · 첫 예보 -->
+          <div class="tabpanel" data-panel="4">
+            <div class="card centered center">
+              <h2 class="t-section">첫 예보를 만들고 있습니다</h2>
+              <p class="sub">2분쯤 걸립니다. 끝나면 알림으로 알려 드릴게요.</p>
+              <div class="bar mt-4"><i style="width:64%"></i></div>
+              <p class="sub mt-2"><b>64%</b> · 최근 6개월 거래 1,204건 중 812건을 읽었습니다</p>
+              <hr class="sep" />
+              <div class="stack-sm" style="text-align:left">
+                <div class="row"><span class="badge safe">끝남</span><span class="sub">계좌 거래 읽어오기</span><span class="sub pushright">1,204건</span></div>
+                <div class="row"><span class="badge accent">하는 중</span><span class="sub">반복되는 거래 찾기</span><span class="sub pushright">임차료·급여·정산</span></div>
+                <div class="row"><span class="badge mute">기다리는 중</span><span class="sub">30일 잔고 예보 계산하기</span></div>
+              </div>
+              <hr class="sep" />
+              <button class="btn sec wide" data-goto="today">먼저 둘러보기</button>
+              <span class="btn-why">지금 들어가도 됩니다. 아직 계산 중인 자리는 비워 두고 끝나는 대로 채워 넣습니다.</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-03 자금 흐름 ═══════════════════ -->
+      <section class="view" id="view-forecast">
+        <div class="page-head">
+          <div>
+            <h1>자금 흐름</h1>
+            <p class="sub">앞으로 며칠간 잔고가 어떻게 움직일지, 그리고 왜 그런지 봅니다.</p>
+          </div>
+          <span class="feat">SC-03</span>
+        </div>
+
+        <div class="tabs" data-tabs="fc">
+          <button class="on" data-tab="f1">잔액 곡선</button>
+          <button data-tab="f2">예보가 맞았나 <em class="count">87%</em></button>
+          <button data-tab="f3">예보에 반영된 것 <em class="count">3</em></button>
+        </div>
+
+        <div data-panelset="fc">
+
+          <!-- 탭 1 · 잔액 곡선 (P0-07 · P0-08) -->
+          <div class="tabpanel on" data-panel="f1">
+            <dl class="stats">
+            <div><dt>지금 잔고</dt><dd class="money">4,182,400원</dd><small>계좌 2개 합산</small></div>
+            <div><dt>안전잔고 <span class="feat">P1-08</dt></span><dd class="money">2,300,000원</dd><small>최근 30일 고정비 기준</small></div>
+            <div class="short"><dt>가장 낮아지는 잔고 <span class="feat">P0-07</dt></span>
+                <dd class="money is-risk">1,487,600원</dd>
+                <small>9월 3일 · 안전잔고보다 812,400원 아래</small></div>
+            <div><dt>예보 신뢰도</dt><dd>보통</dd><small>참조 기간 3개월</small></div>
+          </dl>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2 id="chartTitle">앞으로 30일 예상 잔고</h2>
+                  <p class="sub">실선은 예상값, 옅은 영역은 최소~최대 범위입니다.</p>
+                </div>
+                <div class="row">
+                  <div class="chips" id="daysFilter" role="group" aria-label="예보 기간">
+                    <button data-days="7">7일</button>
+                    <button data-days="14">14일</button>
+                    <button class="on" data-days="30">30일</button>
+                  </div>
+                  <span class="feat">P0-07</span>
+                </div>
+              </div>
+
+              <div class="legend">
+                <span><i class="line"></i>예상 잔고</span>
+                <span><i class="line safety"></i>안전잔고</span>
+                <span><i class="area"></i>예상 범위</span>
+              </div>
+
+              <div class="chart" id="balanceChart" role="img" aria-label="9월 3일 잔고가 안전잔고 아래로 내려가는 예상 잔고 차트">
+                <div class="chart-grid"></div>
+                <div class="axis-y"><span>600만</span><span>400만</span><span>200만</span><span>0</span></div>
+                <div class="safety-line"><span>안전잔고 230만원</span></div>
+                <svg viewBox="0 0 1000 320" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="range" x1="0" y1="0" x2="0" y2="1">
+                      <stop class="r0" offset="0" />
+                      <stop class="r1" offset="1" />
+                    </linearGradient>
+                  </defs>
+                  <path class="range-path" d="M0 85 C160 50,260 65,370 105 S540 250,620 278 S760 140,1000 90 L1000 130 C800 175,760 220,630 318 S450 270,360 145 S130 110,0 130 Z" />
+                  <path class="balance-path" d="M0 108 C160 72,260 88,370 124 S540 260,620 298 S760 170,1000 110" />
+                  <circle cx="620" cy="298" r="7" />
+                </svg>
+                <div class="axis-labels"><span>8/26</span><span>9/3</span><span>9/10</span><span>9/17</span><span>9/25</span></div>
+              </div>
+
+              <details class="data-table">
+                <summary class="disclose">날짜별 수치 보기</summary>
+                <div class="list bare data-list mt-3">
+                  <div class="list-row head"><span>날짜</span><span>예상 잔고</span><span>최소~최대</span><span>상태</span></div>
+                  <div class="list-row"><span>9월 1일</span><span class="money">2,614,000원</span><span class="sub">241만~284만</span><span class="badge safe">여유</span></div>
+                  <div class="list-row"><span>9월 3일</span><span class="money is-risk">1,487,600원</span><span class="sub">132만~168만</span><span class="badge risk">부족</span></div>
+                  <div class="list-row"><span>9월 5일</span><span class="money">2,392,300원</span><span class="sub">208만~271만</span><span class="badge safe">회복</span></div>
+                </div>
+              </details>
+            </div>
+
+            <div class="panel-grid wide-left">
+              <div class="panel">
+                <div class="panel-head"><h2>부족한 날 자세히 보기</h2><span class="feat">P0-08</span></div>
+                <div class="gap-summary">
+                  <div><small>처음 모자라는 날</small><b>9월 3일</b></div>
+                  <div><small>가장 모자란 금액</small><b>812,400원</b></div>
+                  <div><small>이어지는 기간</small><b>2일</b></div>
+                  <div><small>회복하는 날</small><b>9월 5일</b></div>
+                </div>
+                <p class="sub mt-3">모자란 금액은 <b>안전잔고 2,300,000원 대비</b>입니다. 통장이 0원이 되는 것은 아닙니다.</p>
+
+                <h3 class="t-card mt-6">왜 이렇게 되나요</h3>
+                <ol class="timeline mt-3">
+                  <li><b>급여 3,000,000원 나감</b><small>9월 3일 · 확정</small></li>
+                  <li><b>배달 정산이 추석 연휴로 밀림</b><small>9월 1일 → 9월 5일 · 영업일 보정 <span class="feat">P1-04</span></small></li>
+                  <li><b>대출 상환 1,680,000원 나감</b><small>9월 10일 · 확정 <span class="feat">P1-13</span></small></li>
+                </ol>
+              </div>
+
+              <div class="panel">
+                <h2 class="t-section">어떻게 하면 되나요</h2>
+                <div class="stack-sm mt-3">
+                  <button class="btn sec wide start" data-goto="scenario">
+                    <span><b>바꿔서 비교해 보기</b><span class="sub">지출일을 옮기면 어떻게 되는지</span></span>
+                  </button>
+                  <button class="btn sec wide start" data-goto="finance">
+                    <span><b>지원금 알아보기</b><span class="sub">공백 전 집행 가능 2건</span></span>
+                  </button>
+                  <button class="btn sec wide start" data-goto="multi">
+                    <span><b>다른 가게에서 옮겨 오기</b><span class="sub">연남점 잉여 2,180,000원</span></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 2 · 예측 정확도 (P1-05) -->
+          <div class="tabpanel" data-panel="f2">
+            <div class="notice info"><i>i</i>
+              <span>예측한 거래와 실제로 들어온 거래를 자동으로 맞춰 봅니다. 어긋난 만큼 <b>다음 예보를 스스로 보정</b>합니다. <span class="feat">P1-05</span></span></div>
+
+            <dl class="stats">
+            <div><dt>맞은 비율</dt><dd>87%</dd><small>지난달보다 5%p 좋아졌습니다</small></div>
+            <div><dt>날짜가 빗나간 평균</dt><dd>1.2일</dd><small>거래처별로 자동 보정 중</small></div>
+            <div><dt>금액이 빗나간 평균</dt><dd>6%</dd><small>예상 범위에 반영합니다</small></div>
+            <div><dt>맞음 / 놓침 / 예상 밖</dt><dd>46 / 3 / 5</dd><small>2026년 6~8월</small></div>
+          </dl>
+
+            <div class="panel">
+              <div class="panel-head"><h2>거래처별로 얼마나 맞았나</h2><span class="cap">최근 3개월</span></div>
+              <div class="list bare acc-list">
+                <div class="list-row head"><span>거래처</span><span>표본</span><span>날짜 오차</span><span>금액 오차</span><span>지금 적용 중인 보정</span></div>
+                <div class="list-row"><span><b>배달의민족</b></span><span>12회</span><span>+1.0일</span><span>4%</span><span class="sub">예측일 +1일 보정</span></div>
+                <div class="list-row"><span><b>신한카드</b></span><span>8회</span><span>+0.2일</span><span>2%</span><span class="sub">보정 없음</span></div>
+                <div class="list-row"><span><b>서울우유</b></span><span>9회</span><span>+0.5일</span><span>11%</span><span class="sub">금액 범위 넓힘</span></div>
+                <div class="list-row"><span><b>쿠팡이츠</b></span><span>4회</span><span>+2.1일</span><span>18%</span><span class="sub">표본이 적어 보정 보류</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 3 · 예보에 반영된 것 (P1-04 · P1-06 · P1-07) -->
+          <div class="tabpanel" data-panel="f3">
+            <p class="sub">예보 숫자를 바꾼 요인을 모아 둡니다. 각 항목은 <b>끄고 켤 수 있습니다.</b></p>
+
+            <div class="card">
+              <div class="spread">
+                <div>
+                  <h2 class="t-section">추석 연휴 정산 밀림 <span class="feat">P1-04</span></h2>
+                  <p class="sub">9월 1일(화) 예정이던 배달 정산이 <b>연휴로 9월 5일</b>로 밀립니다. 원래 예정일도 함께 적어 둡니다.</p>
+                </div>
+                <span class="badge accent">반영 중</span>
+              </div>
+              <div class="list bare two mt-3">
+                <div class="list-row"><span>원래 예정일</span><span class="money pushright">9월 1일 (화)</span></div>
+                <div class="list-row"><span>보정 뒤 예정일</span><span class="money pushright">9월 5일 (토 → 다음 영업일)</span></div>
+                <div class="list-row total"><span>이 보정이 만든 공백</span><span class="money pushright is-risk">2일</span></div>
+              </div>
+              <label class="check mt-3"><input type="checkbox" checked /> 영업일·명절 보정을 예보에 반영합니다</label>
+            </div>
+
+            <div class="grid2">
+              <div class="card">
+                <div class="spread">
+                  <div><h2 class="t-section">원자재 가격 <span class="feat">P1-06</span></h2>
+                    <p class="sub">유제품 가격이 지난달보다 8% 올랐습니다.</p></div>
+                  <span class="badge caution">신뢰도 낮음</span>
+                </div>
+                <div class="list bare two mt-3">
+                  <div class="list-row"><span>우유 시세 변동</span><span class="money pushright">+8.0%</span></div>
+                  <div class="list-row"><span>재료비에서 차지하는 비중</span><span class="money pushright">40%</span></div>
+                  <div class="list-row total"><span>월 재료비에 미치는 영향</span><span class="money pushright is-warn">+96,000원 (3.2%)</span></div>
+                </div>
+                <p class="sub mt-3">출처 aT 농산물유통정보 · 수집일 8월 26일. 참고 지표이며 확정값이 아닙니다.</p>
+                <label class="check mt-3"><input type="checkbox" checked /> 예보에 반영합니다</label>
+              </div>
+
+              <div class="card">
+                <div class="spread">
+                  <div><h2 class="t-section">계절성 <span class="feat">P1-07</span></h2>
+                    <p class="sub">9월은 성수기로 들어갑니다.</p></div>
+                  <span class="badge caution">신뢰도 낮음</span>
+                </div>
+                <div class="list bare two mt-3">
+                  <div class="list-row"><span>예상 매출 변화</span><span class="money pushright">+5% ~ +12%</span></div>
+                  <div class="list-row"><span>내 작년 9월 기록</span><span class="money pushright">사용함</span></div>
+                  <div class="list-row"><span>업종 통계</span><span class="money pushright">소상공인시장진흥공단</span></div>
+                </div>
+                <div class="notice warn mt-3"><i>!</i>
+                  <span>자체 데이터가 12개월이 안 돼 <b>업종 통계 비중이 높습니다.</b> 실제와 다를 수 있습니다.</span></div>
+                <label class="check mt-3"><input type="checkbox" checked /> 예보에 반영합니다</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-04 거래 ═══════════════════ -->
+      <section class="view" id="view-transactions">
+        <div class="page-head">
+          <div>
+            <h1>거래</h1>
+            <p class="sub">자동으로 붙인 분류를 확인하고 영수증을 연결합니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-04</span>
+            <button class="btn pri" id="reviewAll">확인 필요 8건 검토</button>
+          </div>
+        </div>
+
+        <div class="tabs" data-tabs="tx">
+          <button class="on" data-tab="t1">거래 목록 <em class="count on">8</em></button>
+          <button data-tab="t2">거래처 사전 <em class="count">24</em></button>
+          <button data-tab="t3">자료 가져오기</button>
+        </div>
+
+        <div data-panelset="tx">
+
+          <!-- 탭 1 · 거래 목록 (P0-02) -->
+          <div class="tabpanel on" data-panel="t1">
+            <div class="notice info"><i>i</i>
+              <span>확인하지 않은 거래는 <b>예보에서 빠집니다.</b> 8건만 확인하면 됩니다. <span class="feat">P0-02 · P0-05</span></span></div>
+
+            <div class="card tight filter-bar">
+              <label class="field search">거래처·적요 찾기<input placeholder="예: 서울우유" /></label>
+              <label class="field">기간<select><option>최근 31일</option><option>최근 3개월</option></select></label>
+              <label class="field">입출금<select><option>전체</option><option>들어온 돈</option><option>나간 돈</option></select></label>
+              <label class="field">확인 상태<select><option>확인 필요</option><option>전체</option></select></label>
+              <label class="check"><input type="checkbox" /> 영수증 없음만</label>
+            </div>
+
+            <div class="panel">
+              <div class="list tx-table">
+                <div class="list-row head">
+                  <span>일시</span><span>적요·거래처</span><span>입출금</span><span>금액</span>
+                  <span>분류</span><span>확인</span><span>영수증</span>
+                </div>
+                <div id="transactionRows"></div>
+              </div>
+              <div class="tx-cards" id="transactionCards"></div>
+            </div>
+          </div>
+
+          <!-- 탭 2 · 거래처 사전 (P1-01) -->
+          <div class="tabpanel" data-panel="t2">
+            <div class="notice info"><i>i</i>
+              <span>통장 적요를 실제 거래처와 분류로 이어 주는 사전입니다. 여기서 한 번 고치면 <b>앞으로 같은 적요는 자동으로</b> 그렇게 분류됩니다. <span class="feat">P1-01</span></span></div>
+
+            <div class="panel">
+              <div class="list acc-list">
+                <div class="list-row head"><span>통장 적요</span><span>나온 횟수</span><span>거래처</span><span>분류</span><span>어떻게 정해졌나</span></div>
+                <button class="list-row"><span><b>우아한형제들</b></span><span>12회</span><span>배달의민족</span><span>배달 정산</span><span class="row"><span class="badge safe">직접 확정</span></span></button>
+                <button class="list-row"><span><b>신한카드매출</b></span><span>8회</span><span>신한카드</span><span>카드 정산</span><span class="row"><span class="badge safe">직접 확정</span></span></button>
+                <button class="list-row"><span><b>이마트에브리데이성수</b></span><span>3회</span><span>이마트 성수</span><span>재료비</span><span class="row"><span class="badge ai">자동 분류 68%</span></span></button>
+                <button class="list-row"><span><b>㈜성수농산</b></span><span>5회</span><span>성수농산</span><span>재료비</span><span class="row"><span class="badge ai">자동 분류 88%</span></span></button>
+                <button class="list-row"><span><b>KEPCO</b></span><span>7회</span><span>한국전력</span><span>공과금</span><span class="row"><span class="badge mute">규칙</span></span></button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h2 class="t-section">자동 분류는 이 순서로 합니다</h2>
+              <ol class="timeline mt-3">
+                <li><b>① 규칙</b><small>KEPCO·건강보험공단처럼 뜻이 분명한 적요</small></li>
+                <li><b>② 거래처 사전</b><small>내가 한 번 확정한 적요는 그대로 다시 씁니다</small></li>
+                <li><b>③ AI 분류</b><small>업종·확정 사례·거래 주기를 함께 넘겨 분류와 근거를 받습니다</small></li>
+              </ol>
+              <div class="notice warn mt-4"><i>!</i>
+                <span>③으로 정해진 것 중 <b>신뢰도가 낮은 건은 확정하지 않고</b> ‘확인 필요’로 남깁니다.</span></div>
+            </div>
+          </div>
+
+          <!-- 탭 3 · 자료 가져오기 (P0-01) -->
+          <div class="tabpanel" data-panel="t3">
+            <div class="grid2">
+              <div class="card">
+                <div class="spread">
+                  <div><h2 class="t-section">연결된 계좌 <span class="feat">P0-01</span></h2><p class="sub">금융망에서 거래를 자동으로 읽어 옵니다.</p></div>
+                  <button class="btn sec sm">계좌 더 연결하기</button>
+                </div>
+                <div class="list bare two mt-3">
+                  <div class="list-row"><span><b>국민은행 1234-56-789012</b><small>8월 26일 09:00에 읽었습니다 · 1,204건</small></span><span class="badge safe">정상</span></div>
+                  <div class="list-row"><span><b>신한카드 가맹점 정산</b><small>8월 26일 09:00에 읽었습니다</small></span><span class="badge safe">정상</span></div>
+                  <div class="list-row"><span><b>배달의민족 사장님광장</b><small>8월 20일 이후 못 읽고 있습니다</small></span><span class="badge risk">연결 끊김</span></div>
+                </div>
+                <button class="btn pri wide mt-4" id="syncNow">지금 다시 불러오기</button>
+              </div>
+
+              <div class="card">
+                <h2 class="t-section">엑셀·CSV로 올리기</h2>
+                <p class="sub">자동 연결이 안 되면 파일로 넣어도 똑같이 예보에 들어갑니다.</p>
+                <div class="steps mt-4" style="flex-direction:column;align-items:flex-start;gap:12px">
+                  <span class="step done"><i class="no">1</i>인터넷뱅킹에서 거래내역 내려받기</span>
+                  <span class="step on"><i class="no">2</i>파일 고르고 열 맞추기</span>
+                  <span class="step"><i class="no">3</i>미리 보고 넣기</span>
+                </div>
+                <hr class="sep" />
+                <div class="list bare two">
+                  <div class="list-row"><span>날짜 열</span><span class="pushright"><select><option>거래일자</option></select></span></div>
+                  <div class="list-row"><span>적요 열</span><span class="pushright"><select><option>적요</option></select></span></div>
+                  <div class="list-row"><span>금액 열</span><span class="pushright"><select><option>출금액/입금액</option></select></span></div>
+                </div>
+                <div class="notice ok mt-4"><i>✓</i><span>1,204줄 중 <b>1,198줄</b>을 읽었습니다. 6줄은 날짜를 못 읽어 건너뜁니다.</span></div>
+                <button class="btn sec wide mt-3">미리 보고 넣기</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-05 반복·예정 거래 ═══════════════════ -->
+      <section class="view" id="view-recurring">
+        <div class="page-head">
+          <div>
+            <h1>반복·예정 거래</h1>
+            <p class="sub">예보에 넣을 규칙을 직접 확인합니다. 서비스가 확정하지 않습니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-05</span>
+            <button class="btn pri" id="addPlanned">한 번뿐인 거래 넣기</button>
+          </div>
+        </div>
+
+        <div class="tabs" data-tabs="rc">
+          <button class="on" data-tab="r1">확인할 후보 <em class="count on">2</em></button>
+          <button data-tab="r2">확정된 규칙 <em class="count">7</em></button>
+          <button data-tab="r3">예정 거래 <em class="count">34</em></button>
+        </div>
+
+        <div data-panelset="rc">
+
+          <!-- 탭 1 · 후보 (P0-03 · P0-04 · P0-05) -->
+          <div class="tabpanel on" data-panel="r1">
+            <div class="notice info"><i>i</i>
+              <span>적요·간격·요일이 반복되는 거래를 찾아 <b>다음 예정일과 금액 범위</b>를 계산했습니다. 확인해 주셔야 예보에 들어갑니다. <span class="feat">P0-03 · P0-04 · P0-05</span></span></div>
+
+            <div class="pattern-grid">
+              <div class="card pattern-card">
+                <div class="card-head"><h2 class="t-section">배달의민족</h2><span class="badge caution">확인 필요</span></div>
+                <p class="sub">매주 화요일에 정산금이 들어오고 있습니다.</p>
+                <div class="pattern-data">
+                  <div><small>다음 예상일</small><b>9월 1일</b></div>
+                  <div><small>예상 금액</small><b>+82만~96만</b></div>
+                  <div><small>지금까지 맞은 비율</small><b>92%</b></div>
+                  <div><small>표본</small><b>12회</b></div>
+                </div>
+                <div class="notice info"><i>i</i>
+                  <span>추석 연휴가 겹쳐 <b>9월 5일로 밀려</b> 반영됩니다. <span class="feat">P1-04</span></span></div>
+                <div class="card-actions mt-3">
+                  <button class="btn pri approve-pattern">확인하고 등록</button>
+                  <button class="btn sec">고치기</button>
+                  <button class="btn ghost dismiss-pattern">넘기기</button>
+                </div>
+              </div>
+
+              <div class="card pattern-card">
+                <div class="card-head"><h2 class="t-section">한국전력</h2><span class="badge caution">확인 필요</span></div>
+                <p class="sub">매월 25일 전후로 공과금이 나가고 있습니다.</p>
+                <div class="pattern-data">
+                  <div><small>다음 예상일</small><b>9월 25일</b></div>
+                  <div><small>예상 금액</small><b>−31만~38만</b></div>
+                  <div><small>지금까지 맞은 비율</small><b>85%</b></div>
+                  <div><small>표본</small><b>2회</b></div>
+                </div>
+                <div class="card-actions mt-3">
+                  <button class="btn pri" disabled>확인하고 등록</button>
+                  <span class="btn-why">같은 패턴이 3번은 나와야 등록할 수 있습니다. 지금은 2번 나왔습니다. 다음 청구일에 한 번 더 나오면 켜집니다.</span>
+                  <button class="btn ghost dismiss-pattern">넘기기</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 2 · 확정된 규칙 -->
+          <div class="tabpanel" data-panel="r2">
+            <div class="panel">
+              <div class="list acc-list">
+                <div class="list-row head"><span>거래처</span><span>주기</span><span>다음 예정</span><span>예상 금액</span><span>상태</span></div>
+                <button class="list-row"><span><b>좋은건물 임대</b></span><span>매월 23일</span><span>9월 23일</span><span class="money">−1,500,000원</span><span class="row"><span class="badge safe">확정</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>급여</b></span><span>매월 3일</span><span>9월 3일</span><span class="money">−3,000,000원</span><span class="row"><span class="badge safe">확정</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>신한카드 정산</b></span><span>매주 금요일</span><span>8월 28일</span><span class="money">+120만~135만</span><span class="row"><span class="badge safe">확정</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>소상공인 운영자금 상환</b></span><span>매월 10일</span><span>9월 10일</span><span class="money">−1,680,000원</span><span class="row"><span class="badge accent">대출 연동</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>서울도시가스</b></span><span>매월 21일</span><span>9월 21일</span><span class="money">−8만~11만</span><span class="row"><span class="badge mute">일시중지</span><span class="go">›</span></span></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 3 · 예정 거래 (P0-06 · P1-05) -->
+          <div class="tabpanel" data-panel="r3">
+            <div class="notice info"><i>i</i>
+              <span>규칙에서 자동으로 만든 미래 거래와 직접 넣은 거래입니다. 실제 거래가 들어오면 <b>자동으로 맞춰 지웁니다.</b> <span class="feat">P0-06 · P1-05</span></span></div>
+
+            <div class="panel">
+              <div class="list acc-list">
+                <div class="list-row head"><span>예정일</span><span>구분</span><span>내용</span><span>금액</span><span>실제 거래와 맞춤</span></div>
+                <button class="list-row"><span><b>8월 28일</b></span><span>규칙</span><span>신한카드 정산</span><span class="money">+1,230,000원</span><span class="row"><span class="badge safe">맞춰졌음</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>9월 1일</b></span><span>규칙</span><span>배달 정산 <span class="badge mute">9/5로 밀림</span></span><span class="money">+82만~96만</span><span class="row"><span class="badge mute">기다리는 중</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>9월 3일</b></span><span>규칙</span><span>급여</span><span class="money">−3,000,000원</span><span class="row"><span class="badge mute">기다리는 중</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>9월 10일</b></span><span>대출</span><span>소상공인 운영자금 상환</span><span class="money">−1,680,000원</span><span class="row"><span class="badge mute">기다리는 중</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>9월 10일</b></span><span>직접 넣음</span><span>에스프레소 머신 교체</span><span class="money">−1,500,000원</span><span class="row"><span class="badge accent">직접</span><span class="go">›</span></span></button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="spread">
+                <div><h2 class="t-section">놓친 예정 거래 3건</h2>
+                  <p class="sub">예정일이 지났는데 맞는 실제 거래를 못 찾았습니다. 직접 맞추거나 지워 주세요.</p></div>
+                <span class="badge caution">확인 필요</span>
+              </div>
+              <div class="list bare three mt-3">
+                <div class="list-row"><span><b>8월 21일 · 서울도시가스 −87,400원</b><small>8월 21일 −87,400원 거래가 있습니다</small></span><button class="btn sec sm">이 거래로 맞추기</button><button class="btn ghost sm">지우기</button></div>
+                <div class="list-row"><span><b>8월 18일 · 쿠팡이츠 +290,000원</b><small>비슷한 금액의 거래를 못 찾았습니다</small></span><button class="btn sec sm">직접 찾기</button><button class="btn ghost sm">지우기</button></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-06 시뮬레이션 ═══════════════════ -->
+      <section class="view" id="view-scenario">
+        <div class="page-head">
+          <div>
+            <h1>시뮬레이션</h1>
+            <p class="sub">조건을 바꿔 보고 자금이 어떻게 달라지는지 비교합니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-06 · P0-09 · P0-13</span>
+            <button class="btn sec" id="savedScenarios">저장한 것 3개</button>
+          </div>
+        </div>
+
+        <div class="notice info"><i>i</i>
+          <span>여기서 바꾼 값은 <b>비교용입니다.</b> 실제 거래나 원래 예보는 바뀌지 않습니다. <span class="feat">P0-13 원본 보존</span></span></div>
+
+        <div class="scenario-layout">
+          <div class="card builder">
+            <div class="card-head"><h2 class="t-section">조건</h2><span class="feat">P0-13</span></div>
+            <label class="field">이름<input value="추석 정산 지연 + 머신 교체" /></label>
+
+            <div class="condition">
+              <div>정산이 늦어지면<button class="rm" aria-label="정산 지연 조건 지우기">✕</button></div>
+              <label>늦어지는 날 <input id="delayDays" type="range" min="0" max="7" value="2" /><b id="delayValue">2일</b></label>
+            </div>
+
+            <div class="condition">
+              <div>들어오는 돈이 줄면<button class="rm" aria-label="입금 감소 조건 지우기">✕</button></div>
+              <label>줄어드는 비율 <input id="decreaseRate" type="range" min="0" max="50" value="10" /><b id="decreaseValue">10%</b></label>
+            </div>
+
+            <div class="condition">
+              <div>큰 지출이 생기면<button class="rm" aria-label="추가 지출 조건 지우기">✕</button></div>
+              <div class="row mt-3">
+                <label class="field grow">날짜<input type="date" value="2026-09-10" /></label>
+                <label class="field grow">금액<input id="extraSpend" value="1,500,000" /></label>
+              </div>
+            </div>
+
+            <details class="mt-4">
+              <summary class="disclose">조건 더하기</summary>
+              <div class="stack-sm mt-3">
+                <button class="btn sec wide start">지출일 옮기기 <span class="sub">임차료를 며칠 뒤로</span></button>
+                <button class="btn sec wide start">돈이 더 들어오면 <span class="sub">지원금·정산 선지급</span></button>
+                <button class="btn sec wide start">대출을 실행하면 <span class="sub">금액·금리·상환일 반영</span></button>
+              </div>
+            </details>
+
+            <button class="btn pri wide mt-4" id="calculateScenario">다시 계산하기</button>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2 class="t-section">바꾸기 전과 후</h2>
+                <p class="sub">8월 26일 09:00 자료 기준 · 원본 예보는 그대로 둡니다</p>
+              </div>
+              <span class="badge risk">위험이 커집니다</span>
+            </div>
+
+            <div class="comparison">
+              <div><small>가장 낮아지는 잔고</small><span>1,487,600원</span><b id="modifiedBalance">−662,400원</b></div>
+              <div><small>처음 모자라는 날</small><span>9월 3일</span><b id="modifiedDate">9월 1일</b></div>
+              <div><small>이어지는 기간</small><span>2일</span><b id="modifiedDuration">5일</b></div>
+              <div><small>안전잔고 아래</small><span>3일</span><b id="modifiedSafety">7일</b></div>
+            </div>
+
+            <div class="mini-chart">
+              <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                <path class="original-line" d="M0 50 C180 34 300 86 410 188 S650 78 800 60" />
+                <path class="modified-line" id="modifiedLine" d="M0 64 C180 60 300 128 410 220 S650 112 800 82" />
+              </svg>
+            </div>
+            <div class="legend end">
+              <span><i class="line"></i>원래 예보</span>
+              <span><i class="line modified"></i>바꾼 뒤</span>
+            </div>
+
+            <hr class="sep" />
+            <h3 class="t-card">이 조건이면 이렇게 해 볼 수 있습니다</h3>
+            <div class="stack-sm mt-3">
+              <button class="btn sec wide start" data-goto="finance"><span><b>지원금 2건 확인</b><span class="sub">성동구 경영안정자금 · 9월 12일까지</span></span></button>
+              <button class="btn sec wide start" data-goto="multi"><span><b>연남점에서 812,400원 옮겨 오기</b><span class="sub">옮기면 안전잔고를 지킵니다</span></span></button>
+            </div>
+
+            <div class="card-actions end mt-4">
+              <button class="btn sec">되돌리기</button>
+              <button class="btn pri">이 조건 저장하기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-07 증빙과 신고자료 ═══════════════════ -->
+      <section class="view" id="view-evidence">
+        <div class="page-head">
+          <div>
+            <h1>증빙과 신고자료</h1>
+            <p class="sub">영수증을 거래에 붙이고, 세무사에게 보낼 자료를 만듭니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-07</span>
+            <button class="btn pri" id="uploadEvidence">영수증 올리기</button>
+          </div>
+        </div>
+
+        <div class="tabs" data-tabs="ev">
+          <button class="on" data-tab="e1">증빙 보관함 <em class="count on">24</em></button>
+          <button data-tab="e2">거래에 붙이기 <em class="count">3</em></button>
+          <button data-tab="e5">품목 가계부</button>
+          <button data-tab="e3">정산 맞춰 보기 <em class="count">1</em></button>
+          <button data-tab="e4">신고자료 만들기</button>
+        </div>
+
+        <div data-panelset="ev">
+
+          <!-- 탭 1 · 증빙 보관함 (P0-10 · P1-02) -->
+          <div class="tabpanel on" data-panel="e1">
+            <div class="split">
+              <div class="list thumb-list">
+                <div class="list-filter">
+                  <label class="field">영수증 찾기<input placeholder="가게 이름이나 금액" /></label>
+                  <label class="field">보여줄 것<select><option>거래에 아직 안 붙인 것</option><option>전부</option><option>읽는 중</option></select></label>
+                </div>
+                <button class="list-row" aria-selected="true">
+                  <span class="thumb">영수증</span>
+                  <span><b>서울우유 협동조합</b><small>8월 29일 · 42,350원</small></span>
+                  <span class="badge caution">확인 필요</span>
+                </button>
+                <button class="list-row">
+                  <span class="thumb">계산서</span>
+                  <span><b>대한식자재</b><small>8월 27일 · 315,000원</small></span>
+                  <span class="badge safe">붙였음</span>
+                </button>
+                <button class="list-row">
+                  <span class="thumb">영수증</span>
+                  <span><b>다이소 성수점</b><small>8월 24일 · 18,900원</small></span>
+                  <span class="badge mute">읽는 중</span>
+                </button>
+                <button class="list-row">
+                  <span class="thumb">읽기<br />실패</span>
+                  <span><b>사진 20260823_2.jpg</b><small>8월 23일 · 금액을 못 읽었습니다</small></span>
+                  <span class="badge risk">직접 입력</span>
+                </button>
+              </div>
+
+              <div class="card">
+                <div class="card-head">
+                  <div>
+                    <h2 class="t-section">사진에서 읽어낸 내용 <span class="feat">P1-02</span></h2>
+                    <p class="sub">틀린 곳이 있으면 고쳐 주세요. 고친 내용이 그대로 저장됩니다.</p>
+                  </div>
+                  <span class="badge caution">읽기 정확도 84%</span>
+                </div>
+
+                <div class="doc-preview">
+                  <div>서울우유<br />공급자 123-45-67890<hr />우유 1L × 10<br />생크림 × 2<br /><b>합계 42,350원</b></div>
+                </div>
+
+                <div class="grid2">
+                  <label class="field">가게 이름<input value="서울우유 협동조합" /></label>
+                  <label class="field">산 날짜<input type="date" value="2026-08-29" /></label>
+                  <label class="field">전체 금액<input value="42,350" /></label>
+                  <label class="field">부가세<input value="3,850" /><span class="hint">면세 품목이면 0으로 두세요</span></label>
+                </div>
+
+                <h3 class="t-card mt-6">읽어낸 품목 <span class="feat">P1-03</span></h3>
+                <div class="list bare item-list mt-3">
+                  <div class="list-row head"><span>품목</span><span>수량</span><span>금액</span><span>분류</span></div>
+                  <div class="list-row"><span>우유 1L</span><span>10개</span><span class="money">31,500원</span><span class="badge mute">재료</span></div>
+                  <div class="list-row"><span>생크림</span><span>2개</span><span class="money">10,850원</span><span class="badge mute">재료</span></div>
+                </div>
+
+                <div class="notice ok mt-4"><i>✓</i>
+                  <div class="grow">
+                    <div><b>이 거래가 맞아 보입니다</b> — 서울우유 · 8월 29일 · 42,350원 나감</div>
+                    <div class="mt-1">금액과 날짜가 똑같습니다.</div>
+                  </div>
+                  <button class="btn pri sm" id="linkEvidence">이 거래에 붙이기</button>
+                </div>
+
+                <div class="row mt-3">
+                  <button class="btn ghost">다른 거래 찾아보기</button>
+                  <button class="btn ghost pushright">붙일 거래가 없음으로 표시</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 2 · 거래에 붙이기 (P0-10) -->
+          <div class="tabpanel" data-panel="e2">
+            <div class="notice info"><i>i</i>
+              <span>금액과 날짜가 똑같은 것만 골라 놓았습니다. <b>맞으면 한 번에 붙이고</b>, 애매한 것만 하나씩 보세요. <span class="feat">P0-10</span></span></div>
+            <div class="list wide mt-4">
+              <div class="list-row head"><span>영수증</span><span>붙일 거래</span><span>맞는 정도</span><span></span></div>
+              <div class="list-row">
+                <span><b>서울우유 협동조합</b><small>8월 29일 · 42,350원</small></span>
+                <span><b>서울우유</b><small>8월 29일 · 42,350원 나감</small></span>
+                <span class="badge safe">거의 확실</span>
+                <button class="btn sec sm">붙이기</button>
+              </div>
+              <div class="list-row">
+                <span><b>성수농산</b><small>8월 26일 · 128,000원</small></span>
+                <span><b>성수농산㈜</b><small>8월 27일 · 128,000원 나감</small></span>
+                <span class="badge caution">날짜 하루 차이</span>
+                <button class="btn sec sm">확인하고 붙이기</button>
+              </div>
+              <div class="list-row">
+                <span><b>사진 20260823_2.jpg</b><small>금액을 못 읽었습니다</small></span>
+                <span class="sub">붙일 거래를 찾지 못했습니다</span>
+                <span class="badge risk">직접 입력 필요</span>
+                <button class="btn sec sm">금액 넣기</button>
+              </div>
+            </div>
+            <div class="row mt-4">
+              <span class="sub">거의 확실한 것 1건을 한 번에 붙일 수 있습니다.</span>
+              <button class="btn pri pushright">거의 확실한 1건 붙이기</button>
+            </div>
+          </div>
+
+          <!-- 탭 3 · 품목 가계부 (P1-03) -->
+          <div class="tabpanel" data-panel="e5">
+            <div class="notice info"><i>i</i>
+              <span>영수증에서 읽은 품목을 모아 <b>무엇을 얼마에 얼마나 샀는지</b> 보여 줍니다. 단가가 오르면 재료비 예보에도 반영됩니다. <span class="feat">P1-03 · P1-06</span></span></div>
+
+            <div class="card tight filter-bar">
+              <label class="field">기간<select><option>2026년 8월</option><option>최근 3개월</option></select></label>
+              <label class="field">묶는 기준<select><option>품목별</option><option>분류별</option></select></label>
+            </div>
+
+            <div class="panel">
+              <div class="list item-list">
+                <div class="list-row head"><span>품목</span><span>산 횟수</span><span>8월 합계</span><span>단가 변화</span></div>
+                <button class="list-row"><span><b>우유 1L</b><small>재료 · 서울우유</small></span><span>9회</span><span class="money">1,284,000원</span><span class="badge warn">+8.0%</span></button>
+                <button class="list-row"><span><b>돼지 앞다리살</b><small>재료 · 성수농산</small></span><span>5회</span><span class="money">862,000원</span><span class="badge mute">+1.2%</span></button>
+                <button class="list-row"><span><b>양파</b><small>재료 · 성수농산</small></span><span>6회</span><span class="money">318,400원</span><span class="badge safe">−4.5%</span></button>
+                <button class="list-row"><span><b>종이컵 6oz</b><small>소모품 · 다이소</small></span><span>3회</span><span class="money">56,700원</span><span class="badge mute">0.0%</span></button>
+                <button class="list-row"><span><b>생크림</b><small>재료 · 서울우유</small></span><span>4회</span><span class="money">43,400원</span><span class="badge warn">+8.0%</span></button>
+              </div>
+            </div>
+
+            <div class="grid2">
+              <div class="card">
+                <h2 class="t-section">우유 1L 단가 추이</h2>
+                <div class="bar-list mt-4">
+                  <div><div class="r"><span>6월</span><b>3,150원</b></div><span class="t"><i style="width:87%"></i></span></div>
+                  <div><div class="r"><span>7월</span><b>3,240원</b></div><span class="t"><i style="width:90%"></i></span></div>
+                  <div><div class="r"><span>8월</span><b>3,600원</b></div><span class="t"><i style="width:100%"></i></span></div>
+                </div>
+                <div class="bar-scale"><span>0원</span><span>가장 높은 달 3,600원</span></div>
+              </div>
+              <div class="card mark-caution">
+                <span class="badge caution">눈에 띄는 변화</span>
+                <h2 class="t-section mt-3">우유가 두 달 새 14% 올랐습니다</h2>
+                <p class="sub">재료비에서 우유가 차지하는 비중이 40%라, 월 재료비가 약 3.2%(96,000원) 오를 것으로 봅니다.</p>
+                <button class="btn ghost mt-3" data-goto="forecast">예보에 어떻게 반영됐는지 보기 →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 4 · 정산 맞춰 보기 (P0-11) -->
+          <div class="tabpanel" data-panel="e3">
+            <p class="sub">플랫폼이 보내 준 정산 내역과 통장에 실제로 들어온 돈을 나란히 놓고 봅니다. <span class="feat">P0-11</span></p>
+
+            <div class="grid3">
+              <div class="card tight"><span class="badge safe">맞음</span><div class="money md mt-2">6건</div><div class="sub">들어온 돈이 정산서와 같습니다</div></div>
+              <div class="card tight mark-caution"><span class="badge warn">차이남</span><div class="money md mt-2">1건</div><div class="sub">합계 <b class="money is-warn">−34,200원</b> 덜 들어왔습니다</div></div>
+              <div class="card tight"><span class="badge mute">입금 전</span><div class="money md mt-2">2건</div><div class="sub">아직 통장에 안 들어왔습니다</div></div>
+            </div>
+
+            <div class="split">
+              <div class="list two">
+                <div class="list-row head"><span>어디서 · 언제</span><span>상태</span></div>
+                <button class="list-row" aria-selected="true">
+                  <span><b>배달의민족</b><small>8월 18일 ~ 8월 24일 · −34,200원</small></span>
+                  <span class="badge warn">차이남</span>
+                </button>
+                <button class="list-row">
+                  <span><b>신한카드</b><small>8월 19일 ~ 8월 25일 · 0원</small></span>
+                  <span class="badge safe">맞음</span>
+                </button>
+                <button class="list-row">
+                  <span><b>배달의민족</b><small>8월 25일 ~ 8월 31일</small></span>
+                  <span class="badge mute">입금 전</span>
+                </button>
+              </div>
+
+              <div class="card">
+                <div class="card-head">
+                  <div>
+                    <h2 class="t-section">배달의민족 · 8월 18일 ~ 8월 24일</h2>
+                    <p class="sub">계산이 어떻게 되는지 그대로 보여 드립니다.</p>
+                  </div>
+                  <span class="badge warn">34,200원 덜 들어옴</span>
+                </div>
+
+                <div class="list bare two">
+                  <div class="list-row"><span>판 금액</span><span class="money pushright">1,000,000원</span></div>
+                  <div class="list-row"><span>취소·환불 뺀 것</span><span class="money pushright">−50,000원</span></div>
+                  <div class="list-row"><span>수수료 뺀 것</span><span class="money pushright">−100,000원</span></div>
+                  <div class="list-row total"><span>정산서대로면 들어올 돈</span><span class="money pushright">850,000원</span></div>
+                  <div class="list-row"><span>통장에 들어온 돈<small>8월 25일 · 배민정산</small></span><span class="money pushright">815,800원</span></div>
+                  <div class="list-row diff"><span>차이</span><span class="money is-warn pushright">−34,200원</span></div>
+                </div>
+
+                <div class="notice warn mt-4"><i>?</i>
+                  <span><b>이런 경우일 수 있습니다.</b> ① 광고비나 쿠폰 부담금이 따로 빠졌거나 ② 지난주 취소분이 이번에 함께 정산됐거나 ③ 정산서에 없는 수수료가 붙었을 수 있습니다. 서비스가 원인을 확정하지는 않습니다.</span></div>
+
+                <div class="row mt-3">
+                  <button class="btn pri sm">정산서 사진 올려서 맞춰 보기</button>
+                  <button class="btn sec sm">들어온 거래 바꾸기</button>
+                  <button class="btn ghost sm pushright">차이 확인함으로 표시</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 5 · 신고자료 만들기 (P0-12) -->
+          <div class="tabpanel" data-panel="e4">
+            <div class="notice warn"><i>!</i>
+              <div class="grow">
+                <b>먼저 보실 것이 있습니다.</b>
+                고른 기간에 <b>영수증이 없는 거래가 96건(8,210,000원)</b> 있습니다. 지금 만들면 이 거래는 ‘증빙 없음’으로 들어갑니다.
+              </div>
+              <button class="btn sec sm">96건 먼저 채우기</button>
+            </div>
+
+            <div class="card mt-4">
+              <div class="card-head"><h2 class="t-section">어떤 자료를 만들까요</h2><span class="feat">P0-12</span></div>
+              <div class="grid2">
+                <label class="field">언제부터<input type="date" value="2026-01-01" /></label>
+                <label class="field">언제까지<input type="date" value="2026-08-31" /><span class="hint">부가세 신고 기간에 맞춰 골라도 됩니다</span></label>
+              </div>
+              <hr class="sep" />
+              <div class="stack-sm">
+                <label class="check"><input type="checkbox" checked /> 한 해 매출 요약</label>
+                <label class="check"><input type="checkbox" checked /> 사업용 계좌 거래내역</label>
+                <label class="check"><input type="checkbox" checked /> 필요경비 후보 명세서 <span class="badge mute">확정 아님</span></label>
+                <label class="check"><input type="checkbox" checked /> 플랫폼별 정산 맞춰 본 표</label>
+                <label class="check"><input type="checkbox" checked /> 품목별 지출 집계 <span class="feat">P1-03</span></label>
+                <label class="check"><input type="checkbox" checked /> 영수증 없는 거래 목록</label>
+                <label class="check"><input type="checkbox" /> 영수증 사진 원본 <span class="sub">파일이 커집니다(약 18MB)</span></label>
+              </div>
+              <div class="notice info mt-4"><i>i</i>
+                <span>세금을 대신 계산해 드리는 것이 아닙니다. <b>세무사가 보고 판단할 자료</b>를 모아 드립니다.</span></div>
+              <button class="btn pri wide mt-4" id="makeExport">자료 만들기 (XLSX·ZIP)</button>
+            </div>
+
+            <div class="panel">
+              <h2 class="t-section">지난번에 만든 자료</h2>
+              <div class="list bare three mt-3">
+                <div class="list-row"><span><b>신고준비자료_온기식당_2026상반기.zip</b><small>7월 25일 · 12.1MB · 거래 812건 · 영수증 붙은 비율 68%</small></span><button class="btn sec sm">내려받기</button><span class="badge mute">9월 2일까지</span></div>
+                <div class="list-row"><span><b>신고준비자료_온기식당_2025.zip</b><small>2026년 1월 20일 · 21.4MB</small></span><span class="sub">기한 지남</span><button class="btn ghost sm">다시 만들기</button></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-08 캘린더 ═══════════════════ -->
+      <section class="view" id="view-calendar">
+        <div class="page-head">
+          <div>
+            <h1>캘린더</h1>
+            <p class="sub">정산·지출·세금 일정을 한 달 단위로 봅니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-08 · P1-18</span>
+            <button class="btn sec" aria-label="이전 달">‹</button>
+            <b>2026년 9월</b>
+            <button class="btn sec" aria-label="다음 달">›</button>
+          </div>
+        </div>
+
+        <div class="calendar-layout">
+          <div class="card calendar-card">
+            <div class="calendar-legend">
+              <span><i class="certainty confirmed"></i>확정</span>
+              <span><i class="certainty range"></i>범위</span>
+              <span><i class="certainty predicted"></i>예측</span>
+              <span class="badge risk">× 부족</span>
+              <span class="pushright">셀에는 유형만 적습니다. 금액은 날짜를 누르면 오른쪽에 나옵니다.</span>
+            </div>
+            <div class="calendar" id="calendarGrid"></div>
+          </div>
+
+          <div class="card day-detail">
+            <div class="card-head">
+              <div>
+                <p class="sub">고른 날짜</p>
+                <h2 class="t-section" id="selectedDate">9월 3일 목요일</h2>
+              </div>
+              <span class="badge risk">× 부족</span>
+            </div>
+            <div class="day-balance">
+              <span>그날 예상 잔고</span>
+              <b class="money md is-risk">1,487,600원</b>
+              <span class="sub">안전잔고 2,300,000원보다 812,400원 아래</span>
+            </div>
+            <div class="list bare icon">
+              <div class="list-row">
+                <i class="certainty confirmed"></i>
+                <span><b>급여</b><small>확정 · 반복 거래</small></span>
+                <em class="money">−3,000,000원</em>
+              </div>
+              <div class="list-row">
+                <i class="certainty predicted"></i>
+                <span><b>배달 정산</b><small>추석 연휴로 9/1 → 9/5 밀림 <span class="feat">P1-04</span></small></span>
+                <em class="money">+820,000~960,000원</em>
+              </div>
+            </div>
+
+            <h3 class="t-card mt-6">이번 달 세금 일정</h3>
+            <div class="list bare two mt-3">
+              <div class="list-row"><span><b>원천세 신고·납부</b><small>9월 10일</small></span><span class="money pushright">−184,000원</span></div>
+              <div class="list-row"><span><b>4대보험 납부</b><small>9월 10일</small></span><span class="money pushright">−312,000원</span></div>
+              <div class="list-row"><span><b>부가세 예정고지</b><small>10월 25일 <span class="feat">P1-11</span></small></span><span class="money pushright">−56만~78만</span></div>
+            </div>
+
+            <button class="btn sec wide mt-4" data-goto="forecast">자금 흐름에서 보기</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-09 브리핑 ═══════════════════ -->
+      <section class="view" id="view-reports">
+        <div class="page-head">
+          <div>
+            <h1>브리핑</h1>
+            <p class="sub">계산된 지표와 근거를 바탕으로 흐름을 요약합니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">SC-09 · P1-17 · P1-19</span>
+            <div class="chips" role="group" aria-label="기간">
+              <button class="on">주간</button>
+              <button>월간</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card report-hero">
+          <div class="card-head"><span class="badge ai">AI 주간 브리핑 <span class="feat">P1-17</span></span><span class="cap">8월 26일 생성</span></div>
+          <h2 class="t-section">정산은 줄고 급여 출금을 앞두고 있어요</h2>
+          <p class="sub">이번 주 배달 정산은 평소보다 12% 적었습니다. 9월 3일 급여가 나간 뒤 잔고가 안전잔고 아래로 내려갈 가능성이 있으므로, 9월 5일 정산이 들어오기 전 큰 지출은 비교해 보는 것이 좋겠습니다.</p>
+          <div class="notice info mt-3"><i>i</i>
+            <span>브리핑 문장은 <b>계산 엔진이 낸 숫자만</b> 씁니다. 새로운 수치를 지어내지 않습니다.</span></div>
+          <div class="source-links">
+            <button class="btn sec sm" data-goto="transactions">배달 정산 −12% →</button>
+            <button class="btn sec sm" data-goto="forecast">앞으로 30일 최저 잔고 →</button>
+            <button class="btn sec sm" data-goto="calendar">9월 3일 급여 −300만 →</button>
+          </div>
+        </div>
+
+        <dl class="stats">
+            <div><dt>8월 들어온 돈</dt><dd class="money">14,200,000원</dd><small class="delta">▲ 지난달보다 3.2%</small></div>
+            <div><dt>8월 나간 돈</dt><dd class="money">9,800,000원</dd><small class="delta bad">▲ 지난달보다 8.0%</small></div>
+            <div><dt>남은 돈</dt><dd class="money">4,400,000원</dd><small>마감 집계</small></div>
+            <div><dt>예보 적중률</dt><dd>87%</dd><small class="delta">▲ 5%p 좋아짐</small></div>
+          </dl>
+
+        <div class="panel-grid">
+          <div class="panel">
+            <div class="panel-head"><h2>어디에 썼나</h2><span class="feat">P1-19</span></div>
+            <div class="bar-list mt-4">
+              <div><div class="r"><span>재료비</span><b>3,200,000원</b></div><span class="t"><i style="width:100%"></i></span></div>
+              <div><div class="r"><span>급여</span><b>3,000,000원</b></div><span class="t"><i style="width:93.8%"></i></span></div>
+              <div><div class="r"><span>기타</span><b>2,100,000원</b></div><span class="t"><i style="width:65.6%"></i></span></div>
+              <div><div class="r"><span>임차료</span><b>1,500,000원</b></div><span class="t"><i style="width:46.9%"></i></span></div>
+            </div>
+            <div class="bar-scale"><span>0원</span><span>가장 큰 항목 3,200,000원</span></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>수익원별로 보면</h2><span class="feat">P1-19</span></div>
+            <div class="list bare acc-list mt-3">
+              <div class="list-row head"><span>수익원</span><span>비중</span><span>8월</span><span>전월 대비</span><span>원인</span></div>
+              <div class="list-row"><span><b>카드 정산</b></span><span>52%</span><span class="money">7,384,000원</span><span class="delta">▲ 5.1%</span><span class="sub">주말 매출 증가</span></div>
+              <div class="list-row"><span><b>배달 정산</b></span><span>34%</span><span class="money">4,828,000원</span><span class="delta bad">▼ 12.0%</span><span class="sub">쿠폰 부담금 증가</span></div>
+              <div class="list-row"><span><b>현금 매출</b></span><span>14%</span><span class="money">1,988,000원</span><span class="delta">▲ 2.0%</span><span class="sub">—</span></div>
+            </div>
+            <div class="card tight mark-caution mt-4">
+              <span class="badge caution">눈에 띄는 변화</span>
+              <p class="sub mt-2"><b>재료비가 지난달보다 8% 늘었습니다.</b> 우유 단가 상승이 주된 이유입니다. 다음 달 재료비는 950만~1,080만원 범위로 예상됩니다.</p>
+              <button class="btn ghost mt-2" data-goto="evidence">품목별 근거 보기 →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SC-10 대출과 지원제도 ═══════════════════ -->
+      <section class="view" id="view-finance">
+        <div class="page-head">
+          <div>
+            <h1>대출과 지원제도</h1>
+            <p class="sub">지금 빌린 돈과 받을 수 있는 돈을 한곳에서 봅니다.</p>
+          </div>
+          <span class="feat">SC-10</span>
+        </div>
+
+        <div class="notice warn"><i>!</i>
+          <span>여기서 보여 드리는 것은 <b>참고용</b>입니다. 실제 대출 실행과 지원금 신청은 해당 기관에서 직접 하셔야 합니다.</span></div>
+
+        <div class="tabs" data-tabs="fn">
+          <button class="on" data-tab="n1">내 대출 <em class="count on">2</em></button>
+          <button data-tab="n2">신용등급</button>
+          <button data-tab="n3">지원제도 <em class="count">2</em></button>
+          <button data-tab="n4">서류와 문서</button>
+        </div>
+
+        <div data-panelset="fn">
+
+          <!-- 탭 1 · 대출 현황 (P1-13) -->
+          <div class="tabpanel on" data-panel="n1">
+            <dl class="stats">
+            <div><dt>남은 원금</dt><dd class="money">21,000,000원</dd><small>일반 대출 1건</small></div>
+            <div><dt>마이너스통장 사용</dt><dd class="money">1,500,000원</dd><small>한도 1,000만 중</small></div>
+            <div><dt>이번 달 나갈 상환금</dt><dd class="money">1,680,000원</dd><small>9월 10일</small></div>
+            <div class="short"><dt>공백일과 겹침</dt><dd>9월 10일</dd><small>부족 구간 직후</small></div>
+          </dl>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">신한은행 소상공인 운영자금 <span class="feat">P1-13</span></h2>
+                  <p class="sub">일반 대출 · 원리금균등상환 · 만기 2029년 6월 12일</p></div>
+                <span class="badge accent">상환 중</span>
+              </div>
+              <div class="grid4 mt-4">
+                <div><div class="sub">원금</div><b class="money md">30,000,000원</b></div>
+                <div><div class="sub">남은 잔액</div><b class="money md">21,000,000원</b></div>
+                <div><div class="sub">금리</div><b class="money md">연 5.2%</b></div>
+                <div><div class="sub">매월 상환</div><b class="money md">1,680,000원</b></div>
+              </div>
+              <div class="bar mt-4"><i style="width:30%"></i></div>
+              <p class="sub mt-2">30% 갚았습니다 · 다음 상환 <b>9월 10일</b> · 출금 계좌 국민은행 1234-56-789012</p>
+              <div class="notice info mt-4"><i>i</i>
+                <span>상환 일정은 <b>예정 거래로 자동 등록</b>되어 잔고 예보에 들어가 있습니다.</span></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">SSAFY은행 마이너스 통장</h2>
+                  <p class="sub">한도 대출 · 이자 납입일 매월 25일 · 만기 2027년 7월 16일</p></div>
+                <span class="badge safe">정상</span>
+              </div>
+              <div class="grid4 mt-4">
+                <div><div class="sub">한도</div><b class="money md">10,000,000원</b></div>
+                <div><div class="sub">쓴 금액</div><b class="money md">1,500,000원</b></div>
+                <div><div class="sub">더 쓸 수 있는 금액</div><b class="money md">8,500,000원</b></div>
+                <div><div class="sub">쌓인 이자</div><b class="money md">36,960원</b></div>
+              </div>
+              <div class="bar mt-4"><i style="width:15%"></i></div>
+              <p class="sub mt-2">한도의 15%를 쓰고 있습니다 · 다음 이자 출금 <b>9월 25일</b></p>
+              <div class="row mt-4">
+                <button class="btn sec sm" data-goto="scenario">이 한도를 쓰면 어떻게 되는지 보기</button>
+                <button class="btn ghost sm pushright">금융망에서 다시 불러오기</button>
+              </div>
+            </div>
+
+            <button class="btn sec wide">대출 직접 넣기</button>
+          </div>
+
+          <!-- 탭 2 · 신용등급 (P1-14) -->
+          <div class="tabpanel" data-panel="n2">
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">지금 신용등급 <span class="feat">P1-14</span></h2>
+                  <p class="sub">금융망 자산 기반(수시입출금 + 예·적금) · 8월 31일 기준</p></div>
+                <span class="badge caution">신뢰도 낮음</span>
+              </div>
+
+              <div class="grade-scale mt-4">
+                <div><b>A</b>1억 이상</div>
+                <div class="on"><b>B</b>8천만 이상</div>
+                <div class="next"><b>C</b>5천만 이상</div>
+                <div><b>D</b>3천만 이상</div>
+                <div><b>E</b>3천만 미만</div>
+              </div>
+
+              <div class="grid3 mt-4">
+                <div><div class="sub">수시입출금</div><b class="money md">34,000,000원</b></div>
+                <div><div class="sub">예·적금</div><b class="money md">55,000,000원</b></div>
+                <div><div class="sub">합계</div><b class="money md">89,000,000원</b></div>
+              </div>
+
+              <hr class="sep" />
+              <h3 class="t-card">이대로 가면</h3>
+              <div class="list bare two mt-3">
+                <div class="list-row"><span>9월</span><span class="pushright row"><span class="money">86,500,000원</span><span class="badge safe">B 유지</span></span></div>
+                <div class="list-row"><span>10월</span><span class="pushright row"><span class="money">78,200,000원</span><span class="badge warn">C로 내려감</span></span></div>
+              </div>
+              <div class="notice warn mt-4"><i>!</i>
+                <span><b>10월에 등급이 내려갈 수 있습니다.</b> 지금 조건으로 받을 수 있는 상품은 9월 안에 알아보시는 편이 낫습니다. 예측 등급은 추정치이며 실제 심사 결과와 다를 수 있습니다.</span></div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">지금 등급으로 받을 수 있는 상품</h2><p class="sub">1,000만원 기준으로 걸렀습니다</p></div>
+                <span class="feat">P1-14</span>
+              </div>
+              <div class="list bare acc-list mt-3">
+                <div class="list-row head"><span>상품</span><span>금리</span><span>한도</span><span>기간</span><span>지금 신청 가능</span></div>
+                <button class="list-row"><span><b>OO은행 소상공인 우대 신용대출</b><small>신용대출 · 원리금균등상환</small></span><span>4.5%</span><span class="money">2,000만</span><span>90일</span><span class="row"><span class="badge safe">가능 · B등급 이상</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>XX저축은행 사업자 일반 신용대출</b><small>신용대출 · 원리금균등상환</small></span><span>6.9%</span><span class="money">1,500만</span><span>180일</span><span class="row"><span class="badge safe">가능 · C등급 이상</span><span class="go">›</span></span></button>
+                <button class="list-row"><span><b>△△은행 우수기업 대출</b><small>신용대출</small></span><span>3.8%</span><span class="money">3,000만</span><span>365일</span><span class="row"><span class="badge mute">A등급부터</span><span class="go">›</span></span></button>
+              </div>
+              <div class="notice info mt-4"><i>i</i>
+                <span>지금 가장 유리한 것은 <b>OO은행 소상공인 우대 신용대출(4.5%)</b>입니다. 지금 흐름대로면 10월 중 등급 하락으로 신청이 어려워질 수 있어 <b>9월 안 실행</b>을 권합니다.</span></div>
+              <button class="btn sec wide mt-3" data-goto="scenario">이 대출을 실행하면 잔고가 어떻게 되는지 보기</button>
+            </div>
+          </div>
+
+          <!-- 탭 3 · 지원제도 (P1-15) -->
+          <div class="tabpanel" data-panel="n3">
+            <div class="card tight filter-bar">
+              <label class="field search">찾고 싶은 것을 그대로 적어 보세요<input value="성수동 식당 사장이 지금 받을 수 있는 임대료 지원" /></label>
+              <label class="field">지역<select><option>서울 성동구</option><option>전국</option></select></label>
+              <label class="field">종류<select><option>전체</option><option>보조금</option><option>융자</option><option>바우처</option></select></label>
+              <button class="btn pri">찾기</button>
+            </div>
+
+            <div class="card program-card">
+              <div class="spread">
+                <div>
+                  <h2 class="t-section">2026 성동구 소상공인 경영안정자금 <span class="feat">P1-15</span></h2>
+                  <div class="meta mt-1">
+                    <span>성동구청</span><span>기업마당에서 수집 · 8월 25일</span>
+                    <span>신청 9월 1일 ~ <b>9월 12일</b></span><span>집행까지 약 30일</span>
+                  </div>
+                </div>
+                <span class="badge safe">조건 맞음 · 91%</span>
+              </div>
+              <div class="grid3 mt-3">
+                <div><div class="sub">종류</div><b>융자</b></div>
+                <div><div class="sub">한도</div><b class="money">30,000,000원</b></div>
+                <div><div class="sub">금리</div><b>연 2.0%</b></div>
+              </div>
+              <div class="notice ok mt-3"><i>✓</i>
+                <span><b>9월 3일 부족 구간 전에 받을 수 있습니다.</b> 지금 신청하면 집행 예상일이 9월 말이라 이번 공백에는 늦지만, 10월 흐름에는 도움이 됩니다.</span></div>
+              <div class="list bare two mt-3">
+                <div class="list-row"><span>지역</span><span class="pushright">서울 성동구 <span class="badge safe">맞음</span></span></div>
+                <div class="list-row"><span>업종</span><span class="pushright">요식업 포함 전 업종 <span class="badge safe">맞음</span></span></div>
+                <div class="list-row"><span>연 매출</span><span class="pushright">3억 이하 · 내 값 1.7억 <span class="badge safe">맞음</span></span></div>
+                <div class="list-row"><span>업력</span><span class="pushright">1년 이상 · 내 값 7년 <span class="badge safe">맞음</span></span></div>
+                <div class="list-row"><span>공동사업자 신청 가능 여부</span><span class="pushright"><span class="badge caution">공고에 없음 · 기관 확인 필요</span></span></div>
+              </div>
+              <div class="row mt-4">
+                <button class="btn pri sm">필요 서류 준비하기</button>
+                <button class="btn sec sm">공고 원문 열기</button>
+                <button class="btn ghost sm pushright">관심 없음</button>
+              </div>
+            </div>
+
+            <div class="card program-card">
+              <div class="spread">
+                <div>
+                  <h2 class="t-section">2026 서울시 소상공인 임대료 특별지원</h2>
+                  <div class="meta mt-1">
+                    <span>서울특별시</span><span>기업마당에서 수집 · 8월 24일</span>
+                    <span>신청 9월 1일 ~ 9월 19일</span>
+                  </div>
+                </div>
+                <span class="badge caution">확인 필요 · 76%</span>
+              </div>
+              <div class="grid3 mt-3">
+                <div><div class="sub">종류</div><b>보조금</b></div>
+                <div><div class="sub">한도</div><b class="money">3,000,000원</b></div>
+                <div><div class="sub">금리</div><b>—</b></div>
+              </div>
+              <div class="notice warn mt-3"><i>!</i>
+                <span>공고에 <b>‘임차 계약 2년 이상’</b>이라는 조건이 있는데 등록된 정보로는 판단할 수 없습니다. 최종 자격은 기관에 확인해 주세요.</span></div>
+              <div class="row mt-3">
+                <button class="btn sec sm">공고 원문 열기</button>
+                <button class="btn ghost sm">임차 정보 입력하기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 탭 4 · 서류와 문서 (P1-16) -->
+          <div class="tabpanel" data-panel="n4">
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">어디서 떼는지 <span class="feat">P1-16</span></h2>
+                  <p class="sub">성동구 경영안정자금에 필요한 서류입니다. 발급은 직접 하셔야 합니다.</p></div>
+                <span class="badge accent">4건</span>
+              </div>
+              <div class="list bare acc-list mt-3">
+                <div class="list-row head"><span>서류</span><span>수수료</span><span>발급처</span><span>방법</span><span></span></div>
+                <div class="list-row"><span><b>사업자등록증명</b></span><span>무료</span><span>홈택스</span><span>온라인 즉시</span><button class="btn sec sm">발급처 열기</button></div>
+                <div class="list-row"><span><b>부가가치세 과세표준증명</b></span><span>무료</span><span>홈택스</span><span>온라인 즉시</span><button class="btn sec sm">발급처 열기</button></div>
+                <div class="list-row"><span><b>국세납세증명서</b></span><span>무료</span><span>정부24</span><span>온라인 즉시</span><button class="btn sec sm">발급처 열기</button></div>
+                <div class="list-row"><span><b>임대차계약서 사본</b></span><span>—</span><span>직접 보관</span><span>스캔해서 올리기</span><button class="btn sec sm">올리기</button></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">사업계획서 쓰기</h2>
+                  <p class="sub">템플릿에 내 숫자를 넣어 두었습니다. 문장은 다듬어 쓰세요.</p></div>
+                <span class="feat">P1-16</span>
+              </div>
+              <div class="doc-editor mt-4">
+                <div class="doc-paper">
+                  <h4>1. 사업 개요</h4>
+                  <p>온기식당 성수점은 2019년 6월 개업한 한식 일반음식점으로, 최근 12개월 매출은 <mark>1억 7,040만원</mark>입니다.</p>
+                  <h4>2. 자금 신청 사유</h4>
+                  <p>추석 연휴로 배달 플랫폼 정산이 <mark>9월 1일에서 9월 5일로</mark> 지연되어, <mark>9월 3일 급여 지급일</mark>에 운영 안전잔고 대비 <mark>812,400원</mark>의 자금 공백이 예상됩니다.</p>
+                  <h4>3. 자금 사용 계획</h4>
+                  <p>인건비 및 재료비 결제에 사용할 계획입니다.</p>
+                </div>
+                <div class="stack-sm">
+                  <div class="card tight mark-ai">
+                    <span class="badge ai">AI 문장 보조</span>
+                    <p class="sub mt-2">표시된 <mark>숫자</mark>는 계산 엔진 값을 그대로 넣은 것입니다.</p>
+                  </div>
+                  <button class="btn sec wide start">더 정중하게 다듬기</button>
+                  <button class="btn sec wide start">짧게 줄이기</button>
+                  <button class="btn sec wide start">3장 근거 자세히 쓰기</button>
+                  <hr class="sep" />
+                  <button class="btn pri wide">DOCX로 내려받기</button>
+                  <button class="btn sec wide">PDF로 내려받기</button>
+                  <span class="btn-why">서류를 대신 접수하거나 발급하지 않습니다. 만든 문서를 내려받아 직접 제출하세요.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 여러 가게 (P1-12) ═══════════════════ -->
+      <section class="view" id="view-multi">
+        <div class="page-head">
+          <div>
+            <h1>여러 가게</h1>
+            <p class="sub">가게별 흐름을 따로 보고, 남는 곳에서 모자란 곳으로 옮기면 어떻게 되는지 계산합니다.</p>
+          </div>
+          <span class="feat">P1-12</span>
+        </div>
+
+        <dl class="stats">
+            <div><dt>두 가게 합산 잔고</dt><dd class="money">11,594,400원</dd><small>8월 26일 09:00 기준</small></div>
+            <div><dt>합산 최저 잔고</dt><dd class="money">6,667,600원</dd><small>9월 3일</small></div>
+            <div class="short"><dt>공백이 생기는 가게</dt><dd>1곳</dd><small>성수점 · 9월 3일</small></div>
+            <div><dt>안 읽은 알림</dt><dd>3건</dd><small>두 가게 합계</small></div>
+          </dl>
+
+        <div class="biz-grid">
+          <div class="card mark-risk">
+            <div class="card-head"><h2 class="t-section">온기식당 성수점</h2><span class="badge risk">주의</span></div>
+            <b class="money xl">4,182,400원</b>
+            <div class="list bare two mt-3">
+              <div class="list-row"><span>안전잔고</span><span class="money pushright">2,300,000원</span></div>
+              <div class="list-row"><span>가장 낮아지는 잔고</span><span class="money is-risk pushright">1,487,600원</span></div>
+              <div class="list-row"><span>처음 모자라는 날</span><span class="money pushright">9월 3일</span></div>
+            </div>
+            <button class="btn sec wide mt-3" data-goto="today">이 가게로 들어가기</button>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2 class="t-section">온기식당 연남점</h2><span class="badge safe">여유</span></div>
+            <b class="money xl">7,412,000원</b>
+            <div class="list bare two mt-3">
+              <div class="list-row"><span>안전잔고</span><span class="money pushright">3,000,000원</span></div>
+              <div class="list-row"><span>가장 낮아지는 잔고</span><span class="money pushright">5,180,000원</span></div>
+              <div class="list-row"><span>처음 모자라는 날</span><span class="sub pushright">없음</span></div>
+            </div>
+            <button class="btn sec wide mt-3">이 가게로 들어가기</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div><h2 class="t-section">가게 사이에서 옮기면 <span class="feat">P1-12</span></h2>
+              <p class="sub">9월 3일 기준으로 계산했습니다. <b>실제 이체는 하지 않습니다.</b></p></div>
+            <span class="badge accent">계산만 함</span>
+          </div>
+
+          <div class="transfer-flow mt-4">
+            <div class="card tight">
+              <div class="sub">연남점 · 남는 돈</div>
+              <b class="money md">2,180,000원</b>
+              <div class="sub mt-1">예상 잔고 5,180,000 − 안전잔고 3,000,000</div>
+            </div>
+            <div class="arrow" aria-hidden="true">→</div>
+            <div class="card tight">
+              <div class="sub">성수점 · 모자란 돈</div>
+              <b class="money md is-risk">812,400원</b>
+              <div class="sub mt-1">안전잔고 2,300,000 − 예상 잔고 1,487,600</div>
+            </div>
+          </div>
+
+          <div class="notice ok mt-4"><i>✓</i>
+            <span>연남점에서 성수점으로 <b>812,400원</b>을 옮기면 두 가게 모두 안전잔고를 지킵니다. 이체 1건으로 끝납니다.</span></div>
+
+          <div class="list bare acc-list mt-4">
+            <div class="list-row head"><span>가게</span><span>옮기기 전</span><span>옮긴 뒤</span><span>안전잔고</span><span>상태</span></div>
+            <div class="list-row"><span><b>성수점</b></span><span class="money is-risk">1,487,600원</span><span class="money">2,300,000원</span><span class="money">2,300,000원</span><span class="badge safe">여유</span></div>
+            <div class="list-row"><span><b>연남점</b></span><span class="money">5,180,000원</span><span class="money">4,367,600원</span><span class="money">3,000,000원</span><span class="badge safe">여유</span></div>
+          </div>
+
+          <div class="notice warn mt-4"><i>!</i>
+            <span>계산 결과일 뿐입니다. <b>실제 이체는 은행에서 직접</b> 하셔야 하고, 가게 간 자금 이동은 세무상 정리가 필요할 수 있습니다.</span></div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 알림 센터 (P0-08) ═══════════════════ -->
+      <section class="view" id="view-alerts">
+        <div class="page-head">
+          <div>
+            <h1>알림</h1>
+            <p class="sub">부족 예보 · 연결 끊김 · 새 지원금을 한곳에서 봅니다.</p>
+          </div>
+          <div class="row">
+            <span class="feat">P0-08</span>
+            <div class="chips" role="group" aria-label="알림 필터">
+              <button class="on">안 읽은 것 3</button>
+              <button>전체</button>
+            </div>
+            <button class="btn ghost">모두 읽음</button>
+          </div>
+        </div>
+
+        <div class="list stack">
+          <button class="list-row unread">
+            <span class="row"><span class="badge warn">경고</span><span class="cap pushright">1시간 전</span></span>
+            <b>9월 3일에 812,400원이 모자랄 것 같습니다</b>
+            <small>추석 연휴로 배달 정산이 9월 1일에서 5일로 밀립니다. 그 사이 들어오는 돈이 없습니다.</small>
+            <span class="btn ghost self-start" data-goto="forecast">부족 원인 보기 →</span>
+          </button>
+          <button class="list-row unread">
+            <span class="row"><span class="badge risk">연결 끊김</span><span class="cap pushright">6일 전부터</span></span>
+            <b>배달의민족 자료를 6일째 못 읽고 있습니다</b>
+            <small>비밀번호가 바뀐 것 같습니다. 이 상태로 두면 배달 정산이 예보에 안 잡혀 잔고가 실제보다 적게 보입니다.</small>
+            <span class="btn ghost self-start" data-goto="transactions">다시 연결하기 →</span>
+          </button>
+          <button class="list-row unread">
+            <span class="row"><span class="badge accent">지원금</span><span class="cap pushright">어제</span></span>
+            <b>성동구 소상공인 경영안정자금이 열렸습니다</b>
+            <small>업종·사업 기간 조건이 맞습니다. 신청은 9월 12일까지이고, 집행은 9월 말입니다.</small>
+            <span class="btn ghost self-start" data-goto="finance">공고 보기 →</span>
+          </button>
+          <button class="list-row">
+            <span class="row"><span class="badge mute">읽음</span><span class="cap pushright">8월 24일</span></span>
+            <b>이번 주 브리핑이 나왔습니다</b>
+            <small>배달 정산이 지난주보다 12% 적게 들어왔습니다.</small>
+          </button>
+          <button class="list-row">
+            <span class="row"><span class="badge mute">읽음</span><span class="cap pushright">8월 21일</span></span>
+            <b>확인 안 한 거래가 10건을 넘었습니다</b>
+            <small>확인하지 않으면 예보에서 빠집니다.</small>
+          </button>
+        </div>
+
+        <div class="card">
+          <h2 class="t-section">어떤 알림을 받을지</h2>
+          <div class="stack-sm mt-3">
+            <label class="check"><input type="checkbox" checked /> 잔고가 안전잔고 아래로 내려갈 것 같을 때</label>
+            <label class="check"><input type="checkbox" checked /> 자료를 못 읽고 있을 때</label>
+            <label class="check"><input type="checkbox" checked /> 조건 맞는 지원금이 새로 열렸을 때</label>
+            <label class="check"><input type="checkbox" /> 주간 브리핑이 나왔을 때</label>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 설정 ═══════════════════ -->
+      <section class="view" id="view-settings">
+        <div class="page-head">
+          <div>
+            <h1>설정</h1>
+            <p class="sub">예보 숫자를 좌우하는 값들입니다. 여기서 바꾸면 모든 화면에 반영됩니다.</p>
+          </div>
+          <span class="feat">P1-06~09 · P1-11</span>
+        </div>
+
+        <div class="tabs" data-tabs="st">
+          <button class="on" data-tab="s1">안전잔고</button>
+          <button data-tab="s2">준비금 <em class="count">2</em></button>
+          <button data-tab="s3">부가세</button>
+          <button data-tab="s4">예보 방식</button>
+          <button data-tab="s5">가게와 계정</button>
+        </div>
+
+        <div data-panelset="st">
+
+          <!-- 안전잔고 (P1-08) -->
+          <div class="tabpanel on" data-panel="s1">
+            <div class="split">
+              <div class="card">
+                <div class="card-head"><h2 class="t-section">안전잔고 <span class="feat">P1-08</span></h2></div>
+                <p class="sub">이 금액 아래로 내려갈 것 같으면 알려 드립니다. 통장이 0원이 되는 것과는 다릅니다.</p>
+                <label class="field mt-4">지금 값<input value="2,300,000" /><span class="hint">단위: 원</span></label>
+                <hr class="sep" />
+                <p class="section-label">어떻게 정할까요</p>
+                <div class="stack-sm">
+                  <label class="check"><input type="radio" name="sl" checked /> 최근 한 달 고정비 기준 <b class="money">2,470,000원</b></label>
+                  <span class="btn-why">임차료·급여·보험료·구독료 합계 (2026.07.27~08.26)</span>
+                  <label class="check"><input type="radio" name="sl" /> 꼭 나가는 돈 기준 <b class="money">1,850,000원</b></label>
+                  <span class="btn-why">월 급여 + 임차료 합계</span>
+                  <label class="check"><input type="radio" name="sl" /> 직접 정하기</label>
+                </div>
+                <label class="check mt-4"><input type="checkbox" /> 매달 고정비를 다시 계산해 자동으로 바꾸기</label>
+                <button class="btn pri wide mt-4">저장하기</button>
+              </div>
+
+              <div class="card">
+                <div class="card-head"><h2 class="t-section">지금 상태</h2><span class="badge caution">주의</span></div>
+                <div class="list bare two">
+                  <div class="list-row"><span>지금 잔고</span><span class="money pushright">4,182,400원</span></div>
+                  <div class="list-row"><span>안전잔고</span><span class="money pushright">2,300,000원</span></div>
+                  <div class="list-row"><span>30일 내 가장 낮아지는 잔고</span><span class="money is-risk pushright">1,487,600원</span></div>
+                  <div class="list-row total"><span>안전잔고 대비 모자란 금액</span><span class="money is-risk pushright">812,400원</span></div>
+                </div>
+                <h3 class="t-card mt-6">왜 내려가나요</h3>
+                <ol class="timeline mt-3">
+                  <li><b>급여 3,000,000원</b><small>9월 3일 · 확정</small></li>
+                  <li><b>배달 정산 밀림</b><small>9월 1일 → 9월 5일</small></li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- 준비금 (P1-09) -->
+          <div class="tabpanel" data-panel="s2">
+            <div class="notice info"><i>i</i>
+              <span>준비금은 <b>서비스 안에서만 따로 떼어 두는 가상 금액</b>입니다. 실제 계좌를 나누거나 이체하지 않습니다. <span class="feat">P1-09</span></span></div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">오늘 모아둘 돈</h2><p class="sub">목표일까지 남은 영업일로 나눈 금액입니다.</p></div>
+                <b class="money xl">300,000원</b>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">9월 급여</h2><p class="sub">9월 3일 목표 · 남은 영업일 6일 · 우선순위 1</p></div>
+                <span class="badge caution">모으는 중</span>
+              </div>
+              <div class="progress-row mt-3"><b>40%</b><span>1,200,000 / 3,000,000원</span></div>
+              <div class="bar mt-2"><i style="width:40%"></i></div>
+              <div class="grid4 mt-4">
+                <div><div class="sub">목표</div><b class="money md">3,000,000원</b></div>
+                <div><div class="sub">모은 돈</div><b class="money md">1,200,000원</b></div>
+                <div><div class="sub">남은 돈</div><b class="money md">1,800,000원</b></div>
+                <div><div class="sub">하루에</div><b class="money md">300,000원</b></div>
+              </div>
+              <div class="notice ok mt-4"><i>✓</i>
+                <span>지금 속도면 <b>목표일까지 다 모을 수 있습니다.</b> 연결된 예정 거래(9월 3일 급여)의 날짜나 금액이 바뀌면 목표도 함께 바뀝니다.</span></div>
+              <div class="row mt-3">
+                <button class="btn sec sm">오늘 모은 금액 기록</button>
+                <button class="btn ghost sm">목표 고치기</button>
+                <button class="btn ghost sm pushright">잠시 멈추기</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">부가세</h2><p class="sub">과세 매출에서 자동으로 떼어 둡니다 · 우선순위 2</p></div>
+                <span class="badge safe">다 모았음</span>
+              </div>
+              <div class="progress-row mt-3"><b>100%</b><span>1,140,000 / 1,140,000원</span></div>
+              <div class="bar ok mt-2"><i style="width:100%"></i></div>
+              <p class="sub mt-3">서비스가 <code>category = VAT</code>로 자동 만들고 관리합니다. 지우려면 부가세 탭에서 끄세요.</p>
+            </div>
+
+            <button class="btn sec wide">준비금 새로 만들기</button>
+          </div>
+
+          <!-- 부가세 (P1-11) -->
+          <div class="tabpanel" data-panel="s3">
+            <div class="notice warn"><i>!</i>
+              <span>세금을 대신 계산해 드리는 것이 아닙니다. <b>거래 자료로 추정한 값</b>이며, 최종 신고는 세무대리인과 확인하세요. <span class="feat">P1-11</span></span></div>
+
+            <div class="card">
+              <div class="card-head">
+                <div><h2 class="t-section">2026년 2기 (7월 1일 ~ 12월 31일)</h2>
+                  <p class="sub">일반과세 · 신고 기한 2027년 1월 25일 · 예정고지 2026년 10월 25일</p></div>
+                <span class="badge accent">진행 중</span>
+              </div>
+              <div class="list bare two mt-3">
+                <div class="list-row"><span>받아 둔 부가세 (매출세액)</span><span class="money pushright">1,140,000원</span></div>
+                <div class="list-row"><span>돌려받을 부가세 (매입세액)</span><span class="money pushright">−480,000원</span></div>
+                <div class="list-row total"><span>낼 돈 예상</span><span class="money pushright">560,000 ~ 780,000원</span></div>
+              </div>
+              <p class="sub mt-3">매입세액은 <b>영수증이 붙은 거래에서만</b> 잡힙니다. 지금 영수증 없는 거래가 96건 있어 실제 매입세액은 더 클 수 있습니다.</p>
+              <button class="btn sec wide mt-3" data-goto="evidence">영수증 없는 96건 채우기</button>
+            </div>
+
+            <div class="split">
+              <div class="panel">
+                <h2 class="t-section">써도 되는 돈은 이렇게 계산합니다</h2>
+                <div class="list bare two mt-3">
+                  <div class="list-row"><span>지금 잔고</span><span class="money pushright">4,182,400원</span></div>
+                  <div class="list-row"><span>부가세로 따로 둘 돈</span><span class="money pushright">−1,140,000원</span></div>
+                  <div class="list-row"><span>급여로 모아둔 돈</span><span class="money pushright">−1,200,000원</span></div>
+                  <div class="list-row total"><span>지금 써도 되는 돈</span><span class="money pushright">1,842,400원</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <h2 class="t-section">부가세 준비금</h2>
+                <p class="sub">매출이 들어올 때마다 자동으로 떼어 둡니다.</p>
+                <label class="check mt-4"><input type="checkbox" checked /> 부가세 준비금을 자동으로 만들고 관리하기</label>
+                <label class="check"><input type="checkbox" checked /> ‘써도 되는 돈’에서 부가세를 빼고 보여 주기</label>
+                <div class="notice info mt-4"><i>i</i>
+                  <span>끄면 잔고가 커 보이지만, 신고 때 한 번에 나갑니다.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 예보 방식 (P1-06 · P1-07) -->
+          <div class="tabpanel" data-panel="s4">
+            <div class="card">
+              <h2 class="t-section">예보에 무엇을 반영할까요</h2>
+              <p class="sub">각 항목은 예보 숫자를 바꿉니다. 반영된 결과는 자금 흐름 화면에서 볼 수 있습니다.</p>
+              <div class="stack-md mt-4">
+                <div>
+                  <label class="check"><input type="checkbox" checked /> <b>영업일·명절 보정</b> <span class="feat">P1-04</span></label>
+                  <span class="btn-why">주말·공휴일에 걸린 정산일을 다음 영업일로 옮깁니다. 원래 예정일도 함께 적습니다.</span>
+                </div>
+                <div>
+                  <label class="check"><input type="checkbox" checked /> <b>원자재 가격 변동</b> <span class="feat">P1-06</span></label>
+                  <span class="btn-why">지금 우유 +8% → 월 재료비 +3.2%(약 96,000원)로 반영 중입니다.</span>
+                </div>
+                <div>
+                  <label class="check"><input type="checkbox" checked /> <b>계절성·성수기</b> <span class="feat">P1-07</span></label>
+                  <span class="btn-why">9월은 성수기로 매출 +5~12% 전망입니다. 자체 데이터가 12개월 미만이라 업종 통계 비중이 높습니다.</span>
+                </div>
+                <div>
+                  <label class="check"><input type="checkbox" checked /> <b>예측 정확도 자동 보정</b> <span class="feat">P1-05</span></label>
+                  <span class="btn-why">거래처별로 빗나간 만큼 다음 예측을 스스로 조정합니다. 지금 배달의민족은 +1일 보정 중입니다.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-head"><h2 class="t-section">원자재 설정 <span class="feat">P1-06</span></h2><button class="btn sec sm">품목 더하기</button></div>
+              <p class="sub">재료비에서 각 품목이 차지하는 비중을 넣으면, 시세 변동이 예보에 얼마나 영향을 주는지 계산합니다.</p>
+              <div class="list bare acc-list mt-3">
+                <div class="list-row head"><span>품목</span><span>비중</span><span>이번 달 변동</span><span>영향</span><span>출처</span></div>
+                <div class="list-row"><span><b>우유·유제품</b></span><span>40%</span><span class="badge warn">+8.0%</span><span class="money is-warn">+96,000원</span><span class="sub">aT · 8월 26일</span></div>
+                <div class="list-row"><span><b>돈육</b></span><span>25%</span><span class="badge mute">+1.2%</span><span class="money">+9,000원</span><span class="sub">aT · 8월 26일</span></div>
+                <div class="list-row"><span><b>채소</b></span><span>20%</span><span class="badge safe">−4.5%</span><span class="money">−27,000원</span><span class="sub">aT · 8월 26일</span></div>
+                <div class="list-row"><span><b>그 밖에</b></span><span>15%</span><span class="sub">—</span><span class="sub">—</span><span class="sub">—</span></div>
+              </div>
+              <div class="notice warn mt-4"><i>!</i>
+                <span>큰 흐름을 보는 <b>참고 지표</b>입니다. 실제 매입 단가와 다를 수 있습니다.</span></div>
+            </div>
+
+            <div class="card">
+              <h2 class="t-section">며칠 앞까지 볼까요</h2>
+              <div class="chips mt-3">
+                <button>7일</button><button>14일</button><button class="on">30일</button><button>60일</button>
+                <button disabled>90일</button>
+              </div>
+              <span class="btn-why">90일은 거래가 3개월치는 있어야 켜집니다. 지금은 6개월치가 있으니 다음 달부터 쓸 수 있습니다.</span>
+            </div>
+          </div>
+
+          <!-- 가게와 계정 -->
+          <div class="tabpanel" data-panel="s5">
+            <div class="split">
+              <div class="panel">
+                <h2 class="t-section">내 가게</h2>
+                <div class="list bare three mt-3">
+                  <button class="list-row"><span><b>온기식당 성수점</b><small>성수동 · 한식 · 일반과세</small></span><span class="badge accent">보는 중</span><span class="go">›</span></button>
+                  <button class="list-row"><span><b>온기식당 연남점</b><small>연남동 · 한식 · 일반과세</small></span><span></span><span class="go">›</span></button>
+                </div>
+                <button class="btn sec wide mt-3">가게 더 등록하기</button>
+              </div>
+
+              <div class="panel">
+                <h2 class="t-section">계정</h2>
+                <div class="list bare two mt-3">
+                  <button class="list-row"><span><b>이메일</b><small>jk007125@naver.com</small></span><span class="go">›</span></button>
+                  <button class="list-row"><span><b>비밀번호 바꾸기</b></span><span class="go">›</span></button>
+                  <button class="list-row"><span><b>세무대리인에게 자동으로 보내기</b><small>달마다 · 지금 꺼짐</small></span><span class="badge mute">꺼짐</span></button>
+                  <button class="list-row" data-goto="onboarding"><span><b>시작하기 화면 다시 보기</b><small>가입·계좌 연결 흐름</small></span><span class="go">›</span></button>
+                </div>
+                <hr class="sep" />
+                <button class="btn danger wide">가게 자료 모두 지우기</button>
+                <span class="btn-why">거래·영수증·예보가 모두 사라지고 되돌릴 수 없습니다. 지우기 전에 자료를 먼저 내려받으세요.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 모바일 하단 탭 -->
+    <nav class="mo-nav app-tabs" aria-label="모바일 메뉴">
+      <a href="#today" data-view="today" class="on"><i>⌂</i>홈</a>
+      <a href="#forecast" data-view="forecast"><i>⌁</i>흐름</a>
+      <a href="#transactions" data-view="transactions"><i>≡</i>거래</a>
+      <a href="#" id="moreTab"><i>⋯</i>더보기</a>
+    </nav>
+  </main>
+</div>
+</div><!-- /.shell -->
+
+<!-- ══════════════ 더보기 시트 ══════════════ -->
+<div class="sheet" id="moreSheet">
+  <div class="scrim" data-close-sheet></div>
+  <div class="sheet-panel stack-lg" role="dialog" aria-modal="true" aria-label="더보기">
+    <div class="spread">
+      <h2 class="t-section">더보기</h2>
+      <button class="btn sec sm" data-close-sheet aria-label="닫기">닫기 ✕</button>
+    </div>
+    <div>
+      <p class="section-label">매일 보는 것</p>
+      <div class="list two">
+        <button class="list-row" data-goto="calendar"><span><b>캘린더</b><small>정산·지출·세금 일정</small></span><span class="go">›</span></button>
+        <button class="list-row" data-goto="recurring"><span><b>반복·예정 거래</b><small>확인할 후보 2건</small></span><span class="count">2</span></button>
+      </div>
+    </div>
+    <div>
+      <p class="section-label">서류와 자료</p>
+      <div class="list two">
+        <button class="list-row" data-goto="evidence"><span><b>증빙과 신고자료</b><small>거래에 안 붙은 영수증 3건</small></span><span class="count">3</span></button>
+      </div>
+    </div>
+    <div>
+      <p class="section-label">대응</p>
+      <div class="list two">
+        <button class="list-row" data-goto="scenario"><span><b>시뮬레이션</b><small>조건을 바꿔 비교하기</small></span><span class="go">›</span></button>
+        <button class="list-row" data-goto="finance"><span><b>대출과 지원제도</b><small>조건 맞는 지원금 2건</small></span><span class="count">2</span></button>
+        <button class="list-row" data-goto="reports"><span><b>브리핑</b><small>주간 요약과 근거</small></span><span class="go">›</span></button>
+      </div>
+    </div>
+    <div>
+      <p class="section-label">전체</p>
+      <div class="list two">
+        <button class="list-row" data-goto="multi"><span><b>여러 가게</b><small>합산 잔고 11,594,400원</small></span><span class="go">›</span></button>
+        <button class="list-row" data-goto="settings"><span><b>설정</b><small>안전잔고 2,300,000원</small></span><span class="go">›</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 화면 목록 (시연용) ══════════════ -->
+<div class="sheet" id="demoSheet">
+  <div class="scrim" data-close-demo></div>
+  <div class="sheet-panel stack-lg" role="dialog" aria-modal="true" aria-label="화면 목록">
+    <div class="spread">
+      <div>
+        <h2 class="t-section">화면 목록</h2>
+        <p class="sub">기능명세서 P0 13개 · P1 18개를 어느 화면에서 볼 수 있는지</p>
+      </div>
+      <button class="btn sec sm" data-close-demo aria-label="닫기">닫기 ✕</button>
+    </div>
+    <div class="list demo-index">
+      <div class="list-row head"><span>화면</span><span>내용</span><span>기능</span></div>
+      <button class="list-row" data-goto="onboarding"><b>SC-01</b><span>로그인·사업장·계좌 연결</span><span class="feat">P0-01</span></button>
+      <button class="list-row" data-goto="today"><b>SC-02</b><span>오늘 요약</span><span class="feat">P0-08 · P1-08·09·11·17</span></button>
+      <button class="list-row" data-goto="forecast"><b>SC-03</b><span>자금 흐름 · 정확도 · 반영된 것</span><span class="feat">P0-07·08 · P1-04·05·06·07</span></button>
+      <button class="list-row" data-goto="transactions"><b>SC-04</b><span>거래 · 거래처 사전 · 자료 가져오기</span><span class="feat">P0-01·02·05 · P1-01</span></button>
+      <button class="list-row" data-goto="recurring"><b>SC-05</b><span>반복 후보 · 확정 규칙 · 예정 거래</span><span class="feat">P0-03·04·05·06 · P1-05</span></button>
+      <button class="list-row" data-goto="scenario"><b>SC-06</b><span>시뮬레이션</span><span class="feat">P0-09 · P0-13</span></button>
+      <button class="list-row" data-goto="evidence"><b>SC-07</b><span>증빙 · 품목 · 정산 대사 · 내보내기</span><span class="feat">P0-10·11·12 · P1-02·03</span></button>
+      <button class="list-row" data-goto="calendar"><b>SC-08</b><span>자금·세금 캘린더</span><span class="feat">P1-18 · P1-04</span></button>
+      <button class="list-row" data-goto="reports"><b>SC-09</b><span>브리핑 · 월별 리포트</span><span class="feat">P1-17 · P1-19</span></button>
+      <button class="list-row" data-goto="finance"><b>SC-10</b><span>대출 · 신용 · 지원제도 · 문서</span><span class="feat">P1-13·14·15·16</span></button>
+      <button class="list-row" data-goto="multi"><b>—</b><span>여러 가게 · 자금 융통</span><span class="feat">P1-12</span></button>
+      <button class="list-row" data-goto="settings"><b>—</b><span>안전잔고 · 준비금 · 부가세 · 예보 방식</span><span class="feat">P1-06·07·08·09·11</span></button>
+      <button class="list-row" data-goto="alerts"><b>—</b><span>알림 센터</span><span class="feat">P0-08</span></button>
+    </div>
+    <p class="sub">P1-10 · P1-20 · P1-21은 SRS v1.2에서 각각 P0-13 승격 / P2 이관되어 결번입니다.</p>
+  </div>
+</div>
+
+<!-- ══════════════ 거래 상세 Drawer ══════════════ -->
+<div class="drawer-host" id="drawerHost">
+  <div class="scrim" data-close-drawer></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="거래 상세">
+    <div class="drawer-head">
+      <div class="spread">
+        <div>
+          <p class="sub">거래 상세</p>
+          <h2 class="t-section">우아한형제들</h2>
+        </div>
+        <button class="btn sec sm" data-close-drawer aria-label="닫기">닫기 ✕</button>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+      <div class="amount-detail">
+        <span class="sub">8월 26일 09:12 · 통장 적요</span>
+        <b class="money">+850,000원</b>
+        <span class="sub">이 거래 뒤 잔고 5,032,400원</span>
+      </div>
+
+      <div class="card tight mark-ai mt-4">
+        <span class="badge ai">자동으로 이렇게 봤습니다 · 86% <span class="feat">P1-01</span></span>
+        <h3 class="t-card mt-3">배달의민족 정산금이 맞나요?</h3>
+        <p class="sub">적요 ‘우아한형제들’은 배달의민족이 정산금을 보낼 때 쓰는 이름입니다. 지난 12번 모두 화요일에 들어왔습니다.</p>
+        <div class="row mt-3">
+          <button class="btn pri grow" id="confirmClass">맞아요</button>
+          <button class="btn sec grow" id="rejectClass">아니에요</button>
+        </div>
+      </div>
+
+      <div class="stack-md mt-4" id="classifyForm" hidden>
+        <label class="field">어떤 돈인가요<select><option>배달 정산</option><option>카드 정산</option><option>현금 매출</option><option>그 밖의 입금</option></select></label>
+        <label class="field">보낸 곳<input value="배달의민족" /></label>
+        <label class="check"><input type="checkbox" checked /> 앞으로 같은 적요는 이렇게 분류하기</label>
+        <label class="field">메모<textarea>주간 정산</textarea></label>
+        <button class="btn sec wide">영수증 붙이기</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ══════════════ 한 번뿐인 거래 넣기 (P0-06) ══════════════ -->
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-label="한 번뿐인 거래 넣기">
+    <div class="modal-head">
+      <div class="spread">
+        <div>
+          <p class="sub">예정 거래 <span class="feat">P0-06</span></p>
+          <h2 class="t-section">한 번뿐인 거래 넣기</h2>
+        </div>
+        <button class="btn sec sm close-modal" aria-label="닫기">닫기 ✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="field">입출금<select><option>나가는 돈</option><option>들어오는 돈</option></select></label>
+        <label class="field">분류<select><option>설비·비품</option><option>재료비</option></select></label>
+        <label class="field span-2">무엇인가요<input value="에스프레소 머신 교체" /></label>
+        <label class="field">언제<input type="date" value="2026-09-10" /></label>
+        <label class="field">얼마<input value="1,500,000" /></label>
+        <label class="field span-2">메모<textarea>중고 구매 예정</textarea></label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <div class="card-actions end">
+        <button class="btn sec close-modal">취소</button>
+        <button class="btn pri close-modal" id="savePlanned">넣기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-host" id="toastHost" role="status" aria-live="polite"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>

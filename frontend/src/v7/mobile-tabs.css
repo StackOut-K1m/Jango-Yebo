@@ -1,0 +1,134 @@
+/* ══════════════════════════════════════════════════════════════════
+   좁은 화면의 하단 탭 바 (화면구성도 4.1)
+
+   sky.css 의 「카드 없음」을 지킨다 — 띠는 판 위에 뜬 상자가 아니라
+   화면 바닥에 붙은 땅이다. 위쪽 실선 하나로만 본문과 가른다.
+   ══════════════════════════════════════════════════════════════════ */
+
+.m-tabs { display: none; }
+
+@media (max-width: 760px) {
+  .m-tabs {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    /* 다섯 칸을 고르게 나눈다. 가운데 칸이 촬영 단추 자리다 — 칸 수가 홀수여야
+       단추가 띠 한가운데에 선다. 짝수로 두면 단추가 한쪽으로 치우친다 */
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    /* 칸마다 높이를 제 내용으로 정하면 글자 있는 칸과 단추 칸의 밑줄이 어긋난다 */
+    align-items: stretch;
+    height: 58px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    /* 홈 인디케이터가 있는 기기에서 마지막 줄이 가려진다 */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .m-tabs a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    color: var(--text-3);
+    font-size: var(--fs-11, 11px);
+    font-weight: 550;
+    line-height: 1;
+    text-decoration: none;
+    transition: color .18s var(--ease);
+  }
+  .m-tabs a svg { width: 21px; height: 21px; }
+  /* 지금 화면. 색만으로 말하지 않도록 굵기도 함께 바꾼다(도메인 규칙 6) */
+  .m-tabs a[aria-current] {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .m-tabs a[aria-current] svg { color: var(--lavender); }
+
+  /* 가운데 촬영 단추 — 제 칸(3번째) 안에서 띠 위로 올라와 앉는다.
+     칸을 벗어나 걸치게 두면 옆 칸이 밀려 글자 자리가 흔들린다 */
+  .m-shoot {
+    grid-column: 3;
+    justify-self: center;
+    align-self: start;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    /* 띠 윗선 위로 절반쯤 올라온다. 전부 올리면 띠에서 떨어져 나온 것처럼 보이고,
+       안 올리면 다른 칸과 구별이 안 된다 */
+    margin-top: -17px;
+    padding: 0;
+    border: 3px solid var(--surface);
+    border-radius: 50%;
+    background: var(--lavender);
+    color: var(--on-accent);
+    box-shadow: 0 3px 12px var(--shadow-1);
+    cursor: pointer;
+    transition: transform .12s var(--ease);
+  }
+  .m-shoot svg { width: 23px; height: 23px; }
+  .m-shoot:active { transform: scale(.93); }
+
+  /* 띠에 가려 마지막 줄을 못 읽는 일이 없게 본문 아래를 비운다 */
+  .v7-page__body,
+  .page-shell {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* ── 종류 고르기 시트 ── */
+.m-sheet-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  background: #0009;
+}
+.m-sheet {
+  width: 100%;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 18px 18px 0 0;
+  padding: 22px 20px calc(22px + env(safe-area-inset-bottom, 0));
+  display: grid;
+  gap: 10px;
+  color: var(--text);
+}
+.m-sheet h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.m-sheet__lede { margin: 0 0 6px; font-size: var(--fs-13, 13px); color: var(--text-3); }
+
+.m-sheet__pick {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.m-sheet__pick:disabled { opacity: .45; cursor: default; }
+.m-sheet__pick svg { flex: none; color: var(--lavender); }
+.m-sheet__pick span { display: grid; gap: 2px; min-width: 0; }
+.m-sheet__pick b { font-size: var(--fs-14_5, 14.5px); font-weight: 600; }
+.m-sheet__pick small { font-size: var(--fs-12, 12px); color: var(--text-3); }
+
+.m-sheet__error { margin: 0; font-size: var(--fs-13, 13px); color: var(--peach); }
+
+.m-sheet__cancel {
+  margin-top: 4px;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--fs-14, 14px);
+  cursor: pointer;
+}

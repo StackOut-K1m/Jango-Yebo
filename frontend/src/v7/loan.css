@@ -1,0 +1,67 @@
+/* 대출·신용 (SC-10). 표·안내·빈 상태는 page.css 규칙을 그대로 쓰고, 여기에는 이 화면에만 있는 것만 둔다. */
+
+/* 칸이 좁아지면 한 단어씩 줄이 바뀌어 행이 길어진다. 표는 폭을 지키고 좁은 창에서는 감싼 틀(tx-table-wrap)이 가로로 굴린다 */
+.v7-page .loan-table { min-width: 900px; }
+.v7-page .loan-table td { white-space: nowrap; vertical-align: top; }
+.v7-page .loan-table td small { display: block; margin-top: 4px; color: var(--muted); font-size: var(--fs-11, 11px); }
+/* 서버 사유 문구·자격 안내는 길다. 이 둘만 접는다 */
+.v7-page .loan-table .loan-forecast small { max-width: 220px; white-space: normal; word-break: keep-all; line-height: 1.45; }
+.v7-page .loan-table .loan-name { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text); }
+.v7-page .loan-table .is-gap,
+.v7-page .v7-rows .is-gap { color: var(--w-rain); }
+/* 끝난 대출·지금 신청할 수 없는 상품은 한 단계 물러선다. 지우지 않는 것은 「등급이 오르면 열린다」를 보여 주려는 것이다 */
+.v7-page .loan-table tr[data-closed] td { color: var(--muted); }
+.v7-page .loan-table tr[data-picked] { background: color-mix(in srgb, var(--lavender) 8%, transparent); }
+.v7-page .loan-caption { caption-side: top; text-align: left; padding: 12px 16px 0; color: var(--muted); font-size: var(--fs-12, 12px); }
+
+/* 상태·반영 여부. 색만으로 말하지 않도록 그림과 글자를 함께 둔다(도메인 규칙 6) */
+.v7-page .loan-state,
+.v7-page .loan-forecast { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.v7-page .loan-forecast { flex-wrap: wrap; }
+.v7-page .loan-state { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: var(--fs-11_5, 11.5px); color: var(--muted); }
+.v7-page .loan-state[data-status='REPAYING'],
+.v7-page .loan-state[data-status='NORMAL'] { color: var(--mint); }
+.v7-page .loan-state[data-status='OVERDUE'] { color: var(--w-rain); border-color: color-mix(in srgb, var(--w-rain) 45%, transparent); font-weight: 700; }
+.v7-page .loan-forecast { color: var(--mint); font-size: var(--fs-12_5, 12.5px); }
+.v7-page .loan-forecast[data-off] { color: var(--w-sun-text); }
+.v7-page .loan-forecast small { flex-basis: 100%; }
+
+/* 갚은 몫. 막대는 거들 뿐이라 숫자(남은 금액)가 먼저 선다 */
+.v7-page .loan-progress {
+  display: block; width: 100%; min-width: 96px; height: 4px; margin-top: 7px; margin-left: auto;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mint) calc(var(--paid) * 100%), var(--veil-4) 0);
+}
+
+.v7-page .loan-badge {
+  padding: 1px 7px; border-radius: 999px;
+  background: var(--lavender); color: var(--on-accent); font-size: var(--fs-10_5, 10.5px); font-weight: 700;
+}
+
+.v7-page .loan-status-line { display: flex; align-items: center; gap: 8px; }
+
+/* 등급 척도. 지금 칸은 채운 바탕 + 굵기 + 「지금」 글자로 말한다 */
+.v7-page .loan-grades { list-style: none; margin: 14px 0 12px; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+.v7-page .loan-grades li {
+  display: grid; justify-items: center; gap: 4px; padding: 12px 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--veil-1);
+}
+.v7-page .loan-grades b { font-size: 20px; font-weight: 700; color: var(--muted); }
+.v7-page .loan-grades small { font-size: var(--fs-10_5, 10.5px); color: var(--muted); text-align: center; word-break: keep-all; }
+.v7-page .loan-grades li[aria-current] { border-color: var(--lavender); background: color-mix(in srgb, var(--lavender) 16%, transparent); }
+.v7-page .loan-grades li[aria-current] b { color: var(--text); font-weight: 800; }
+.v7-page .loan-grades li[aria-current] small { color: var(--text); font-weight: 700; }
+
+/* 긴 설명 값은 굵게 두면 무겁다 — .v7-facts dd 의 굵기를 이 경우만 푼다 */
+.v7-page .v7-facts dd.v7-muted { font-weight: 400; line-height: 1.5; }
+/* 버튼 안 그림과 글자 사이 */
+.v7-page .v7-panel__head-row .v7-secondary-button { display: inline-flex; align-items: center; gap: 6px; }
+
+/* 금액 입력 한 줄. 버튼이 입력칸 옆에 서야 「입력 → 찾기」가 한 동작으로 읽힌다 */
+.v7-page .loan-ask { margin-bottom: 18px; }
+.v7-page .loan-ask .auth-field { max-width: 480px; }
+/* 버튼 높이를 입력칸에 맞춘다 — stretch 로 두면 둘이 한 높이가 된다 */
+.v7-page .loan-ask__row { display: flex; align-items: stretch; gap: 12px; }
+.v7-page .loan-ask__row input { flex: 1 1 auto; min-width: 0; }
+.v7-page .loan-ask .auth-submit { width: auto; min-height: 0; margin: 0; padding-block: 0; padding-inline: 22px; white-space: nowrap; }
+.v7-page .loan-pick { margin-bottom: 4px; }

@@ -1,0 +1,9 @@
+.venv
+.env
+__pycache__
+.pytest_cache
+.ruff_cache
+# 더미 데이터·학습 아티팩트는 이미지에 넣지 않는다 (.gitignore 대상이기도 하다).
+# 가중치는 런타임에 /app/artifacts 로 볼륨 마운트한다 — infra/compose.yml
+datasets
+artifacts

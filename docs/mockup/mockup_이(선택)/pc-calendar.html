@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 캘린더 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-08-1 자금·세금 캘린더 (PC · 월간 그리드)
+   왼쪽에서 걸러내고, 가운데 달력에서 날짜를 고르면 오른쪽에 그날이 열립니다.
+   걸러내기는 표시만 바꿉니다. 잔고 계산은 항상 전체로 합니다. */
+.mo { display:flex; align-items:center; gap:var(--s4); margin-bottom:var(--s5); }
+.mo h2 { font-size:17px; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+/* 화살표만 정사각으로 둡니다. :not(.btn) 이 없으면 「오늘로」까지 30px 로 눌려서
+   글자가 상자 밖으로 나갑니다(.mo button 두 개가 .btn 하나를 이깁니다). */
+.mo button:not(.btn) { width:30px; height:30px; border-radius:8px; font-size:15px; color:var(--ink-3);
+                       transition:background 140ms, color 140ms; }
+.mo button:not(.btn):hover { background:var(--ground-2); color:var(--ink); }
+.mo .sp { margin-left:auto; }
+.legend2 { display:flex; gap:var(--s5); flex-wrap:wrap; margin-top:var(--s5);
+           font-size:11px; color:var(--ink-3); }
+.legend2 span { display:inline-flex; align-items:center; gap:5px; }
+.legend2 i { width:14px; height:3px; border-radius:2px; }
+.detail .mv { display:flex; align-items:baseline; gap:var(--s3); padding:var(--s3) 0; position:relative; }
+.detail .mv + .mv::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.detail .mv .t { font-size:12.5px; font-weight:600; }
+.detail .mv .s { font-size:11px; color:var(--ink-3); display:block; margin-top:1px; }
+.detail .mv .a { margin-left:auto; font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.detail .mv .a.in { color:var(--safe); }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">2026년 9월</p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede">날짜가 정해진 지출과 정산 예정일을 한 달에 겹쳐 봅니다. 칸 바닥의 띠가 안전선 아래라는 표시입니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <aside class="side">
+    <div class="grp">
+      <h3>무엇을 볼까</h3>
+      <div class="checks" id="kindChecks"></div>
+    </div>
+    <div class="grp">
+      <h3>상태</h3>
+      <div class="checks">
+        <button class="check" id="badOnly" aria-pressed="false"><i aria-hidden="true"></i>안전선 아래인 날만</button>
+      </div>
+    </div>
+    <div class="grp">
+      <h3>이번 달 요약</h3>
+      <div id="sideFigs"></div>
+    </div>
+  </aside>
+
+  <main class="body">
+    <div class="mo">
+      <button id="prev" aria-label="지난달">‹</button>
+      <h2 id="moLbl"></h2>
+      <button id="next" aria-label="다음달">›</button>
+      <span class="sp"></span>
+      <button class="btn btn-sub btn-sm" id="today">오늘로</button>
+    </div>
+    <div class="cal">
+      <div class="dow"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="legend2">
+      <span><i style="background:var(--safe)"></i>안전</span>
+      <span><i style="background:var(--caution)"></i>주의</span>
+      <span><i style="background:var(--danger)"></i>위험 (안전선의 25% 미만)</span>
+      <span><i style="background:var(--gap)"></i>공백 (0원 미만)</span>
+      <span>· 예보가 있는 달은 9월입니다</span>
+    </div>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = pcTop('calendar');
+wireSwitch();
+(function () {
+  var k = SKYC['caution'], s = document.getElementById('sky');
+  s.dataset.w = 'caution';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* ── 자료 정리 ──
+   그날 오간 돈: 고정비(날짜 확정) + 정산(요일 규칙) + 재료 매입(영업일).
+   전날 대비 차액에서 고정비와 정산을 뺀 나머지를 재료 매입으로 둡니다.
+   그래야 합계가 잔고 변화와 맞아떨어집니다. */
+var KINDS = [['고정','고정비'],['정산','정산 입금'],['세금','세금'],['대출','대출 상환'],
+             ['인출','대표 인출'],['재료','재료 매입']];
+var KIND_OF = { '임차료':'고정', '임차료 관리비':'고정', '전기와 가스':'고정',
+                '4대보험':'세금', '직원 급여':'고정', '대출 상환':'대출',
+                '대표 인출':'인출' };
+var byDate = {}; days.forEach(function (d) { byDate[d.date] = d; });
+
+function noSettleDay(iso) { return NO_SETTLE.indexOf(iso) >= 0; }
+function movesOf(iso) {
+  var i = days.findIndex(function (d) { return d.date === iso; });
+  if (i < 0) return null;
+  var out = [];
+  FIXED.filter(function (f) { return f[0] === iso; }).forEach(function (f) {
+    out.push({ kind:KIND_OF[f[1]] || '고정', t:f[1], s:f[2], dir:'out', amt:f[3], cert:'CONFIRMED' });
+  });
+  var dow = new Date(iso).getDay();
+  var settle = 0;
+  if (!noSettleDay(iso) && dow !== 1) {
+    settle = 1043200;
+    out.push({ kind:'정산', t:'카드 정산', s:'KG이니시스 · 이틀 전 매출', dir:'in', amt:settle, cert:'RANGE' });
+    if (dow === 2) { out.push({ kind:'정산', t:'배달의민족 정산', s:'주 1회 · 화요일 새벽', dir:'in', amt:843200, cert:'RANGE' }); settle += 843200; }
+    if (dow === 5) { out.push({ kind:'정산', t:'쿠팡이츠 정산', s:'주 1회 · 금요일 새벽', dir:'in', amt:318400, cert:'RANGE' }); settle += 318400; }
+  }
+  /* 남은 차액을 무엇으로 부를지는 그날의 성격이 정합니다.
+     정산이 없는 날에 이걸 '재료 매입' 이라고 적으면 거짓말이 됩니다 —
+     휴무일에 재료를 216만원 사지 않습니다. 안 들어온 정산이 원인입니다. */
+  var delta = i === 0 ? 0 : days[i].v - days[i-1].v;
+  var fixedOut = out.filter(function (m) { return m.dir === 'out'; }).reduce(function (a,m) { return a+m.amt; }, 0);
+  var rest = settle - fixedOut - delta;
+  var closed = dow === 1;                        /* 월요일 휴무 */
+  var noSettle = NO_SETTLE.indexOf(iso) >= 0;
+  if (i > 0 && Math.abs(rest) > 1000) {
+    if (rest > 0 && (noSettle || closed)) {
+      out.push({ kind:'정산', t:'들어오지 않은 정산', dir:'out', amt:Math.round(rest), cert:'PREDICTED',
+                 s: closed ? '휴무일이라 정산이 없습니다' : '주말과 휴무가 겹쳐 정산이 밀립니다' });
+    } else if (rest > 0) {
+      out.push({ kind:'재료', t:'재료 매입과 잡비', s:'영업일마다 오가는 돈',
+                 dir:'out', amt:Math.round(rest), cert:'PREDICTED' });
+    } else {
+      out.push({ kind:'정산', t:'밀렸던 정산 입금', s:'앞서 밀린 것이 들어옵니다',
+                 dir:'in', amt:Math.round(-rest), cert:'PREDICTED' });
+    }
+  }
+  return { i:i, day:days[i], moves:out, delta:delta };
+}
+
+var view = [2026, 9];
+var sel = '2026-09-01';
+var F = { kinds:[], badOnly:false };
+
+function shown(moves) {
+  return F.kinds.length ? moves.filter(function (m) { return F.kinds.indexOf(m.kind) >= 0; }) : moves;
+}
+
+/* ── 왼쪽 ── */
+function drawSide() {
+  document.getElementById('kindChecks').innerHTML = KINDS.map(function (k) {
+    var n = 0;
+    days.forEach(function (d) { var m = movesOf(d.date); if (m) n += m.moves.filter(function (x) { return x.kind === k[0]; }).length; });
+    return '<button class="check" data-k="' + k[0] + '" aria-pressed="' + (F.kinds.indexOf(k[0]) >= 0) + '">'
+      + '<i aria-hidden="true"></i>' + k[1] + '<span class="n">' + n + '</span></button>';
+  }).join('');
+
+  var fixedSum = FIXED.reduce(function (a,f) { return a+f[3]; }, 0);
+  document.getElementById('sideFigs').innerHTML =
+      '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">나갈 고정비</span>'
+      + '<span class="b">' + won(fixedSum) + '</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">안전선 아래</span>'
+      + '<span class="b">' + badDays.length + '일</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">정산 없는 날</span>'
+      + '<span class="b">' + NO_SETTLE.length + '일</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">가장 낮은 날</span>'
+      + '<span class="b">' + md(lowest.date) + '</span></div>';
+}
+
+/* ── 가운데 달력 ── */
+function drawCal() {
+  var y = view[0], m = view[1];
+  document.getElementById('moLbl').textContent = y + '년 ' + m + '월';
+  var first = new Date(y, m-1, 1).getDay(), last = new Date(y, m, 0).getDate();
+  var html = '';
+  for (var i = 0; i < first; i++) html += '<span class="cell out"></span>';
+  for (var n = 1; n <= last; n++) {
+    var iso = y + '-' + String(m).padStart(2,'0') + '-' + String(n).padStart(2,'0');
+    var d = byDate[iso], mv = movesOf(iso);
+    var risk = d ? d.risk : null;
+    if (F.badOnly && (!risk || risk === 'safe')) {
+      html += '<span class="cell out"><span class="d">' + n + '</span></span>';
+      continue;
+    }
+    var top = mv ? shown(mv.moves).slice().sort(function (a,b) { return b.amt-a.amt; })[0] : null;
+    html += '<button class="cell' + (iso === sel ? ' on' : '') + (iso === today.date ? ' today' : '') + '"'
+      + ' data-iso="' + iso + '"' + (d ? '' : ' disabled') + '>'
+      + '<span class="d">' + n + '</span>'
+      + (d ? '<span class="b">' + man(d.v) + '</span>' : '')
+      + (top ? '<span class="ev" style="color:' + (top.dir === 'in' ? 'var(--safe)' : 'var(--ink-2)') + '">'
+          + (top.dir === 'in' ? '+' : '−') + man(top.amt) + ' ' + top.t + '</span>' : '')
+      + (risk && risk !== 'safe' ? '<span class="band" style="background:var(--' + risk + ')"></span>' : '')
+      + '</button>';
+  }
+  document.getElementById('grid').innerHTML = html;
+
+  var hasData = y === 2026 && m === 9;
+  document.getElementById('hero').innerHTML = hasData
+    ? '9월에 안전선 아래로 내려가는 날이 <b><span class="n">' + badDays.length + '일</span></b>입니다'
+    : y + '년 ' + m + '월은 <b>예보가 없습니다</b>';
+}
+
+/* ── 오른쪽 · 고른 날 ── */
+function drawDetail() {
+  var el = document.getElementById('detail');
+  var mv = movesOf(sel);
+  if (!mv) {
+    el.innerHTML = '<h3>고른 날</h3><p class="dm" style="margin-top:var(--s4)">예보가 있는 날을 골라 주세요.</p>';
+    return;
+  }
+  var d = mv.day, ms = shown(mv.moves);
+  var ins = ms.filter(function (m) { return m.dir === 'in'; }).reduce(function (a,m) { return a+m.amt; }, 0);
+  var outs = ms.filter(function (m) { return m.dir === 'out'; }).reduce(function (a,m) { return a+m.amt; }, 0);
+  var CERT = { CONFIRMED:['확정',''], RANGE:['범위',''], PREDICTED:['예보','bd-est'] };
+
+  el.innerHTML = '<h3>' + mdKo(sel) + ' ' + d.dow + '요일</h3>'
+    + '<p style="margin-top:var(--s4)"><span class="st st-' + d.risk + '">'
+      + '<span class="mk mk-' + d.risk + '"></span>' + WORD[d.risk] + ' · ' + KO[d.risk] + '</span></p>'
+    + '<p class="dv" style="margin-top:var(--s4)">' + won(d.v) + '<span style="font-size:12px;color:var(--ink-3)">원</span></p>'
+    + '<p class="dm">' + (d.v < SAFETY
+        ? '안전선까지 ' + won(SAFETY - d.v) + '원 모자랄 가능성이 있습니다'
+        : '안전선보다 ' + won(d.v - SAFETY) + '원 위에 있습니다') + '</p>'
+    + '<div class="grp"><h3>그날 오갈 돈</h3><div style="margin-top:var(--s4)">'
+      + (ms.length ? ms.map(function (m) {
+          var c = CERT[m.cert];
+          return '<div class="mv"><span><span class="t">' + m.t
+            + ' <span class="bd ' + c[1] + '">' + c[0] + '</span></span>'
+            + '<span class="s">' + m.s + '</span></span>'
+            + '<span class="a' + (m.dir === 'in' ? ' in' : '') + '">'
+            + (m.dir === 'in' ? '+' : '−') + won(m.amt) + '</span></div>';
+        }).join('') : '<p class="dm">걸러낸 조건에 맞는 것이 없습니다.</p>')
+    + '</div></div>'
+    + '<dl style="margin-top:var(--s6)">'
+      + '<div class="kv"><dt>들어옴</dt><dd>+' + won(ins) + '원</dd></div>'
+      + '<div class="kv"><dt>나감</dt><dd>−' + won(outs) + '원</dd></div>'
+      + '<div class="kv"><dt>전날보다</dt><dd>' + (mv.delta >= 0 ? '+' : '−') + won(Math.abs(mv.delta)) + '원</dd></div>'
+    + '</dl>'
+    + '<div class="grp">'
+      + '<a class="btn btn-pri btn-block" href="pc-scenarios.html">이날을 시나리오로 보기</a>'
+    + '</div>';
+}
+
+function redraw() { drawSide(); drawCal(); drawDetail(); }
+
+/* ── 손잡이 ── */
+document.getElementById('grid').addEventListener('click', function (e) {
+  var c = e.target.closest('.cell[data-iso]'); if (!c || c.disabled) return;
+  sel = c.dataset.iso; drawCal(); drawDetail();
+});
+document.getElementById('kindChecks').addEventListener('click', function (e) {
+  var b = e.target.closest('.check'); if (!b) return;
+  var k = b.dataset.k, i = F.kinds.indexOf(k);
+  if (i < 0) F.kinds.push(k); else F.kinds.splice(i, 1);
+  b.setAttribute('aria-pressed', String(i < 0));
+  drawCal(); drawDetail();
+});
+document.getElementById('badOnly').addEventListener('click', function () {
+  F.badOnly = !F.badOnly; this.setAttribute('aria-pressed', String(F.badOnly)); drawCal();
+});
+document.getElementById('prev').addEventListener('click', function () {
+  view[1]--; if (view[1] < 1) { view[1] = 12; view[0]--; } drawCal();
+});
+document.getElementById('next').addEventListener('click', function () {
+  view[1]++; if (view[1] > 12) { view[1] = 1; view[0]++; } drawCal();
+});
+document.getElementById('today').addEventListener('click', function () {
+  view = [2026, 9]; sel = '2026-09-01'; redraw();
+});
+
+redraw();
+mountFeatures('pc-calendar');
+</script>
+</body>
+</html>

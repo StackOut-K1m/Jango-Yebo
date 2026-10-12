@@ -1,0 +1,77 @@
+/* ══════════════════════════════════════════════════════════════
+   화면별 기능 띠 · sky.css 다음에 불러옵니다.
+
+   화면 맨 아래에 「이 화면이 맡는 기능」을 붙입니다.
+   화면을 혼자 열어도 무엇을 만들어야 하는지 보이게 하기 위한 것입니다.
+
+   ── 시안이 아니라 작업 지시입니다 ──
+   그래서 「하늘과 땅」의 크림색 밖으로 나옵니다. 배경을 어둡게 두어
+   여기부터는 사장에게 보이는 화면이 아니라 팀에게 보이는 메모임을 표시합니다.
+   실제 구현에서는 이 띠를 지웁니다.
+   ══════════════════════════════════════════════════════════════ */
+
+.featbar {
+  background:#22211e; color:#e8e5df; padding:var(--s7) var(--s9) var(--s9);
+  font-family:var(--sans); position:relative; z-index:20;
+}
+body.m .featbar { padding:var(--s6) var(--s6) calc(var(--s9) + 76px); }
+
+.featbar .fb-hd {
+  display:flex; align-items:baseline; gap:var(--s5); flex-wrap:wrap;
+  padding-bottom:var(--s5); border-bottom:1px solid rgb(255 255 255 / .16);
+}
+.featbar .fb-k { font-size:12px; font-weight:800; letter-spacing:.08em; color:#fff; }
+.featbar .fb-id {
+  font-size:10.5px; font-weight:800; letter-spacing:.05em; padding:2px 7px;
+  border-radius:4px; background:rgb(255 255 255 / .14); color:#fff;
+}
+.featbar .fb-n { font-size:11.5px; color:#a8a49c; font-variant-numeric:tabular-nums; }
+.featbar .fb-go {
+  margin-left:auto; font-size:11.5px; font-weight:700; color:#e8e5df;
+  border-bottom:1.5px solid currentColor; padding-bottom:1px;
+}
+
+.featbar .fb-list { margin-top:var(--s3); }
+.featbar .fb-r {
+  display:grid; grid-template-columns:66px minmax(0,1fr) 52px; gap:var(--s5);
+  align-items:baseline; padding:var(--s4) 0; position:relative;
+}
+.featbar .fb-r + .fb-r::before {
+  content:""; position:absolute; left:0; right:0; top:0; height:1px;
+  background:rgb(255 255 255 / .1);
+}
+.featbar .fb-c {
+  font-size:11.5px; font-weight:800; color:#a8a49c; font-variant-numeric:tabular-nums;
+  letter-spacing:.02em;
+}
+.featbar .fb-t { font-size:13px; font-weight:600; color:#fff; }
+.featbar .fb-m {
+  display:inline-block; font-size:9.5px; font-weight:800; margin-left:6px;
+  padding:1px 5px; border-radius:3px; background:rgb(255 255 255 / .2); vertical-align:1px;
+}
+.featbar .fb-s {
+  display:block; font-size:11.5px; font-weight:400; color:#a8a49c;
+  margin-top:3px; line-height:1.6;
+}
+.featbar .fb-v {
+  text-align:right; font-size:11.5px; font-weight:800; white-space:nowrap;
+}
+
+/* 상태 — 색만으로 말하지 않습니다. 글자가 이미 「있음·부분·없음」입니다.
+   왼쪽 세로선을 함께 두어 훑을 때 눈에 걸리게 합니다. */
+.featbar .fb-y .fb-v { color:#7cc9a0; }
+.featbar .fb-p .fb-v { color:#e6c65a; }
+.featbar .fb-n .fb-v { color:#f08a7a; }
+.featbar .fb-r::after {
+  content:""; position:absolute; left:-14px; top:var(--s4); bottom:var(--s4); width:3px; border-radius:2px;
+}
+.featbar .fb-y::after { background:#7cc9a0; }
+.featbar .fb-p::after { background:#e6c65a; }
+.featbar .fb-n::after { background:#f08a7a; }
+
+@media (max-width:760px) {
+  .featbar { padding-left:var(--s6); padding-right:var(--s6); }
+  .featbar .fb-r { grid-template-columns:60px minmax(0,1fr) 44px; gap:var(--s4); }
+  .featbar .fb-r::after { left:-10px; }
+  .featbar .fb-go { margin-left:0; }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 영수증 촬영</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+.lens { margin-top:var(--s5); }
+</style>
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">배송 직후 그 자리에서</p>
+    <h1 class="hero">영수증을 <b>테두리 안에</b> 맞춰 주세요</h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <div class="lens">
+      <span class="paper"><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="frame"></span>
+      <span class="cap">공급자 · 날짜 · 금액 · 품목까지 읽습니다. 잘못 읽은 것은 다음 화면에서 고칠 수 있습니다.</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-pri btn-block">찍기</button>
+      <button class="btn btn-sub">앨범에서 고르기</button>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>최근 올린 증빙</h2>
+    <div class="rows" id="evRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>증빙 상태</h2>
+    <div class="figs" id="evFigs"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = mTop('영수증 촬영', 'm-home.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+var ST = { matched:['붙었습니다','st-safe','safe'], review:['확인하세요','st-caution','caution'],
+           unmatched:['거래를 못 찾음','st-danger','danger'] };
+document.getElementById('evRows').innerHTML = EVIDENCES.map(function (e) {
+  var s = ST[e[4]];
+  return '<div class="r"><span class="grow"><span class="nm">' + e[0] + '</span>'
+    + '<span class="mt">' + mdKo(e[1]) + ' · ' + e[3] + ' · 읽기 신뢰도 ' + Math.round(e[5]*100) + '%</span></span>'
+    + '<span class="st ' + s[1] + '"><span class="mk mk-' + s[2] + '"></span>' + s[0] + '</span>'
+    + '<span class="amt">' + won(e[2]) + '</span></div>';
+}).join('');
+var mt = EVIDENCES.filter(function(e){return e[4]==='matched';}).length;
+document.getElementById('evFigs').innerHTML =
+  '<div class="fig"><span class="k">붙은 증빙</span><span class="v">' + mt + ' / ' + EVIDENCES.length + '</span>'
+  + '<span class="s">거래와 금액·날짜·거래처가 맞은 것</span>'
+  + '<span class="rail"><i data-w="' + Math.round(mt/EVIDENCES.length*100) + '"></i></span></div>'
+  + '<div class="fig"><span class="k">3만원 넘는 지출</span><span class="v">' + TX.filter(function(t){return t[3]==='out'&&t[4]>30000;}).length + '<small>건</small></span>'
+  + '<span class="s">법정지출증빙을 받아야 하는 거래입니다</span></div>'
+  + '<div class="fig"><span class="k">아직 못 붙인 것</span><span class="v">' + EVIDENCES.filter(function(e){return e[4]!=='matched';}).length + '<small>건</small></span>'
+  + '<span class="s">신고 전에 붙이면 경비로 들어갑니다</span></div>'
+  + '<div class="fig"><span class="k">이번 분기 모은 증빙</span><span class="v">' + won(EVIDENCES.reduce(function(a,e){return a+e[2];},0)) + '<small>원</small></span>'
+  + '<span class="s">종합소득세와 부가세 신고에 쓰입니다</span></div>';
+
+/* ── 촬영 ──
+   시안이라 실제 카메라는 열지 않습니다. 대신 읽어낸 결과가 어떻게 오는지 보여 줍니다.
+   버튼을 눌러도 아무 일이 없으면 사장은 앱이 멈춘 줄 압니다. */
+function shoot(how) {
+  sheetOpen({
+    title: '읽었습니다',
+    sub: how + ' · 글자를 읽어 값을 채웠습니다. 틀린 곳은 고치면 됩니다',
+    rows: [
+      ['거래처', '삼우유통', false],
+      ['날짜', '2026년 8월 31일', false],
+      ['금액', won(318400) + '원', true],
+      ['품목', '돼지고기 · 대파 · 양파', false],
+      ['읽기 신뢰도', '98%', false]
+    ],
+    body: '<p class="dm" style="margin-top:var(--s5);font-size:11.5px;color:var(--ink-2);line-height:1.65">'
+      + '같은 날 같은 금액의 거래가 있어 자동으로 붙일 수 있습니다. '
+      + '<b>8월 31일 삼우유통 −318,400원</b></p>',
+    acts: [
+      ['그 거래에 붙이기', function () { sheetClose(); location.href = 'm-transactions.html'; }, true],
+      ['따로 보관하기', function () { sheetClose(); }, false]
+    ]
+  });
+}
+document.querySelectorAll('.btn').forEach(function (b) {
+  var label = b.textContent.trim();
+  if (/찍기|앨범/.test(label)) b.addEventListener('click', function () { shoot(label); });
+});
+
+wireReveal();
+mountFeatures('m-shoot');
+</script>
+</body>
+</html>

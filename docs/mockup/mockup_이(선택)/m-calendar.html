@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 캘린더</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+.cal .cell .b { font-size:9.5px; }
+</style>
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">2026년 9월</p>
+    <h1 class="hero">안전선 아래인 날 <b><span class="n">5</span>일</b></h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>9월</h2>
+    <div class="cal">
+      <div class="dow"><span class="sun">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+      <div class="grid" id="calGrid"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>날짜가 정해진 지출</h2>
+    <div class="rows" id="calList"></div>
+  </section>
+
+  <section class="sec">
+    <h2>이번 달의 셈</h2>
+    <div class="figs" id="calFigs"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = mTop('캘린더', 'm-home.html');
+document.getElementById('tabs').outerHTML = mTabs('cal');
+(function () {
+  var k = SKYC['caution'], s = document.getElementById('sky');
+  s.dataset.w = 'caution';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* 9월 달력 — 예보 배열과 고정비 일정에서 만듭니다 */
+var YM = [2026, 9];
+var first = new Date(YM[0], YM[1]-1, 1).getDay();
+var last  = new Date(YM[0], YM[1], 0).getDate();
+var byDate = {}; days.forEach(function (d) { byDate[d.date] = d; });
+var fixedBy = {}; FIXED.forEach(function (f) { (fixedBy[f[0]] = fixedBy[f[0]] || []).push(f); });
+
+var cells = '';
+for (var i = 0; i < first; i++) cells += '<span class="cell out"></span>';
+for (var n = 1; n <= last; n++) {
+  var iso = '2026-09-' + String(n).padStart(2,'0');
+  var d = byDate[iso], fx = fixedBy[iso];
+  var risk = d ? d.risk : null;
+  cells += '<button class="cell' + (risk && risk!=='safe' ? ' bad' : '')
+    + '" data-d="' + iso + '"' + (d ? '' : ' disabled') + '>'
+    + '<span class="d">' + n + '</span>'
+    + (d ? '<span class="b">' + man(d.v) + '</span>' : '')
+    + (fx ? '<span class="ev" style="color:var(--ink-2)">' + fx[0][1] + '</span>' : '')
+    + (risk && risk!=='safe' ? '<span class="band" style="background:var(--'+risk+')"></span>' : '')
+    + '</button>';
+}
+document.getElementById('calGrid').innerHTML = cells;
+
+document.getElementById('calFigs').innerHTML =
+  '<div class="fig"><span class="k">이번 달 나갈 고정비</span>'
+  + '<span class="v">' + won(FIXED.reduce(function(a,f){return a+f[3];},0)) + '<small>원</small></span>'
+  + '<span class="s">' + FIXED.length + '건. 날짜가 정해져 있어 미룰 수 없습니다</span></div>'
+  + '<div class="fig"><span class="k">안전선 아래인 날</span><span class="v">' + badDays.length + '<small>일</small></span>'
+  + '<span class="s">' + mdKo(firstBad.date) + '부터입니다</span></div>'
+  + '<div class="fig"><span class="k">정산이 없는 날</span><span class="v">' + NO_SETTLE.length + '<small>일</small></span>'
+  + '<span class="s">' + md(NO_SETTLE[0]) + '~' + md(NO_SETTLE[NO_SETTLE.length-1]) + ' 주말과 휴무</span></div>'
+  + '<div class="fig"><span class="k">세금 일정</span><span class="v">10.25</span>'
+  + '<span class="s">부가세 예정고지. 예상 162만~211만원</span></div>';
+
+document.getElementById('calList').innerHTML = FIXED.map(function (f) {
+  var d = byDate[f[0]];
+  return '<div class="r"><span class="grow"><span class="nm">' + f[1] + '</span>'
+    + '<span class="mt">' + mdKo(f[0]) + ' · ' + f[2] + '</span></span>'
+    + (d ? '<span class="st st-' + d.risk + '"><span class="mk mk-' + d.risk + '"></span>' + KO[d.risk] + '</span>' : '')
+    + '<span class="amt">−' + won(f[3]) + '</span></div>';
+}).join('');
+
+/* ── 날짜를 누르면 그날 내역 ──
+   예보 밖(9월 30일 이후 등)은 자료가 없어 버튼을 끕니다.
+   누를 수 없는 것을 누르게 두면 무반응을 고장으로 읽습니다. */
+document.getElementById('calGrid').addEventListener('click', function (e) {
+  var b = e.target.closest('.cell[data-d]'); if (!b || b.disabled) return;
+  var iso = b.dataset.d, d = byDate[iso], fx = fixedBy[iso] || [];
+  var rows = [
+    ['예상 잔액', won(d.v) + '원', true],
+    ['안전선까지', d.v < SAFETY ? '−' + won(SAFETY - d.v) + '원' : '+' + won(d.v - SAFETY) + '원', true],
+    ['날씨', WORD[d.risk] + ' · ' + KO[d.risk], false]
+  ];
+  var body = fx.length
+    ? '<p class="dm" style="margin-top:var(--s5);font-size:11px;color:var(--ink-3)">이날 나갈 돈</p>'
+      + fx.map(function (f) {
+          return '<div class="bsr"><span class="k">' + f[1] + '</span>'
+            + '<span class="v">' + f[2] + '</span>'
+            + '<span class="v num">−' + won(f[3]) + '</span></div>';
+        }).join('')
+      + '<div class="bsr"><span class="k">합계</span><span class="v"></span>'
+      + '<span class="v num">−' + won(fx.reduce(function (a,f) { return a+f[3]; }, 0)) + '</span></div>'
+    : '<p class="dm" style="margin-top:var(--s5);font-size:11.5px;color:var(--ink-2);line-height:1.65">'
+      + '날짜가 정해진 지출은 없습니다. 재료 매입과 정산만 오갑니다.</p>';
+  /* 통장을 함께 쓰면 이 잔액은 내 가게 것만이 아닙니다. 그 사실을 말해 줘야 합니다. */
+  if (MATES.length)
+    body += '<p class="dm" style="margin-top:var(--s5);font-size:11.5px;color:var(--ink-2);line-height:1.65">'
+      + '이 잔액은 <b>' + PURSE.name + '</b> 것입니다. '
+      + MATES.map(function (m) { return m.name; }).join(' · ') + '과 한 통장을 씁니다. '
+      + '두 가게가 다 버티려면 <b>' + won(PURSE.safety) + '원</b>이 있어야 합니다.</p>';
+  if (NO_SETTLE.indexOf(iso) >= 0)
+    body += '<p class="dm" style="margin-top:var(--s5);font-size:11.5px;color:var(--ink-2);line-height:1.65">'
+      + '<b>이날은 정산이 들어오지 않습니다.</b> 주말이거나 휴무일입니다.</p>';
+  sheetOpen({
+    title: mdKo(iso) + ' ' + d.dow + '요일',
+    sub: SHOP.name + ' 안전선 ' + won(SAFETY) + '원 기준입니다',
+    rows: rows, body: body,
+    acts: [['거래내역에서 보기', function () { location.href = 'm-transactions.html'; }, false]]
+  });
+});
+
+wireReveal();
+mountFeatures('m-calendar');
+</script>
+</body>
+</html>

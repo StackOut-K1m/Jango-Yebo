@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 대출·지원 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-10 대출 · 지원 제도 (P1-13 · P1-14 · P1-15)
+   왼쪽에서 신용 정보를 넣으면 받을 수 있는 상품이 실제로 걸러지고,
+   가운데에서 갈아타기 손익이 실제로 계산됩니다.
+   추천은 참고용입니다. 실행은 금융기관에서 직접 하셔야 합니다. */
+.tbl { --cols:minmax(0,1fr) 116px 92px 108px 96px; }
+.pick { display:flex; align-items:center; gap:var(--s3); padding:var(--s4) 0; position:relative;
+        width:100%; text-align:left; }
+.pick + .pick::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.pick i { width:15px; height:15px; flex:none; border-radius:4px; box-shadow:inset 0 0 0 1.5px var(--hair);
+          position:relative; }
+.pick[aria-pressed="true"] i { background:var(--ink); box-shadow:none; }
+.pick[aria-pressed="true"] i::after { content:""; position:absolute; left:4.5px; top:2px; width:5px; height:8px;
+          border:2px solid var(--ground); border-top:0; border-left:0; transform:rotate(40deg); }
+.pick .n { font-size:13px; font-weight:600; }
+.pick .m { font-size:11px; color:var(--ink-3); display:block; margin-top:1px; }
+.pick .a { margin-left:auto; font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+.calc { margin-top:var(--s6); }
+.calc .c { display:flex; align-items:baseline; gap:var(--s4); padding:var(--s4) 0; position:relative; }
+.calc .c + .c::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.calc .c.tot { padding-top:var(--s5); margin-top:var(--s2); }
+.calc .c.tot::before { background:var(--ink); height:2px; }
+.calc .k { font-size:12.5px; }
+.calc .k small { display:block; font-size:11px; color:var(--ink-3); margin-top:2px; }
+.calc .v { margin-left:auto; font-size:14px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.calc .c.tot .v { font-size:22px; letter-spacing:-.03em; }
+.gauge { position:relative; margin-top:var(--s4); }
+.gauge svg { display:block; width:100%; height:104px; }
+.off { opacity:.4; }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">9월 10일 상환이 공백과 겹칩니다</p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede">추천은 참고용입니다. 실행은 금융기관에서 직접 하셔야 하고, 자격은 주관 기관 확인이 필요합니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <aside class="side">
+    <div class="grp">
+      <h3>내 신용 정보</h3>
+      <div class="gauge"><svg id="g" viewBox="0 0 240 104" aria-hidden="true"></svg></div>
+      <div class="knob">
+        <div class="kt"><span class="n">신용점수</span><span class="v" id="scV"></span></div>
+        <input type="range" id="sc" min="300" max="1000" step="1" value="741">
+        <div class="ends"><span>300</span><span>1000</span></div>
+      </div>
+      <div class="knob">
+        <div class="kt"><span class="n">업력</span><span class="v" id="yrV"></span></div>
+        <input type="range" id="yr" min="0" max="10" step="1" value="4">
+        <div class="ends"><span>없음</span><span>10년</span></div>
+      </div>
+      <button class="toggle" id="late" aria-pressed="false"><span class="sw" aria-hidden="true"></span>최근 1년 연체 있음</button>
+    </div>
+
+    <div class="grp">
+      <h3>갈아탈 대출 고르기</h3>
+      <div id="loanPick"></div>
+    </div>
+
+    <div class="grp">
+      <h3>조건</h3>
+      <div class="knob">
+        <div class="kt"><span class="n">남은 기간</span><span class="v" id="mV"></span></div>
+        <input type="range" id="mo" min="12" max="84" step="6" value="36">
+        <div class="ends"><span>1년</span><span>7년</span></div>
+      </div>
+      <div class="knob">
+        <div class="kt"><span class="n">중도상환수수료</span><span class="v" id="feV"></span></div>
+        <input type="range" id="fe" min="0" max="20" step="1" value="12">
+        <div class="ends"><span>0%</span><span>2.0%</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="body">
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3)">지금 갚고 있는 것</h3>
+    <div class="tbl" style="margin-top:var(--s4)">
+      <div class="th"><span>대출</span><span class="r">남은 원금</span><span class="r">금리</span><span class="r">월 이자</span><span>다음 상환</span></div>
+      <div id="loanRows"></div>
+    </div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s9)">
+      갈아타면 결국 얼마 아끼나</h3>
+    <div class="calc" id="calc"></div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s9)">
+      공백 시점에 맞는 지원 제도</h3>
+    <div class="tbl" style="--cols:minmax(0,1fr) 108px 108px 132px;margin-top:var(--s4)">
+      <div class="th"><span>제도</span><span class="r">금리</span><span class="r">한도</span><span>조건</span></div>
+      <div id="prodRows"></div>
+    </div>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = pcTop('loan');
+wireSwitch();
+(function () {
+  var k = SKYC['caution'], s = document.getElementById('sky');
+  s.dataset.w = 'caution';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* ══ 계산 가정 ══
+   단순 이자 차액으로 계산합니다. 원리금균등 상환은 잔액이 줄어들어 실제 절감은 이보다 작습니다.
+   그 사실을 화면에 적어 둡니다. */
+var S = { score:741, years:4, late:false, months:36, feeBp:12, picked:[0] };
+
+/* 상품에 실제 자격 조건을 둡니다. 신용 정보를 바꾸면 목록이 걸러집니다. */
+var PROD = [
+  { nm:'소상공인 경영안정자금', org:'소진공', rate:2.9, limit:30000000, due:'9월 15일 마감',
+    minScore:600, minYears:1, noLate:true, guarantee:0.9 },
+  { nm:'성동구 소상공인 이자지원', org:'성동구청', rate:0, limit:10000000, due:'상시',
+    minScore:550, minYears:2, noLate:false, guarantee:0 },
+  { nm:'기업은행 새희망홀씨', org:'기업은행', rate:4.8, limit:20000000, due:'상시',
+    minScore:500, minYears:0, noLate:false, guarantee:0.5 },
+  { nm:'신용보증재단 특별보증', org:'서울신보', rate:3.4, limit:50000000, due:'9월 30일 마감',
+    minScore:680, minYears:3, noLate:true, guarantee:1.2 }
+];
+var L = LOANS.map(function (l, i) {
+  return { id:i, nm:l[0], org:l[1], bal:l[2], rate:l[3], due:l[4], pay:l[5] };
+});
+
+function eligible(p) {
+  if (S.score < p.minScore) return false;
+  if (S.years < p.minYears) return false;
+  if (p.noLate && S.late) return false;
+  return true;
+}
+function grade(sc) {
+  var t = [[900,1],[870,2],[840,3],[805,4],[750,5],[665,6],[600,7],[515,8],[445,9],[300,10]];
+  for (var i = 0; i < t.length; i++) if (sc >= t[i][0]) return t[i][1];
+  return 10;
+}
+
+function render() {
+  var fee = S.feeBp / 1000;   /* 12 → 1.2% */
+  document.getElementById('scV').textContent = S.score + '점 · ' + grade(S.score) + '등급';
+  document.getElementById('yrV').textContent = S.years ? S.years + '년' : '1년 미만';
+  document.getElementById('mV').textContent = S.months + '개월';
+  document.getElementById('feV').textContent = (fee*100).toFixed(1) + '%';
+
+  /* 반원 게이지 */
+  var W = 240, H = 104, cx = W/2, cy = H-12, r = 82, lw = 13;
+  var pt = function (a) { return [cx + Math.cos(Math.PI - a*Math.PI)*r, cy - Math.sin(Math.PI - a*Math.PI)*r]; };
+  var arc = function (a0, a1, col, w) {
+    var p0 = pt(a0), p1 = pt(a1);
+    return '<path d="M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' A' + r + ' ' + r
+      + ' 0 0 1 ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + '" fill="none" stroke="' + col
+      + '" stroke-width="' + w + '" stroke-linecap="round"/>';
+  };
+  var p = (S.score - 300) / 700;
+  document.getElementById('g').innerHTML =
+      arc(0, 1, 'var(--hair)', lw)
+    + arc(0, Math.max(0.01, p), 'var(--ink)', lw)
+    + '<text x="' + cx + '" y="' + (cy-22) + '" text-anchor="middle" font-size="26" font-weight="800"'
+      + ' font-family="Pretendard, sans-serif" fill="var(--ink)">' + S.score + '</text>'
+    + '<text x="' + cx + '" y="' + (cy-6) + '" text-anchor="middle" font-size="10.5" font-weight="700"'
+      + ' font-family="Pretendard, sans-serif" fill="var(--ink-3)">' + grade(S.score) + '등급</text>';
+
+  /* 갈아탈 대출 고르기 */
+  document.getElementById('loanPick').innerHTML = L.map(function (l) {
+    return '<button class="pick" data-l="' + l.id + '" aria-pressed="' + (S.picked.indexOf(l.id) >= 0) + '">'
+      + '<i aria-hidden="true"></i><span><span class="n">' + l.nm + '</span>'
+      + '<span class="m">연 ' + l.rate + '% · ' + man(l.bal) + '원</span></span></button>';
+  }).join('');
+
+  /* 보유 대출 표 */
+  document.getElementById('loanRows').innerHTML = L.map(function (l) {
+    return '<div class="tr" style="cursor:default"><span><span class="nm">' + l.nm + '</span>'
+      + '<span class="mt">' + l.org + '</span></span>'
+      + '<span class="r amt">' + won(l.bal) + '</span>'
+      + '<span class="r" style="font-variant-numeric:tabular-nums">' + l.rate + '%</span>'
+      + '<span class="r" style="font-variant-numeric:tabular-nums">' + won(Math.round(l.bal*l.rate/100/12)) + '</span>'
+      + '<span class="dt">' + md(l.due) + '</span></div>';
+  }).join('');
+
+  /* 지원 제도 — 자격으로 실제 걸러집니다 */
+  var ok = PROD.filter(eligible);
+  document.getElementById('prodRows').innerHTML = PROD.map(function (pr) {
+    var e = eligible(pr);
+    return '<div class="tr' + (e ? '' : ' off') + '" style="cursor:default">'
+      + '<span><span class="nm">' + pr.nm + '</span>'
+      + '<span class="mt">' + pr.org + ' · ' + pr.due + '</span></span>'
+      + '<span class="r amt">' + (pr.rate === 0 ? '이자 지원' : pr.rate + '%') + '</span>'
+      + '<span class="r" style="font-variant-numeric:tabular-nums">' + man(pr.limit) + '</span>'
+      + '<span>' + (e ? '<span class="st st-safe"><span class="mk mk-safe"></span>조건 맞음</span>'
+          : '<span class="bd">' + (S.score < pr.minScore ? pr.minScore + '점 이상'
+              : S.years < pr.minYears ? '업력 ' + pr.minYears + '년' : '연체 없어야') + '</span>') + '</span></div>';
+  }).join('');
+
+  /* ── 갈아타기 계산 ──
+     가장 낮은 금리로 통합했을 때. 자격이 맞는 상품 중 최저 금리. */
+  var best = ok.filter(function (pr) { return pr.rate > 0; })
+               .sort(function (a,b) { return a.rate - b.rate; })[0];
+  var picks = L.filter(function (l) { return S.picked.indexOf(l.id) >= 0; });
+  var bal = picks.reduce(function (a,l) { return a+l.bal; }, 0);
+
+  if (!best || !picks.length || bal === 0) {
+    document.getElementById('calc').innerHTML = '<p class="empty">'
+      + (!picks.length ? '왼쪽에서 갈아탈 대출을 골라 주세요.'
+         : '지금 신용 정보로는 갈아탈 수 있는 상품이 없습니다. 조건을 바꿔 보세요.') + '</p>';
+    document.getElementById('hero').innerHTML = '상환 뒤 <b>사흘</b>이 안전선 아래로 내려갑니다';
+    drawDetail(null, picks, bal);
+    return;
+  }
+
+  var oldMonthly = picks.reduce(function (a,l) { return a + l.bal*l.rate/100/12; }, 0);
+  var newMonthly = bal * best.rate/100/12;
+  var save = (oldMonthly - newMonthly) * S.months;
+  var feeAmt = bal * fee;
+  var gtee = bal * best.guarantee/100;
+  var net = save - feeAmt - gtee;
+
+  document.getElementById('calc').innerHTML =
+      '<div class="c"><span class="k">지금 내는 이자<small>' + picks.map(function (l) { return l.nm + ' ' + l.rate + '%'; }).join(' · ')
+        + '</small></span><span class="v">월 ' + won(Math.round(oldMonthly)) + '원</span></div>'
+    + '<div class="c"><span class="k">갈아탄 뒤 이자<small>' + best.nm + ' ' + best.rate + '%</small></span>'
+      + '<span class="v">월 ' + won(Math.round(newMonthly)) + '원</span></div>'
+    + '<div class="c"><span class="k">' + S.months + '개월 동안 줄어드는 이자</span>'
+      + '<span class="v" style="color:var(--safe)">+' + won(Math.round(save)) + '원</span></div>'
+    + '<div class="c"><span class="k">중도상환수수료<small>남은 원금 ' + won(bal) + '원의 ' + (fee*100).toFixed(1) + '%</small></span>'
+      + '<span class="v" style="color:var(--danger)">−' + won(Math.round(feeAmt)) + '원</span></div>'
+    + '<div class="c"><span class="k">보증료<small>' + best.guarantee + '%</small></span>'
+      + '<span class="v" style="color:var(--danger)">−' + won(Math.round(gtee)) + '원</span></div>'
+    + '<div class="c tot"><span class="k">결국 아끼는 돈</span>'
+      + '<span class="v" style="color:' + (net > 0 ? 'var(--safe)' : 'var(--danger)') + '">'
+      + (net > 0 ? '+' : '−') + won(Math.abs(Math.round(net))) + '원</span></div>'
+    + '<p class="dm" style="font-size:11px;color:var(--ink-3);margin-top:var(--s5);line-height:1.6">'
+      + '단순 이자 차액으로 계산했습니다. 원리금균등 상환은 원금이 줄어들면서 이자도 줄어들기 때문에 '
+      + '실제 절감은 이보다 작습니다. 정확한 금액은 금융기관에서 확인하셔야 합니다.</p>';
+
+  document.getElementById('hero').innerHTML = net > 0
+    ? '갈아타면 <b><span class="n">' + won(Math.round(net)) + '원</span></b> 아낄 수 있습니다'
+    : '지금 조건으로 갈아타면 <b>' + won(Math.abs(Math.round(net))) + '원 손해</b>입니다';
+
+  drawDetail(best, picks, bal, net, save, feeAmt, gtee);
+}
+
+function drawDetail(best, picks, bal, net) {
+  var g = L.find(function (l) { return l.due === '2026-09-10'; });
+  document.getElementById('detail').innerHTML = '<h3>상환일과 공백</h3>'
+    + '<p class="dv" style="margin-top:var(--s4)">9월 10일</p>'
+    + '<p class="dm">' + (g ? won(g.pay + L[0].pay) : '') + '원이 나갑니다. '
+      + '이날 이후 사흘이 안전선 아래입니다.</p>'
+    + '<dl style="margin-top:var(--s5)">'
+      + '<div class="kv"><dt>9/10 잔고</dt><dd>' + won(days.find(function (d) { return d.date === '2026-09-10'; }).v) + '원</dd></div>'
+      + '<div class="kv"><dt>가장 낮은 날</dt><dd>' + won(lowest.v) + '원 (' + md(lowest.date) + ')</dd></div>'
+      + '<div class="kv"><dt>남은 원금</dt><dd>' + won(L.reduce(function (a,l) { return a+l.bal; }, 0)) + '원</dd></div>'
+      + '<div class="kv"><dt>월 상환액</dt><dd>' + won(L.reduce(function (a,l) { return a+l.pay; }, 0)) + '원</dd></div>'
+    + '</dl>'
+    + (best ? '<div class="grp"><h3>가장 낮은 금리</h3>'
+        + '<p class="dn" style="margin-top:var(--s3)">' + best.nm + '</p>'
+        + '<p class="dm">' + best.org + ' · 연 ' + best.rate + '% · 한도 ' + man(best.limit) + '원 · ' + best.due + '</p>'
+        + '<button class="btn btn-pri btn-block" style="margin-top:var(--s4)" id="go">신청 서류 확인하기</button>'
+        + '<p class="dm" style="margin-top:var(--s3)">자격은 주관 기관에서 확인해야 합니다. '
+          + '이 화면은 정보 제공이며 금융 자문이 아닙니다.</p></div>' : '')
+    + '<div class="grp"><a class="btn btn-sub btn-block" href="pc-scenarios.html">'
+      + '상환을 미뤘을 때 시나리오로 보기</a></div>';
+  var go = document.getElementById('go');
+  if (go) go.addEventListener('click', function () { this.textContent = '서류 5종을 정리했습니다'; });
+}
+
+/* ── 손잡이 ── */
+[['sc','score'],['yr','years'],['mo','months'],['fe','feeBp']].forEach(function (p) {
+  document.getElementById(p[0]).addEventListener('input', function () { S[p[1]] = +this.value; render(); });
+});
+document.getElementById('late').addEventListener('click', function () {
+  S.late = !S.late; this.setAttribute('aria-pressed', String(S.late)); render();
+});
+document.getElementById('loanPick').addEventListener('click', function (e) {
+  var b = e.target.closest('.pick'); if (!b) return;
+  var id = +b.dataset.l, i = S.picked.indexOf(id);
+  if (i < 0) S.picked.push(id); else S.picked.splice(i, 1);
+  render();
+});
+
+render();
+mountFeatures('pc-loans');
+</script>
+</body>
+</html>

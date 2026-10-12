@@ -1,0 +1,199 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: edge-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/locations:/etc/nginx/locations:ro
+      - ./nginx/certbot/www:/var/www/certbot:ro
+      - ./nginx/certbot/conf:/etc/letsencrypt:ro
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - edge
+
+  jango-api:
+    image: jango-api:${API_TAG}
+    container_name: jango-api
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Seoul
+    env_file:
+      - ./secrets/jango-api.env
+      - ./secrets/finopenapi.env
+    volumes:
+      - /opt/jango-yebo/uploads:/data/uploads
+    mem_limit: 2g
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/readiness | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+      - edge
+
+  jenkins:
+    build:
+      context: ./jenkins
+    image: jango-jenkins:2
+    container_name: jango-jenkins
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Seoul
+      - JENKINS_OPTS=--prefix=/jenkins
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/jango-yebo:/opt/jango-yebo
+    networks:
+      - edge
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: jango-postgres
+    restart: unless-stopped
+    env_file:
+      - ./secrets/postgres.env
+    environment:
+      - TZ=Asia/Seoul
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: jango-redis
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    environment:
+      - TZ=Asia/Seoul
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ./secrets/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping 2>&1 | grep -qE 'PONG|NOAUTH'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  ai-worker:
+    # 이미지는 Jenkins 가 빌드·태그한다 (`docker build -t jango-ai:$TAG ./ai`). :latest 금지.
+    # AI_TAG 는 .env 에 있다 — Jenkins 가 API_TAG 와 함께 매 배포에 다시 쓴다.
+    image: jango-ai:${AI_TAG}
+    container_name: jango-ai
+    restart: unless-stopped
+    env_file:
+      - ./secrets/ai.env
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      # API 서버의 업로드 볼륨을 read-only 로 공유한다. 워커는 fileObjectKey 만 받아 이 경로에서 읽는다.
+      # 컨테이너 안 uid 10001(worker) 이 읽을 수 있어야 한다.
+      - ./uploads:/data/uploads:ro
+      # 예측 모델 가중치 (S15P21C105-76). **이미지에 굽지 않는다** — `ai/artifacts/` 는
+      # 커밋 금지라(ai/CLAUDE.md) Jenkins 가 clone 해도 빌드 컨텍스트에 없다.
+      # 서버에 파일을 두고 여기로 붙인다:
+      #   scp ai/artifacts/residual-gru.pt deploy@your-server:~/app/ai-artifacts/
+      # 컨테이너 안 uid 10001(worker) 이 읽을 수 있어야 한다 (chmod 644).
+      # 파일이 없으면 **예측만** 「모델 미상주」가 되고 워커는 뜬다 (ai/app/main.py).
+      - ./ai-artifacts:/app/artifacts:ro
+    # 실측(76 에서 이 이미지로 확인): 예측 모델 상주 210 MiB · 추론 7~16 ms.
+    # OCR·NLP 가 같은 컨테이너를 쓰므로 여유를 둔다.
+    mem_limit: 1g
+    # forecast_threads=2 + 세마포어 1. 서버가 4 vCPU 뿐이라 API 서버를 굶기지 않게 묶는다.
+    cpus: 2.0
+    # 추론 타임아웃이 15초다 (계약 23장). 진행 중인 추론을 끊지 않는다.
+    stop_grace_period: 20s
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # FORECAST_MODE=live 면 기동에 torch import + 모델 상주가 붙는다.
+      # 그 사이에 retries 를 소모하면 멀쩡한 컨테이너가 unhealthy 로 찍힌다.
+      start_period: 30s
+    networks:
+      # internal 만. edge(nginx)에 붙이지 않는다 — 외부 클라이언트에 노출하지 않는 내부 API (명세 20장)
+      - internal
+
+  frontend:
+    # 이미지는 Jenkins 가 빌드·태그한다. :latest 금지.
+    #   docker build -f frontend/Dockerfile -t jango-frontend:$TAG .
+    #
+    # **빌드 컨텍스트가 저장소 루트다** — backend/ · ai/ 와 규칙이 다르다.
+    # @jangoyebo/core 가 workspace 패키지이고 main 이 src/index.ts(원본 TS)라
+    # packages/core/src 와 루트 lockfile 이 컨텍스트에 있어야 한다.
+    image: jango-frontend:${FRONTEND_TAG}
+    container_name: jango-frontend
+    restart: unless-stopped
+    # 빌드된 정적 파일만 내보낸다. 호스트 포트는 게시하지 않는다 — 외부는 edge 의 443 뿐이다.
+    expose:
+      - "80"
+    environment:
+      - TZ=Asia/Seoul
+    # nginx 가 정적 파일을 서빙만 한다. 128m 로 충분하다.
+    mem_limit: 128m
+    healthcheck:
+      # **localhost 를 쓰면 안 된다.** 컨테이너 /etc/hosts 에 `::1 localhost` 가 함께 있어
+      # busybox wget 이 IPv6 를 먼저 시도하는데, frontend/nginx.conf 는 `listen 80`(IPv4)만
+      # 열어 두므로 connection refused 가 난다 — 컨테이너는 멀쩡한데 unhealthy 로 찍힌다.
+      #
+      # nginx:alpine 의 10-listen-on-ipv6-by-default.sh 가 보통 이걸 메워 주지만,
+      # **패키지 기본 conf 일 때만** 동작한다. 우리처럼 자체 conf 를 넣으면 건너뛴다
+      # ("differs from the packaged version"). 2026-09-15 빌드 #142 가 이걸로 실패했다.
+      #
+      # 엣지도 Docker DNS 가 준 IPv4 로 붙으므로 127.0.0.1 이 실제 경로와 일치한다.
+      # stderr 를 버리지 않는다 — 버리면 docker inspect 의 Health.Output 이 비어
+      # 원인을 보려고 컨테이너에 따로 들어가야 한다.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      # edge 만. 정적 파일 서빙이라 DB·Redis 에 닿을 이유가 없다.
+      #
+      # depends_on 은 두지 않는다. SPA 는 기동 시점에 API 가 필요 없고,
+      # 걸어 두면 API 재배포마다 프론트까지 딸려 재생성된다.
+      - edge
+
+volumes:
+  pgdata:
+    name: jango-pgdata
+  redisdata:
+    name: jango-redisdata
+
+networks:
+  edge:
+    name: jango-edge
+  internal:
+    name: jango-internal

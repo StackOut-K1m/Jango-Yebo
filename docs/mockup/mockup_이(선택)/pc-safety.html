@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 자금 안전 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-03-3 자금 안전 관리 (P1-08 · P1-09 · P1-11)
+   안전선을 움직이면 걸리는 날이 실시간으로 바뀝니다.
+   이 화면의 일은 숫자를 고르는 것이 아니라 "그 선택이 경고를 몇 번 부르는지" 보는 것입니다. */
+.board { position:relative; margin-top:var(--s5); }
+.board svg { display:block; width:100%; height:230px; }
+.bars2 { display:grid; grid-template-columns:repeat(30, 1fr); gap:2px; margin-top:var(--s2); }
+.bars2 i { font-size:9px; text-align:center; color:var(--ink-3); font-style:normal;
+           font-variant-numeric:tabular-nums; }
+.bars2 i.bad { color:var(--danger); font-weight:800; }
+.rec { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:var(--s5); margin-top:var(--s6); }
+/* 여기는 상자를 씁니다. 셋을 나란히 비교하는 자리라 경계가 있어야 서로 안 섞입니다. */
+.rc { padding:var(--s5) var(--s6); border-radius:12px; box-shadow:inset 0 0 0 1px var(--hair);
+      text-align:left; transition:box-shadow 150ms, background 150ms; }
+.rc:hover { background:var(--ground-2); }
+.rc[aria-pressed="true"] { box-shadow:inset 0 0 0 2px var(--ink); background:var(--ground-2); }
+.rc .k { font-size:11px; font-weight:700; color:var(--ink-3); letter-spacing:.03em; }
+.rc .v { font-size:19px; font-weight:800; letter-spacing:-.03em; margin-top:var(--s2); display:block;
+         font-variant-numeric:tabular-nums; }
+.rc .s { font-size:11px; color:var(--ink-2); margin-top:var(--s2); display:block; line-height:1.5; }
+.rc .n { font-size:11.5px; font-weight:800; margin-top:var(--s3); display:block; }
+.hit { display:flex; align-items:baseline; gap:var(--s4); padding:var(--s4) 0; position:relative; }
+.hit + .hit::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.hit .dt { font-size:12px; font-weight:800; width:52px; flex:none; font-variant-numeric:tabular-nums; }
+.hit .why { font-size:11.5px; color:var(--ink-3); }
+.hit .a { margin-left:auto; font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">안전선 · 준비금 · 부가세</p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede">안전선은 잔고가 0이 되기 전에 잡아내기 위한 기준입니다. 높게 잡으면 자주 알리고, 낮게 잡으면 늦게 압니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <aside class="side">
+    <div class="grp">
+      <h3>안전선을 움직여 보세요</h3>
+      <div class="knob">
+        <div class="kt"><span class="n">안전선</span><span class="v" id="lineV"></span></div>
+        <input type="range" id="line" min="500000" max="5000000" step="50000" value="2300000">
+        <div class="ends"><span>50만</span><span>500만</span></div>
+        <p class="kd">움직이면 가운데 그림의 선과 오른쪽 목록이 바로 바뀝니다.</p>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h3>준비금</h3>
+      <div id="resList"></div>
+      <button class="btn btn-sub btn-block" id="addRes" style="margin-top:var(--s4)">준비금 만들기</button>
+    </div>
+
+    <div class="grp">
+      <h3>부가세</h3>
+      <div id="vatBox"></div>
+    </div>
+  </aside>
+
+  <main class="body">
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3)">9월 서른 날</h3>
+    <div class="board">
+      <svg id="board" viewBox="0 0 860 230" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="bars2" id="axis2"></div>
+    </div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s8)">기준을 무엇으로 잡을까</h3>
+    <div class="rec" id="rec"></div>
+
+    <p class="dm" style="font-size:11.5px;color:var(--ink-3);margin-top:var(--s6);line-height:1.6">
+      알림이 너무 잦으면 사장님이 알림을 끕니다. 너무 드물면 늦게 압니다.
+      고정비의 절반 근처가 대체로 쓸 만한 자리입니다.
+    </p>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = pcTop('safety');
+wireSwitch();
+
+var LINE = SAFETY;
+var FIXED_SUM = FIXED.reduce(function (a,f) { return a+f[3]; }, 0);
+var ESSENTIAL = FIXED.filter(function (f) { return /급여|임차료/.test(f[1]); })
+                     .reduce(function (a,f) { return a+f[3]; }, 0);
+
+/* 추천은 '고정비의 몇 %' 같은 임의 비율로 잡지 않습니다.
+   그렇게 잡으면 이 가게에서는 444만원이 나오고, 잔고가 150~450만이라 매일 경보가 됩니다.
+   대신 '무엇 하나를 감당할 수 있는 금액' 으로 잡습니다. 사장님이 이해할 수 있는 기준입니다. */
+function amtOf(name) { var f = FIXED.find(function (x) { return x[1] === name; }); return f ? f[3] : 0; }
+var RECS = [
+  ['임차료 한 달치', amtOf('임차료'),
+   '한 달 임차료 ' + won(amtOf('임차료')) + '원을 늘 남겨 둡니다'],
+  ['임차료와 공과금', amtOf('임차료') + amtOf('임차료 관리비') + amtOf('전기와 가스'),
+   '임차료 · 관리비 · 공과금을 합한 금액입니다'],
+  ['임차료와 대출 상환', amtOf('임차료') + amtOf('대출 상환'),
+   '한 달에 반드시 나가는 둘을 합한 금액입니다']
+];
+
+/* 그날 왜 걸리는지 — 고정비 일정과 정산 공백에서 끌어옵니다 */
+function whyOf(iso) {
+  var f = FIXED.filter(function (x) { return x[0] === iso; });
+  if (f.length) return f.map(function (x) { return x[1] + ' ' + man(x[3]) + '원'; }).join(', ');
+  if (NO_SETTLE.indexOf(iso) >= 0) return '정산이 들어오지 않는 날';
+  var i = days.findIndex(function (d) { return d.date === iso; });
+  var prev = days.slice(Math.max(0,i-3), i).map(function (d) { return d.date; });
+  var pf = FIXED.filter(function (x) { return prev.indexOf(x[0]) >= 0; });
+  if (pf.length) return pf[0][1] + ' 뒤 회복 중';
+  return '정산과 매입이 오간 결과';
+}
+
+function riskAt(v) {
+  if (v < 0) return 'gap';
+  if (v < LINE * 0.25) return 'danger';
+  if (v < LINE) return 'caution';
+  return 'safe';
+}
+
+function render() {
+  var hits = days.filter(function (d) { return riskAt(d.v) !== 'safe'; });
+  var gapN = days.filter(function (d) { return riskAt(d.v) === 'gap'; }).length;
+  var dangerN = days.filter(function (d) { return riskAt(d.v) === 'danger'; }).length;
+
+  document.getElementById('lineV').textContent = won(LINE) + '원';
+  document.getElementById('hero').innerHTML = hits.length === 0
+    ? '이 기준이면 9월에 <b>한 번도 알리지 않습니다</b>'
+    : hits.length >= 25
+      ? '이 기준이면 <b>거의 매일</b> 알립니다'
+      : '이 기준이면 9월에 <b><span class="n">' + hits.length + '번</span></b> 알립니다'
+        + (dangerN + gapN ? ' · 그중 ' + (dangerN+gapN) + '번은 위험 이상' : '');
+
+  /* ── 막대판 ── */
+  var W = 860, H = 230, PAD = 12;
+  var hi = Math.max(5000000, LINE * 1.25);
+  var lo = Math.min(0, lowest.v) - 200000;
+  var bw = (W - PAD*2) / days.length, bar = bw * 0.62;
+  var py = function (v) { return H - 16 - (H - 40) * (v - lo) / (hi - lo); };
+  var C = { safe:'#d8d2c6', caution:'var(--caution)', danger:'var(--danger)', gap:'var(--gap)' };
+
+  var bars = days.map(function (d, i) {
+    var r = riskAt(d.v), x = PAD + bw*i + (bw-bar)/2;
+    var y0 = py(Math.max(d.v, 0)), y1 = py(Math.min(d.v, 0));
+    return '<rect x="' + x.toFixed(1) + '" y="' + y0.toFixed(1) + '" width="' + bar.toFixed(1)
+      + '" height="' + Math.max(2, y1-y0).toFixed(1) + '" rx="2" fill="' + C[r] + '"/>';
+  }).join('');
+
+  var ly = py(LINE);
+  document.getElementById('board').innerHTML = bars
+    + (lo < 0 ? '<line x1="' + PAD + '" y1="' + py(0).toFixed(1) + '" x2="' + (W-PAD)
+        + '" y2="' + py(0).toFixed(1) + '" stroke="var(--ink-3)" stroke-width="1"/>' : '')
+    + '<line x1="' + PAD + '" y1="' + ly.toFixed(1) + '" x2="' + (W-PAD) + '" y2="' + ly.toFixed(1)
+      + '" stroke="var(--ink)" stroke-width="2" stroke-dasharray="7 5"/>'
+    + '<rect x="' + PAD + '" y="' + (ly-19).toFixed(1) + '" width="148" height="17" rx="4" fill="var(--ink)"/>'
+    + '<text x="' + (PAD+7) + '" y="' + (ly-6.5).toFixed(1) + '" fill="var(--ground)" font-size="11"'
+      + ' font-weight="700" font-family="Pretendard, sans-serif">안전선 ' + won(LINE) + '원</text>';
+
+  document.getElementById('axis2').innerHTML = days.map(function (d, i) {
+    return '<i class="' + (riskAt(d.v) !== 'safe' ? 'bad' : '') + '">' + (i+1) + '</i>';
+  }).join('');
+
+  /* ── 추천 셋 ── */
+  document.getElementById('rec').innerHTML = RECS.map(function (r) {
+    var n = days.filter(function (d) {
+      var v = d.v;
+      return v < 0 || v < r[1];
+    }).length;
+    return '<button class="rc" data-v="' + r[1] + '" aria-pressed="' + (LINE === r[1]) + '">'
+      + '<span class="k">' + r[0] + '</span>'
+      + '<span class="v">' + won(r[1]) + '<span style="font-size:11px;color:var(--ink-3)">원</span></span>'
+      + '<span class="s">' + r[2] + '</span>'
+      + '<span class="n" style="color:' + (n === 0 ? 'var(--safe)' : n >= 25 ? 'var(--gap)' : 'var(--ink)') + '">'
+        + (n === 0 ? '9월에 알림 없음' : '9월에 ' + n + '번 알림') + '</span></button>';
+  }).join('');
+
+  /* ── 오른쪽 · 걸리는 날 ── */
+  document.getElementById('detail').innerHTML = '<h3>이 기준에 걸리는 날</h3>'
+    + (hits.length ? '<div style="margin-top:var(--s4)">' + hits.map(function (d) {
+        var r = riskAt(d.v);
+        return '<div class="hit"><span class="dt">' + md(d.date) + '</span>'
+          + '<span><span class="st st-' + r + '"><span class="mk mk-' + r + '"></span>' + KO[r] + '</span>'
+          + '<span class="why" style="display:block;margin-top:3px">' + whyOf(d.date) + '</span></span>'
+          + '<span class="a">' + won(d.v) + '</span></div>';
+      }).join('') + '</div>'
+      : '<p class="dm" style="margin-top:var(--s4)">걸리는 날이 없습니다. 다만 기준이 낮으면 늦게 알게 됩니다.</p>')
+    + '<div class="grp"><h3>지금 상태</h3><dl style="margin-top:var(--s4)">'
+      + '<div class="kv"><dt>오늘 잔고</dt><dd>' + won(today.v) + '원</dd></div>'
+      + '<div class="kv"><dt>가용 잔고</dt><dd>' + won(today.v - VAT_HELD) + '원</dd></div>'
+      + '<div class="kv"><dt>안전선까지</dt><dd>' + (today.v >= LINE
+          ? '+' + won(today.v - LINE) + '원' : '−' + won(LINE - today.v) + '원') + '</dd></div>'
+      + '<div class="kv"><dt>가장 낮은 날</dt><dd>' + won(lowest.v) + '원 (' + md(lowest.date) + ')</dd></div>'
+    + '</dl></div>'
+    + '<div class="grp"><button class="btn btn-pri btn-block" id="apply">이 기준으로 두기</button>'
+      + '<p class="dm" style="margin-top:var(--s3)">바꾸면 예보의 위험 판정과 알림이 이 기준을 따릅니다.</p></div>';
+
+  document.getElementById('apply').addEventListener('click', function () {
+    this.textContent = won(LINE) + '원으로 두었습니다';
+  });
+}
+
+/* ── 왼쪽 · 준비금과 부가세 ── */
+document.getElementById('resList').innerHTML = RESERVES.map(function (r) {
+  var pct = Math.round(r[3]/r[2]*100);
+  return '<div style="padding:var(--s3) 0">'
+    + '<div style="display:flex;align-items:baseline;gap:var(--s3)">'
+      + '<span style="font-size:12.5px;font-weight:700">' + r[0] + '</span>'
+      + '<span style="margin-left:auto;font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums">'
+        + (r[4] ? '하루 ' + won(r[4]) : '완료') + '</span></div>'
+    + '<div style="font-size:11px;color:var(--ink-3);margin-top:2px">'
+      + mdKo(r[5]) + ' · ' + won(r[3]) + ' / ' + won(r[2]) + '원 (' + pct + '%)</div>'
+    + '<span class="rail" style="height:3px;background:var(--hair);border-radius:2px;margin-top:6px;display:block;overflow:hidden">'
+      + '<i style="display:block;height:100%;background:var(--ink);width:' + pct + '%"></i></span></div>';
+}).join('');
+
+document.getElementById('vatBox').innerHTML =
+    '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">예수금</span>'
+    + '<span class="b">' + won(VAT_HELD) + '</span></div>'
+  + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">예상 납부</span>'
+    + '<span class="b">162~211만</span></div>'
+  + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">예정고지</span>'
+    + '<span class="b">10.25</span></div>'
+  + '<p class="dm" style="font-size:11px;color:var(--ink-3);margin-top:var(--s3);line-height:1.55">'
+    + '신고 전 세무전문가 확인이 필요합니다.</p>';
+
+document.getElementById('addRes').addEventListener('click', function () {
+  this.textContent = '목적과 금액을 정해 주세요';
+});
+
+/* ── 손잡이 ── */
+document.getElementById('line').addEventListener('input', function () { LINE = +this.value; render(); });
+document.getElementById('rec').addEventListener('click', function (e) {
+  var b = e.target.closest('.rc'); if (!b) return;
+  LINE = +b.dataset.v;
+  document.getElementById('line').value = LINE;
+  render();
+});
+
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+render();
+mountFeatures('pc-safety');
+</script>
+</body>
+</html>

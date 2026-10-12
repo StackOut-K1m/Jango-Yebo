@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "잔고예보",
+    "slug": "jangoyebo",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "jangoyebo",
+    "newArchEnabled": true,
+    "android": {
+      "package": "io.ssafy.j15c105.jangoyebo"
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

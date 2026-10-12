@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 브리핑</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+.letter { font-family:var(--serif); font-size:17px; line-height:1.9; margin-top:var(--s4);
+          max-width:58ch; color:var(--ink-2); }
+.letter b { color:var(--ink); }
+.letter { font-size:15px; line-height:1.85; }
+</style>
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">8월 넷째 주</p>
+    <h1 class="hero">재료값이 <b>남는 돈을 밀어냈습니다</b></h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <div id="brBody"></div>
+
+  <section class="sec">
+    <h2>이번 주 숫자</h2>
+    <div class="figs" id="brFigs"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('브리핑', 'm-home.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+document.getElementById('brBody').innerHTML = BRIEF_BODY.map(function (b) {
+  return '<section class="sec"><h2>' + b[0] + '</h2><p class="letter">' + b[1] + '</p></section>';
+}).join('');
+document.getElementById('brFigs').innerHTML =
+  '<div class="fig"><span class="k">이번 주 매출</span><span class="v">9,842,000<small>원</small></span>'
+  + '<span class="s">지난주보다 4.2% 늘었습니다</span></div>'
+  + '<div class="fig"><span class="k">남는 돈</span><span class="v">418,000<small>원</small></span>'
+  + '<span class="s">재료비가 18.1% 늘어 오히려 줄었습니다</span></div>'
+  + '<div class="fig"><span class="k">다음 주 최저</span><span class="v">1,487,600<small>원</small></span>'
+  + '<span class="s">안전선까지 812,400원 모자랍니다</span></div>'
+  + '<div class="fig"><span class="k">돼지고기 매입가</span><span class="v">15,800<small>원/kg</small></span>'
+  + '<span class="s">3주 전 13,400원에서 올랐습니다</span></div>';
+
+wireReveal();
+mountFeatures('m-brief');
+</script>
+</body>
+</html>

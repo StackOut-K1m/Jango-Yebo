@@ -1,0 +1,144 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.jangoyebo'
+version = '0.0.1-SNAPSHOT'
+description = 'Jango-Yebo backend API'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springModulithVersion', "2.1.1")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// JWT (HMAC-SHA256). api 만 컴파일 의존, impl/jackson 은 런타임에만 필요하다.
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	implementation 'org.springframework.modulith:spring-modulith-observability-api'
+	implementation 'org.springframework.modulith:spring-modulith-starter-core'
+	// spring-modulith-starter-jpa 는 넣지 않는다.
+	// 도메인 이벤트 발행 레지스트리(event_publication 테이블)를 요구하는데, ddl-auto=validate 라
+	// 쓰지도 않는 테이블 때문에 부팅이 실패한다.
+	//
+	// 모듈 간 이벤트는 이미 있다(core -> forecast 재계산 트리거, S15P21C105-135). 그래도 스타터를
+	// 넣지 않는 이유는 그 이벤트가 유실돼도 손실이 없기 때문이다 — 듣는 쪽이 하는 일은 재계산
+	// 표시 하나이고, 표시가 없으면 매일 04:00 배치가 같은 사업장을 다시 계산한다. 발행을
+	// 영속화할 값어치가 없다. 손실이 생기는 이벤트가 나오면 그때 스타터와 마이그레이션을 함께 넣는다.
+	// XLSX 내보내기 (P0-12 · API 14.3). 기술스택 §3.2 — 의존성은 기능 착수 시 추가한다.
+	// 읽지 않고 쓰기만 한다. poi-ooxml 이 xmlbeans 등을 끌고 와 이미지가 늘지만,
+	// PDF 를 나중에 붙일 때도 같은 생태계를 쓴다.
+	implementation 'org.apache.poi:poi-ooxml:5.4.1'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
+	runtimeOnly 'org.springframework.modulith:spring-modulith-observability-core'
+	runtimeOnly 'org.springframework.modulith:spring-modulith-runtime'
+	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+	testImplementation 'org.springframework.modulith:spring-modulith-docs'
+	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+	testImplementation 'org.testcontainers:testcontainers-postgresql'
+	testCompileOnly 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+	}
+}
+
+tasks.named('test') {
+	// ImplementationStatusDocTests 가 backend/ **밖의** 문서를 읽는다. 입력으로 선언하지
+	// 않으면 Gradle 이 그 변화를 못 보고 test 를 UP-TO-DATE 로 건너뛴다 — **문서만 바뀐
+	// 바로 그 순간에** 검사가 사라진다. 실제로 그렇게 새는 것을 확인하고 넣었다.
+	inputs.files(files('../docs/api/99_구현현황.md'))
+			.withPropertyName('implementationStatusDoc')
+			.optional()
+
+	// Docker 없이 도는 테스트만 고른다 — `./gradlew test -PexcludeDocker`.
+	// Jenkins 는 DooD 라 워크스페이스 경로(/var/jenkins_home/...)가 호스트에 없어
+	// Testcontainers 가 뜨지 않는다. 그 경로가 고쳐지면 이 스위치를 빼면 전부 켜진다.
+	//
+	// **목록이 아니라 태그다.** 파이프라인이 한동안 `--tests "*ModularityTests"` 로
+	// 돌 것을 하나씩 적었는데, 그 뒤 테스트가 늘어나는 동안 목록은 그대로였다.
+	// 태그는 새 테스트가 기본으로 포함되는 쪽이라 아무도 손대지 않아도 따라온다.
+	// 태그는 @NeedsDocker 가 단다 — 컨테이너를 얻는 통로와 같은 애너테이션이라
+	// 표시만 빠뜨릴 수가 없다.
+	useJUnitPlatform {
+		if (providers.gradleProperty('excludeDocker').present) {
+			excludeTags 'docker'
+		}
+	}
+
+	// 운영 application.yml 은 시크릿에 기본값을 두지 않는다(fail-fast, 인프라 제약 §4.1 #6).
+	// 테스트에서도 같은 경로를 타도록 실제 환경변수로 주입한다.
+	// src/test/resources/application.yml 을 두면 메인 설정과 병합되지 않고 '대체'하여
+	// jango.* 속성이 통째로 사라지므로 그 방식은 쓰지 않는다.
+	// Job 워커를 테스트에서 끈다. 켜 두면 JobServiceTests 가 큐에 넣은 작업을 워커가
+	// 가로채 claimsEachJobExactlyOnceUnderConcurrency 의 PROCESSING 단정이 깨진다.
+	// 워커 동작은 JobWorkerTests 가 pollOnce() 를 직접 불러 검증한다.
+	environment 'JOB_WORKER_COUNT', '0'
+	// 예측 실행 스레드도 끈다. 켜 두면 테스트가 만든 사업장에 대해 5초 뒤 계산이 돌아
+	// 단정 시점과 경합한다. 실행 동작은 ForecastRunWorkerTests 가 execute() 를 직접 부른다.
+	environment 'FORECAST_WORKER_ENABLED', 'false'
+	// 예정 거래 자동 반영도 끈다. 켜 두면 테스트가 만든 계좌에 금융망 호출이 나가고
+	// (주소가 더미라 실패한다) 단정 시점과 경합한다. 동작은 PlannedExecutionWorkerTests 가
+	// runOnce() 를 직접 불러 검증한다.
+	environment 'PLANNED_EXECUTION_ENABLED', 'false'
+	environment 'JWT_SECRET', 'test-jwt-secret-must-be-long-enough-for-hmac-sha256-abcdefghijkl'
+	environment 'JWT_ACCESS_TTL', 'PT30M'
+	environment 'JWT_REFRESH_TTL', 'P14D'
+	environment 'APP_ENCRYPTION_KEY', 'test-encryption-key-0123456789abcdef'
+	// DB·Redis 접속값은 Testcontainers 의 @ServiceConnection 이 덮어쓴다. 더미다.
+	environment 'DB_HOST', 'localhost'
+	environment 'DB_PORT', '5432'
+	environment 'DB_NAME', 'jango_test'
+	environment 'DB_USER', 'test'
+	environment 'DB_PASSWORD', 'test'
+	environment 'REDIS_HOST', 'localhost'
+	environment 'REDIS_PORT', '6379'
+	environment 'REDIS_PASSWORD', 'test'
+	environment 'FINOPENAPI_BASE_URL', 'http://localhost:9999'
+	environment 'FINOPENAPI_API_KEY', 'test-api-key'
+	environment 'FINOPENAPI_INSTITUTION_CODE', '00100'
+	environment 'FINOPENAPI_FINTECH_APP_NO', '001'
+	environment 'AI_SERVICE_BASE_URL', 'http://localhost:9998'
+	environment 'AI_SERVICE_TOKEN', 'test-service-token'
+	environment 'STORAGE_ROOT', layout.buildDirectory.dir('test-uploads').get().asFile.absolutePath
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-Xlint:deprecation'
+}

@@ -1,0 +1,63 @@
+/* 프로필 팝오버 안의 색 고르기 줄.
+ *
+ * 선택자에 .card-tone 을 앞세워야 한다 — 팝오버의 일반 버튼 규칙
+ * (`.header-popover button` · `.profile-popover button`)이 폭 100%·비대칭 패딩·
+ * 라디우스 10px 를 먹여 견본이 알약이 아니라 넓적한 줄이 된다. */
+.card-tone {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 9px 0;
+}
+.card-tone__label {
+  font-size: var(--fs-12, 12px);
+  color: var(--text-3);
+}
+.card-tone__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.card-tone .card-tone__swatch,
+.card-tone .card-tone__roll {
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  flex: none;
+  padding: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.card-tone .card-tone__swatch {
+  border: 1px solid var(--veil-4);
+}
+/* 고른 것은 안쪽 링으로 말한다 — 견본 자체가 색이라 테두리 색으로는 구분이 안 된다.
+   이름은 aria-label·title 이 진다(색 단독 금지, 도메인 규칙 6). */
+.card-tone .card-tone__swatch[aria-pressed='true'],
+.card-tone .card-tone__roll[aria-pressed='true'] {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.card-tone .card-tone__swatch:hover {
+  transform: translateY(-1px);
+}
+
+/* 가챠 버튼. 별이 무지개라 바탕은 비워 두고 점선 테두리로만 「무작위」를 말한다. */
+.card-tone .card-tone__roll {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line-strong);
+  background: var(--veil-2);
+}
+.card-tone .card-tone__roll:hover {
+  background: var(--veil-4);
+  transform: translateY(-1px);
+}
+.card-tone .card-tone__roll svg {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-tone .card-tone__swatch:hover,
+  .card-tone .card-tone__roll:hover { transform: none; }
+}

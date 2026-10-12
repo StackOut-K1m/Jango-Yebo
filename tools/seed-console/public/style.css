@@ -1,0 +1,912 @@
+/* 시드 콘솔 — 금융망 콘솔(tools/fin-console)과 같은 토큰·골격을 쓴다. 우리 앱의 sky.css 와는
+   별개다. 여기는 내부 개발 도구라 "하늘과 땅"을 따르지 않고 값이 잘 읽히는 쪽을 택했다.
+
+   두 도구가 파일을 공유하지 않는 것은, 각 서버가 자기 public/ 만 내보내기 때문이다.
+   공유하려면 빌드 단계가 생기는데 의존성 0개라는 성질을 잃는다. 토큰 이름을 같게 두는 쪽을 골랐다.
+
+   지키는 것: 금액은 1,340,000원 · 음수는 −(U+2212) · 한국어는 keep-all ·
+   상태는 색만으로 구분하지 않는다(라벨을 함께 붙인다). */
+
+:root {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --fill: #f2f4f6;
+
+  --ink: #191f28;
+  --ink-2: #4e5968;
+  --ink-3: #8b95a1;
+  --ink-4: #b0b8c1;
+
+  --line: #e5e8eb;
+
+  --blue: #3182f6;
+  --blue-dark: #1b64da;
+  --blue-weak: #e8f3ff;
+
+  --red: #f04452;
+  --red-weak: #fdf0f1;
+
+  --green: #15803d;
+  --green-weak: #e7f6ec;
+
+  --r: 16px;
+  --r-sm: 12px;
+  --r-xs: 8px;
+
+  --sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  --mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+code,
+.mono {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+
+/* 금액·잔액은 자리수가 흔들리면 못 읽는다 */
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── 골격 ─────────────────────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.main {
+  padding: 40px 40px 96px;
+  max-width: 1000px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.head h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.head p {
+  margin-top: 6px;
+  color: var(--ink-3);
+  font-size: 14px;
+  max-width: 62ch;
+}
+
+/* ── 현재 상태 ────────────────────────────────────────────────────── */
+
+.ctx {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctx-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ctx-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+  letter-spacing: 0.02em;
+}
+
+.ctx-value {
+  font-size: 13px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.ctx-value.empty {
+  color: var(--ink-4);
+  font-weight: 500;
+}
+
+/* 판정. 색만으로 가르지 않으려고 앞에 기호와 말을 함께 붙인다. */
+.verdict {
+  border-radius: var(--r-xs);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.verdict.good {
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+}
+
+.verdict.warn {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+.verdict.busy {
+  background: var(--fill);
+  color: var(--ink-3);
+}
+
+/* ── 왼쪽 목록 ────────────────────────────────────────────────────── */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.nav-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+  padding: 0 8px 6px;
+  letter-spacing: 0.02em;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--fill);
+}
+
+.nav-item[aria-current='true'] {
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.nav-item .dot {
+  font-size: 10px;
+  color: var(--red);
+}
+
+.side-foot {
+  border-top: 1px solid var(--line);
+  padding: 12px 8px 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── 카드 ─────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.card-note {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+  line-height: 1.6;
+  max-width: 72ch;
+}
+
+.card-note b {
+  color: var(--ink-2);
+}
+
+.tag {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tag.write {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+/* ── 폼 ───────────────────────────────────────────────────────────── */
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  font-weight: 500;
+  outline: none;
+}
+
+.field textarea {
+  height: auto;
+  min-height: 72px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--blue);
+  background: var(--surface);
+}
+
+.field input::placeholder {
+  color: var(--ink-4);
+  font-weight: 400;
+}
+
+.field .hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+
+.field .hint b {
+  color: var(--ink-2);
+}
+
+.field.wide {
+  grid-column: 1 / -1;
+}
+
+.btn {
+  height: 48px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--blue);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--blue-dark);
+}
+
+.btn:disabled {
+  background: var(--ink-4);
+  cursor: default;
+}
+
+.btn.ghost {
+  background: var(--fill);
+  color: var(--ink-2);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: #e8ebed;
+}
+
+.btn.danger {
+  background: var(--red);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #d63744;
+}
+
+.btn.small {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.btn.block {
+  width: 100%;
+  height: 52px;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* ── 실행 확인 ────────────────────────────────────────────────────── */
+
+.confirm {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 16px;
+  background: var(--surface-2);
+}
+
+.confirm-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.confirm dl {
+  margin: 0 0 4px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  font-size: 13px;
+}
+
+.confirm dt {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.confirm dd {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ── 요약 ─────────────────────────────────────────────────────────── */
+
+.sum {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sum > div {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+}
+
+.sum .k {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sum .v {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sum .s {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+/* ── 표 ───────────────────────────────────────────────────────────── */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  padding: 0 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+th.r,
+td.r {
+  text-align: right;
+}
+
+th.c,
+td.c {
+  text-align: center;
+}
+
+.scroll {
+  overflow-x: auto;
+  margin: 0 -8px;
+  padding: 0 8px;
+}
+
+.amt-in {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.amt-out {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--fill);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.type-badge.in {
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+}
+
+.type-badge.bad {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+.sub-time {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.empty-state {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+/* ── 항목 표(편집) ─────────────────────────────────────────────────── */
+
+/* 금액·날짜를 표 안에서 바로 고친다. 한 날에 몰렸는지가 눈에 보이는 것이 요점이다. */
+.grid-table input,
+.grid-table select {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  background: var(--fill);
+  font-weight: 500;
+  outline: none;
+}
+
+.grid-table input:focus,
+.grid-table select:focus {
+  border-color: var(--blue);
+  background: var(--surface);
+}
+
+.grid-table input.num {
+  text-align: right;
+}
+
+/* 끈 항목(금액 0)은 흐리게. 지운 것과 구분되게 값은 그대로 남겨 둔다. */
+.grid-table tr.off input,
+.grid-table tr.off select {
+  color: var(--ink-4);
+}
+
+.grid-table .row-label {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.grid-table .row-key {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink-4);
+}
+
+.row-drop {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-4);
+  cursor: pointer;
+  border-radius: var(--r-xs);
+}
+
+.row-drop:hover {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+/* ── 곡선 ─────────────────────────────────────────────────────────── */
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* ── 단계 ─────────────────────────────────────────────────────────── */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-mark {
+  flex: none;
+  width: 18px;
+  font-weight: 700;
+  color: var(--ink-4);
+  font-size: 13px;
+}
+
+.step.done .step-mark {
+  color: var(--blue);
+}
+
+.step.fail .step-mark {
+  color: var(--red);
+}
+
+.step.running .step-mark {
+  color: var(--ink-2);
+}
+
+.step-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.step.done .step-text,
+.step.fail .step-text {
+  font-weight: 500;
+}
+
+.step-note {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.step-log {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+.step-log.bad {
+  color: var(--red);
+}
+
+/* 고르는 단계 */
+.pick-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.pick-step:last-of-type {
+  border-bottom: none;
+}
+
+.pick-step input {
+  margin: 3px 0 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+  flex: none;
+}
+
+.pick-step .t {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pick-step .n {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+/* 풀어도 그대로 도는 단계. 체크박스를 잠그고 왜 잠겼는지 적는다 — 선행이라서와
+   앞 단계의 뒤처리라서는 이유가 다르다. */
+.pick-step.locked {
+  cursor: default;
+}
+
+.pick-step.locked .t::after {
+  content: ' · 선행이라 끌 수 없다';
+  font-weight: 500;
+  color: var(--blue);
+  font-size: 12px;
+}
+
+.pick-step.locked.brought .t::after {
+  content: ' · 앞 단계가 남긴 뒤처리라 끌 수 없다';
+}
+
+/* 되돌릴 수 없는 단계. 나머지는 몇 번을 돌려도 같은 상태가 되지만 이것만 그렇지 않아
+   줄 자체가 달라 보여야 한다. 색만으로 가르지 않는다 — 왼쪽 띠가 형태로 한 번,
+   설명 첫머리의 ⚠ 가 글자로 한 번 더 말한다(도메인 규칙 6). */
+.pick-step.danger {
+  border-left: 3px solid var(--red);
+  padding-left: 10px;
+}
+
+.pick-step.danger .t {
+  color: var(--red);
+}
+
+.pick-step.danger input {
+  accent-color: var(--red);
+}
+
+/* 확인 패널에서 지우기 줄. 숫자 사이에 묻히면 읽히지 않는다. */
+.confirm dt.danger,
+.confirm dd.danger {
+  color: var(--red);
+}
+
+/* 원버튼의 두 번째 누름. 자기 앞의 회색 확인 패널과 달라 보여야 한다 —
+   저기는 「이렇게 된다」이고 여기는 「정말 할까」다. */
+.confirm.danger {
+  background: var(--red-weak);
+  border-color: var(--red);
+}
+
+.confirm.danger .confirm-title {
+  color: var(--red);
+}
+
+/* ── 알림 ─────────────────────────────────────────────────────────── */
+
+.err {
+  background: var(--red-weak);
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.err-title {
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 6px;
+}
+
+.err-msg {
+  font-size: 13px;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.ok-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notice {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.notice b {
+  color: var(--ink);
+}
+
+/* ── 반응형 ───────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .main {
+    padding: 24px 16px 64px;
+  }
+}

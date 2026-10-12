@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 대출·지원</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">9월 10일 상환</p>
+    <h1 class="hero">상환 뒤 <b>사흘</b>이 안전선 아래</h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>지금 갚고 있는 것</h2>
+    <div class="rows" id="loanRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>받을 수 있는 것</h2>
+    <div class="rows" id="prodRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>대출과 신용</h2>
+    <div class="figs" id="loanFigs"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('대출·지원', 'm-all.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+document.getElementById('loanRows').innerHTML = LOANS.map(function (l) {
+  return '<div class="r"><span class="grow"><span class="nm">' + l[0] + '</span>'
+    + '<span class="mt">' + l[1] + ' · 연 ' + l[3] + '% · 다음 상환 ' + mdKo(l[4]) + '</span></span>'
+    + '<span class="amt">' + won(l[2]) + '</span></div>';
+}).join('');
+document.getElementById('prodRows').innerHTML = PRODUCTS.map(function (p) {
+  return '<div class="r"><span class="grow"><span class="nm">' + p[0] + '</span>'
+    + '<span class="mt">' + p[1] + ' · 한도 ' + man(p[3]) + '원 · ' + p[4] + ' · ' + p[5] + '</span></span>'
+    + '<span class="amt">' + (p[2] === 0 ? '이자 지원' : '연 ' + p[2] + '%') + '</span></div>';
+}).join('');
+document.getElementById('loanFigs').innerHTML =
+  '<div class="fig"><span class="k">남은 대출</span><span class="v">' + won(LOANS.reduce(function(a,l){return a+l[2];},0)) + '<small>원</small></span>'
+  + '<span class="s">2건. 매달 ' + won(LOANS.reduce(function(a,l){return a+l[5];},0)) + '원씩 나갑니다</span></div>'
+  + '<div class="fig"><span class="k">신용점수</span><span class="v">741<small>점</small></span>'
+  + '<span class="s">나이스 기준 4등급. 실제 심사와 다를 수 있습니다</span>'
+  + '<span class="rail"><i data-w="63"></i></span></div>'
+  + '<div class="fig"><span class="k">9월 상환일</span><span class="v">9.10</span>'
+  + '<span class="s">1,680,000원. 이날 이후 3일간 안전선 아래입니다</span></div>'
+  + '<div class="fig"><span class="k">받을 수 있는 것</span><span class="v">' + PRODUCTS.length + '<small>건</small></span>'
+  + '<span class="s">공백 시점에 맞춰 골랐습니다. 자격은 기관 확인이 필요합니다</span></div>';
+
+wireReveal();
+mountFeatures('m-loans');
+</script>
+</body>
+</html>

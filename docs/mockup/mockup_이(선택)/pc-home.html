@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 예보 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+  /* SC-03-1 분석 대시보드 · PC. 내용은 화면구성도 5.3, 배치는 하늘과 땅. */
+  /* 하늘은 다른 화면과 같은 얇은 띠(.slim)입니다. 곡선은 「앞으로 서른 날」 절로 내렸습니다. */
+  /* 다른 화면의 얇은 하늘이 245px 입니다. 내용만으로는 212 라 같은 높이로 맞춥니다. */
+  .sky { min-height:245px; }
+  /* 곡선은 하늘 안 오른쪽. 위는 상단 줄 아래, 아래는 하늘 바닥 위. 245 안에서 약 160px.
+     상태 뱃지가 690px 쯤까지 오므로 50% 지점부터 시작해 겹치지 않습니다. */
+  .sky.slim .curve { inset:62px 40px 22px 50%; height:auto; }
+  .sky.slim .answer { max-width:640px; }
+  @media (max-width:1180px) { .sky.slim .curve { inset:62px 24px 22px 54%; } .sky.slim .answer { max-width:520px; } }
+
+/* ── 흐름도(폭포) ── 숫자를 나르는 도형입니다. 박스도 나열도 아닙니다. */
+.head-sub { font-size:13.5px; color:var(--ink-2); line-height:1.7; margin-top:var(--s3); max-width:72ch; }
+.head-sub b { color:var(--ink); font-weight:700; }
+.flow { display:block; width:100%; height:auto; margin-top:var(--s6); overflow:visible; }
+.flow .fl-bar.est { opacity:.72; }
+.flow .fl-bar.edge { stroke:rgb(20 20 19 / .12); }
+.flow .fl-ln { stroke:var(--ink-3); stroke-opacity:.45; stroke-width:1; stroke-dasharray:2 3; }
+.flow .fl-v { font-size:12px; font-weight:700; fill:var(--ink-2); font-variant-numeric:tabular-nums; }
+.flow .fl-v.strong { font-size:13px; font-weight:800; fill:var(--ink); }
+.flow .fl-k { font-size:11.5px; font-weight:700; fill:var(--ink); }
+.flow .fl-s { font-size:10.5px; fill:var(--ink-3); }
+.flow .fl-ax { font-size:10.5px; font-weight:700; fill:var(--danger); opacity:.8; }
+
+/* ── 막을 방법 ── 이름 · 더해지는 돈 · 결과 날씨. 결과가 주인공입니다. */
+.levers { margin-top:var(--s5); }
+.lv { display:grid; grid-template-columns:minmax(0,1fr) 120px 220px; gap:var(--s5); align-items:center;
+      padding:var(--s5) 0; position:relative; }
+.lv + .lv::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.lv:hover .lv-k { text-decoration:underline; text-underline-offset:3px; }
+.lv-k { font-size:14px; font-weight:700; }
+.lv-s { display:block; font-size:11.5px; color:var(--ink-3); font-weight:400; margin-top:2px; line-height:1.5; }
+.lv-g { font-size:15px; font-weight:800; text-align:right; color:var(--safe); font-variant-numeric:tabular-nums; }
+.lv-r { display:flex; align-items:center; gap:var(--s3); justify-content:flex-end; }
+.lv-a { font-size:11.5px; color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.lv-none { font-size:13.5px; color:var(--ink-2); line-height:1.7; margin-top:var(--s4); }
+
+/* ── 확인할 일 ── 개수가 크고 나머지는 작게 */
+.todo { margin-top:var(--s5); display:flex; gap:var(--s9); flex-wrap:wrap; }
+.td { display:flex; align-items:baseline; gap:var(--s3); }
+.td-n { font-size:26px; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.td-k { font-size:13px; font-weight:700; }
+.td-s { display:block; font-size:11px; color:var(--ink-3); font-weight:400; margin-top:1px; }
+.td .go { font-size:15px; color:var(--ink-3); align-self:center; }
+</style>
+</head>
+<body>
+
+<header class="sky slim">
+  <div class="top" id="top"></div>
+
+  <div class="answer">
+    <div class="whenrow">
+      <p class="when" id="when"></p>
+      <div class="weather">
+        <span class="glyph" id="glyph" aria-hidden="true"></span>
+        <span class="word" id="word"></span>
+        <span class="state" id="state"></span>
+      </div>
+    </div>
+    <div class="bal"><span class="v tnum" id="bigv">0</span><span class="u">원</span></div>
+    <p class="lede one" id="lede"></p>
+  </div>
+
+  <!-- 곡선은 금액 오른쪽, 하늘 안에 섭니다. 얇은 하늘이라 160px 로 그립니다. -->
+  <div class="curve"><svg id="curve" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+</header>
+
+<!-- 경보 띠. 하늘 안에 겹치지 않고 바로 아래 섭니다(조 목업의 alertband 자리). -->
+<div class="alertband">
+  <span class="pulse" aria-hidden="true"><i></i><i></i></span>
+  <span class="txt" id="alertTxt"></span>
+  <a class="go" href="pc-gap.html">공백 자세히 보기</a>
+</div>
+
+<section class="strip-wrap">
+  <div class="strip-hd">
+    <h2>앞으로 서른 날</h2>
+    <span class="hint">옆으로 끌어 넘기세요. 날짜를 누르면 하늘이 그날로 바뀝니다.</span>
+    <span class="segs" role="group" aria-label="예보 기간">
+      <button data-n="7">7일</button><button data-n="14">14일</button>
+      <button data-n="30" aria-pressed="true">30일</button>
+    </span>
+  </div>
+  <div class="strip" id="strip"></div>
+</section>
+
+<main class="ground">
+  <section class="sec">
+    <h2 id="flowHead"></h2>
+    <p class="head-sub" id="flowSub"></p>
+    <svg class="flow" id="flow" role="img" aria-label="그날 오간 돈의 흐름"></svg>
+  </section>
+
+  <section class="sec">
+    <h2 id="leverHead"></h2>
+    <div class="levers" id="levers"></div>
+  </section>
+
+  <section class="sec">
+    <h2 id="todoHead"></h2>
+    <div class="todo" id="todo"></div>
+  </section>
+
+  <div class="brief">
+    <span class="q">“<span id="briefHl"></span>”</span>
+    <a class="go" href="pc-reports.html">브리핑 열기</a>
+  </div>
+  <p class="note" id="note"></p>
+</main>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = pcTop('home');
+wireSwitch();
+document.getElementById('alertTxt').innerHTML = alertText();
+document.getElementById('briefHl').textContent = BRIEF_HL;
+document.getElementById('note').textContent =
+  BASIS + ' · 예보는 확정이 아니라 범위입니다. 뒤로 갈수록 폭이 넓어집니다. ' + WARN;
+
+/* ══════════════════════════════════════════════════════════════
+   고른 날 기준으로 아래 절을 다시 그립니다.
+
+   전에는 숫자 다섯 개를 줄로 세웠습니다. "박스를 빼라"를 "숫자를 나열하라"로 잘못 받았습니다.
+   박스 대신 필요한 것은 숫자를 나르는 도형입니다. 흐름도 하나가 그날을 설명합니다.
+     흐름   전날 잔고 → +정산 → −고정비 → −재료 → 그날 잔고 (폭포)
+     대응   안전선 아래인 날만: 빠른정산 · 고정비 미룸 · 융통, 각각 "+얼마 → 어떤 날씨"
+     할 일  예보가 더 맞으려면 내가 확인할 것 (개수는 자료에서 셉니다)
+   안전선 · 정확도 · 적립처럼 그날과 무관한 값은 「자금 안전」으로 보냈습니다.
+   ══════════════════════════════════════════════════════════════ */
+
+var CERT_KO = { CONFIRMED:'확정', RANGE:'범위', PREDICTED:'예보' };
+
+/* 폭포. 가로 한 줄에 단계를 이어 그립니다. 값이 위치를 정하고 색은 방향만 말합니다.
+   들어온 돈은 안전색, 나간 돈은 잉크, 시작·끝 막대는 그날 등급색입니다. */
+function drawFlow(F, i) {
+  var el = document.getElementById('flow'); if (!el) return;
+  var W = Math.max(640, el.clientWidth || 900), H = 168, L = 8, R = 8, top = 34, base = H - 30;
+  var vals = [F.start, F.end], run = F.start;
+  F.steps.forEach(function (s) { run += s.v; vals.push(run); });
+  var lo = Math.min.apply(null, vals.concat([0, SAFETY])), hi = Math.max.apply(null, vals.concat([SAFETY]));
+  var pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+  var n = F.steps.length + 2, slot = (W - L - R) / n, bw = Math.min(64, slot * 0.58);
+  var py = function (v) { return top + (base - top) * (1 - (v - lo) / (hi - lo)); };
+  var x = function (k) { return L + slot * k + (slot - bw) / 2; };
+  var riskEnd = riskOf(F.end), C = { safe:'var(--safe)', caution:'var(--caution)', danger:'var(--danger)', gap:'var(--gap)' };
+  var g = '';
+  /* 안전선 · 0선 */
+  g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + py(SAFETY).toFixed(1) + '" y2="' + py(SAFETY).toFixed(1)
+     + '" stroke="var(--danger)" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="4 4"/>';
+  g += '<text x="' + (W - R) + '" y="' + (py(SAFETY) - 5).toFixed(1) + '" text-anchor="end" class="fl-ax">안전선 ' + man(SAFETY) + '</text>';
+  if (lo < 0) g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + py(0).toFixed(1) + '" y2="' + py(0).toFixed(1) + '" stroke="var(--ink-3)" stroke-opacity=".5" stroke-width="1"/>';
+  /* 시작 막대 */
+  var bar = function (k, y0, y1, fill, cls) {
+    var a = Math.min(y0, y1), h = Math.max(2, Math.abs(y1 - y0));
+    return '<rect class="fl-bar ' + (cls||'') + '" x="' + x(k).toFixed(1) + '" y="' + a.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" fill="' + fill + '"/>';
+  };
+  var label = function (k, v, y, above, strong) {
+    return '<text class="fl-v' + (strong ? ' strong' : '') + '" x="' + (x(k) + bw/2).toFixed(1) + '" y="' + (above ? y - 7 : y + 15).toFixed(1) + '" text-anchor="middle">'
+      + (v === 0 ? '0' : (v < 0 ? '−' : (k === 0 || k === n-1) ? '' : '+') + man(Math.abs(v))) + '</text>';   /* 0 은 '+0만' 이 아니라 '0' */
+  };
+  var name = function (k, t, sub) {
+    return '<text class="fl-k" x="' + (x(k) + bw/2).toFixed(1) + '" y="' + (base + 13) + '" text-anchor="middle">' + t + '</text>'
+      + (sub ? '<text class="fl-s" x="' + (x(k) + bw/2).toFixed(1) + '" y="' + (base + 25) + '" text-anchor="middle">' + sub + '</text>' : '');
+  };
+  g += bar(0, py(Math.max(0, F.start)), py(Math.min(0, F.start)) , C[riskOf(F.start)], 'edge');
+  g += label(0, F.start, py(F.start), F.start >= 0, true);
+  g += name(0, F.real ? '아침' : '전날', F.real ? '' : md(days[i-1].date));
+  /* 단계 */
+  run = F.start;
+  F.steps.forEach(function (s, j) {
+    var from = run, to = run + s.v; run = to;
+    var k = j + 1, isIn = s.v >= 0;
+    g += bar(k, py(from), py(to), isIn ? 'var(--safe)' : 'var(--ink-2)', s.cert === 'PREDICTED' ? 'est' : '');
+    /* 연결선 */
+    g += '<line class="fl-ln" x1="' + (x(k-1) + bw).toFixed(1) + '" x2="' + x(k).toFixed(1) + '" y1="' + py(from).toFixed(1) + '" y2="' + py(from).toFixed(1) + '"/>';
+    g += label(k, s.v, isIn ? py(to) : py(from), isIn, false);
+    g += name(k, s.k, CERT_KO[s.cert]);
+  });
+  /* 끝 막대 */
+  var kE = n - 1;
+  g += '<line class="fl-ln" x1="' + (x(kE-1) + bw).toFixed(1) + '" x2="' + x(kE).toFixed(1) + '" y1="' + py(F.end).toFixed(1) + '" y2="' + py(F.end).toFixed(1) + '"/>';
+  g += bar(kE, py(Math.max(0, F.end)), py(Math.min(0, F.end)), C[riskEnd], 'edge');
+  g += label(kE, F.end, py(F.end), F.end >= 0, true);
+  g += name(kE, F.real ? '지금' : '그날 잔고', WORD[riskEnd]);
+  el.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  el.innerHTML = g;
+}
+
+function renderDay(d, i) {
+  var isToday = i === 0;
+  var F = dayFlow(i);
+
+  document.getElementById('flowHead').textContent = isToday ? '오늘 오간 돈' : mdKo(d.date) + ' ' + d.dow + '요일의 흐름';
+  document.getElementById('flowSub').innerHTML = isToday
+    ? '아침 <b>' + won(F.start) + '원</b>에서 ' + F.steps.length + '건이 오가 지금 <b>' + won(F.end) + '원</b>입니다. 확정 · 범위 · 예보를 구분해 표시합니다.'
+    : '전날 <b>' + won(F.start) + '원</b>에서 시작해 <b>' + won(F.end) + '원</b>으로 ' + (d.v < SAFETY
+        ? '내려갑니다. 안전선까지 <b>' + won(SAFETY - d.v) + '원</b> 모자랄 가능성이 있습니다.'
+        : '갑니다. 안전선보다 ' + won(d.v - SAFETY) + '원 위입니다.')
+      + ' 고정비는 확정, 정산은 규칙, 재료와 잡비는 나머지입니다.';
+  drawFlow(F, i);
+
+  /* 대응 */
+  var L = levers(i), lv = document.getElementById('levers'), lh = document.getElementById('leverHead');
+  if (!L.length) {
+    lh.textContent = isToday ? '오늘은 조치할 것이 없습니다' : '이날은 조치할 것이 없습니다';
+    lv.innerHTML = '<p class="lv-none">안전선 위에 있습니다. 가장 깊은 날은 <b>' + mdKo(lowest.date) + '</b>이고, 그날을 띠에서 누르면 막을 방법이 나옵니다.</p>';
+  } else {
+    var need = SAFETY - d.v;
+    lh.innerHTML = '이날을 막을 방법 · <b>' + won(need) + '원</b>이 모자랍니다';
+    lv.innerHTML = L.map(function (o) {
+      return '<a class="lv" href="' + o.href + '">'
+        + '<span class="lv-k">' + o.k + '<span class="lv-s">' + o.s + '</span></span>'
+        + '<span class="lv-g">+' + won(o.gain) + '</span>'
+        + '<span class="lv-r">' + badge(o.risk) + '<span class="lv-a">' + won(o.after) + '원' + (o.enough ? ' · 안전선 넘음' : ' · 아직 모자람') + '</span></span>'
+        + '</a>';
+    }).join('');
+  }
+
+  paintRails();
+}
+
+/* 확인할 일 — 개수는 자료에서 셉니다. 문구에 박아 두면 목록과 어긋납니다. */
+(function () {
+  var cand = (typeof PATTERNS !== 'undefined') ? PATTERNS.filter(function (p) { return p[6] === 'CANDIDATE'; }).length : 0;
+  var lowTx = (typeof TX !== 'undefined') ? TX.filter(function (t) { return t[7] < 0.8 && !t[8]; }).length : 0;
+  var noEv = (typeof EVIDENCES !== 'undefined') ? EVIDENCES.filter(function (e) { return e[4] !== 'matched'; }).length : 0;
+  var items = [
+    [cand, '반복 후보', '승인하면 예정 거래가 되어 예보에 들어갑니다', 'pc-patterns.html'],
+    [lowTx, '분류 확인', '신뢰도 80% 아래인 거래입니다', 'pc-transactions.html'],
+    [noEv, '증빙 안 붙은 지출', '신고자료를 만들 때 빠집니다', 'pc-evidences.html']
+  ].filter(function (x) { return x[0] > 0; });
+  var total = items.reduce(function (a, x) { return a + x[0]; }, 0);
+  document.getElementById('todoHead').innerHTML = total
+    ? '<b>' + total + '건</b>을 확인하면 예보가 더 맞습니다'
+    : '확인할 것이 없습니다';
+  document.getElementById('todo').innerHTML = items.map(function (x) {
+    return '<a class="td" href="' + x[3] + '"><b class="td-n">' + x[0] + '</b><span class="td-k">' + x[1] + '<span class="td-s">' + x[2] + '</span></span><span class="go">›</span></a>';
+  }).join('');
+})();
+
+drawCurve(700, 160);
+buildStrip();
+wireStrip();
+onPick(renderDay);          /* 띠에서 날을 고르면 아래 두 절을 다시 그립니다 */
+renderDay(today, 0);
+window.addEventListener('resize', function () { renderDay(days[_picked], _picked); });
+wireReveal();
+paintSky(today);
+mountFeatures('pc-home');
+</script>
+</body>
+</html>

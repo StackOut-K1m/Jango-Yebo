@@ -1,0 +1,25 @@
+/* 카드도 박스도 두지 않는다. 선과 여백으로 나눈다. */
+.empty {
+  padding: var(--s9) var(--s6);
+  text-align: center;
+}
+
+.empty__title {
+  font-size: var(--f5);
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.empty__hint {
+  margin-top: var(--s3);
+  font-size: var(--f3);
+  line-height: var(--lh);
+  color: var(--ink-3);
+}
+
+.empty__action {
+  margin-top: var(--s6);
+  display: flex;
+  justify-content: center;
+  gap: var(--s3);
+}

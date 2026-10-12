@@ -1,0 +1,294 @@
+/* ============================================================================
+   잔고예보 프로토타입 · 화면별 레이아웃
+   Foundation과 공통 컴포넌트는 design-system.css에 있다. 여기에는
+   이 프로토타입에만 필요한 배치만 둔다. 토큰 밖의 값은 쓰지 않는다.
+   ========================================================================= */
+
+/* 오버레이는 .app 컨테이너 밖에 두어 뷰포트 기준으로 뜬다 */
+.view{display:none}
+.view.active{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--sp-4);align-content:start}
+
+/* ------------------------------------------------------------ 오늘 요약 -- */
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:var(--sp-4)}
+
+.balance-card .hero-money{display:block;font-size:var(--fs-display);line-height:1.2;margin:var(--sp-4) 0 0}
+/* 강조는 파란 면이 아니라 좌측 액센트 바로 한다 (카드 배경과 겹치지 않는다) */
+.available{
+  display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;
+  border-left:3px solid var(--accent);padding:var(--sp-2) var(--sp-3);
+  margin-top:var(--sp-4);background:var(--surface)
+}
+.available>span{font-size:var(--fs-body);color:var(--muted)}
+.available b{font-size:var(--fs-section);font-variant-numeric:tabular-nums}
+.help{
+  width:20px;height:20px;min-height:20px;padding:0;border-radius:var(--r-full);
+  border:1px solid var(--accent-line);background:var(--accent-bg);color:var(--accent);
+  font-size:var(--fs-caption);font-weight:800;position:relative
+}
+/* 시각 크기는 20px, 히트 영역은 44px */
+.help::after{content:"";position:absolute;inset:-12px}
+.mini-stats{display:flex;gap:var(--sp-6);margin-top:var(--sp-3);color:var(--muted);font-size:var(--fs-body);flex-wrap:wrap}
+.mini-stats b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.risk-card{border-color:var(--risk-line)}
+.risk-card h2{margin:var(--sp-3) 0 var(--sp-2)}
+.risk-meta{display:flex;flex-wrap:wrap;gap:var(--sp-2) var(--sp-4);font-size:var(--fs-body);color:var(--muted);margin:var(--sp-3) 0}
+.risk-meta span{white-space:nowrap}
+
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3)}
+.metric{display:grid;gap:var(--sp-1);align-content:start}
+.metric>span{color:var(--muted);font-size:var(--fs-body)}
+.metric small{color:var(--muted);font-size:var(--fs-caption)}
+.metric b{font-size:var(--fs-section);font-variant-numeric:tabular-nums}
+/* 위험 지표는 테두리 1px이 아니라 면으로 구분한다 */
+.metric.is-risk{background:var(--risk-bg);border-color:var(--risk-line)}
+
+.two-column{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+.wide-left{grid-template-columns:1.25fr .75fr}
+
+.progress-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--sp-3)}
+.progress-row b{font-size:var(--fs-page);font-variant-numeric:tabular-nums}
+.progress-row span{font-size:var(--fs-body);color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* 확인할 일 — 1순위 1건을 크게, 나머지는 목록으로 */
+.todo-lead{
+  display:grid;grid-template-columns:36px 1fr auto;gap:var(--sp-3);align-items:center;
+  width:100%;text-align:left;border:1px solid var(--accent-line);background:var(--accent-bg);
+  border-radius:var(--r-lg);padding:var(--sp-3);margin-bottom:var(--sp-3);min-height:var(--tap)
+}
+.todo-lead:hover{border-color:var(--accent)}
+.todo-lead b{display:block;font-size:var(--fs-card)}
+.todo-lead small{display:block;font-size:var(--fs-caption);color:var(--muted);margin-top:2px}
+.todo-icon{width:34px;height:34px;border-radius:var(--r-md);display:grid;place-items:center;background:var(--surface);border:1px solid var(--accent-line);color:var(--accent)}
+
+/* ---------------------------------------------------------- 잔액 예측 -- */
+.legend{display:flex;gap:var(--sp-3);align-items:center;font-size:var(--fs-caption);color:var(--muted);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:var(--sp-1)}
+.legend.end{justify-content:flex-end}
+.line{display:inline-block;width:18px;height:2px;background:var(--accent)}
+.line.safety{background:var(--caution);border-top:1px dashed var(--caution)}
+.line.modified{background:var(--risk)}
+.area{width:18px;height:8px;background:var(--accent-bg)}
+
+.chart{height:320px;position:relative;margin-top:var(--sp-4)}
+.chart-grid{position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent 0,transparent 63px,var(--line-2) 64px)}
+.chart svg{position:absolute;inset:16px 0 24px;width:100%;height:calc(100% - 40px);overflow:visible}
+/* 차트 그라디언트도 토큰으로 */
+#range .r0{stop-color:var(--accent);stop-opacity:.18}
+#range .r1{stop-color:var(--accent);stop-opacity:.02}
+.range-path{fill:url(#range);stroke:none}
+.balance-path{fill:none;stroke:var(--accent);stroke-width:3}
+.chart circle{fill:var(--risk);stroke:var(--surface);stroke-width:3}
+.chart text{font-size:var(--fs-body);fill:var(--risk);font-weight:700}
+.safety-line{position:absolute;top:42%;left:0;right:0;border-top:2px dashed var(--caution)}
+.safety-line span{position:absolute;right:0;top:-18px;font-size:var(--fs-caption);color:var(--caution);font-weight:700}
+.axis-y{position:absolute;left:0;top:0;bottom:24px;display:flex;flex-direction:column;justify-content:space-between;font-size:var(--fs-caption);color:var(--muted)}
+.axis-labels{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;color:var(--muted);font-size:var(--fs-caption)}
+
+.gap-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2);background:var(--surface-2);padding:var(--sp-3);border-radius:var(--r-md)}
+.gap-summary small{display:block;color:var(--muted);font-size:var(--fs-caption)}
+.gap-summary b{display:block;font-size:var(--fs-card);margin-top:var(--sp-1);font-variant-numeric:tabular-nums}
+
+.timeline{list-style:none;padding:0;margin:0}
+.timeline li{border-left:2px solid var(--line);padding:0 0 var(--sp-4) var(--sp-4);position:relative}
+.timeline li:last-child{padding-bottom:0}
+.timeline li::before{content:"";position:absolute;width:8px;height:8px;border-radius:var(--r-full);background:var(--accent);left:-5px;top:5px}
+.timeline b{display:block;font-size:var(--fs-card)}
+.timeline small{display:block;font-size:var(--fs-caption);color:var(--muted);margin-top:2px}
+
+/* 접힘 표 — 차트를 못 읽어도 값에 닿을 수 있게 한다 */
+details.data-table{margin-top:var(--sp-3);border-top:1px solid var(--line-2);padding-top:var(--sp-3)}
+.data-list{--cols:110px 1fr 1fr 90px}
+details.data-table summary{cursor:pointer;font-size:var(--fs-body);font-weight:700;color:var(--accent);min-height:var(--tap);display:flex;align-items:center}
+
+/* ---------------------------------------------------------- 거래 내역 -- */
+.filter-bar{display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;padding:var(--sp-3)}
+.filter-bar .field{flex:0 0 auto}
+.filter-bar .field.search{flex:1 1 220px}
+
+.table-card{padding:0;overflow:hidden}
+.tx-table{--cols:96px 1.4fr 72px 128px 116px 152px 84px}
+.tx-cards{display:none;padding:var(--sp-3);gap:var(--sp-2)}
+
+/* Drawer — 뷰포트 기준 고정. .app 컨테이너 밖에 둔다. */
+.drawer-host{position:fixed;inset:0;z-index:100;display:none}
+.drawer-host.open{display:flex;justify-content:flex-end}
+.drawer-host .scrim{position:absolute;inset:0}
+.drawer-host .drawer{position:relative;height:100%}
+.amount-detail{display:grid;gap:var(--sp-1);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line-2)}
+.amount-detail b{font-size:var(--fs-page);font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------ 반복 · 예정 거래 -- */
+.pattern-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+.pattern-data{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2);background:var(--surface-2);padding:var(--sp-3);border-radius:var(--r-md);margin:var(--sp-4) 0}
+.pattern-data small{display:block;font-size:var(--fs-caption);color:var(--muted)}
+.pattern-data b{display:block;font-size:var(--fs-body);margin-top:var(--sp-1);font-variant-numeric:tabular-nums}
+.card-actions{display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap}
+.card-actions.end{justify-content:flex-end}
+/* 구분선으로 3칸을 나누면 좁은 폭에서 축이 바뀐다. 카드 3장으로 쪼갠다. */
+.accuracy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3)}
+
+/* -------------------------------------------------------------- 시나리오 -- */
+.scenario-layout{display:grid;grid-template-columns:360px 1fr;gap:var(--sp-4);align-items:start}
+.condition{padding:var(--sp-3);border:1px solid var(--line);border-radius:var(--r-md);margin-top:var(--sp-3)}
+.condition>div{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:var(--fs-body)}
+.condition .rm{border:0;background:transparent;min-height:var(--tap);width:var(--tap);border-radius:var(--r-sm)}
+.condition .rm:hover{background:var(--surface-2)}
+.condition label{display:grid;grid-template-columns:minmax(0,80px) minmax(0,1fr) 48px;align-items:center;gap:var(--sp-2);margin-top:var(--sp-3);font-size:var(--fs-caption);color:var(--muted)}
+.condition label b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.condition input[type=range]{padding:0;background:transparent;border:0}
+.comparison{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)}
+.comparison>div{padding:var(--sp-3);background:var(--surface-2);border-radius:var(--r-md);display:grid;gap:var(--sp-1)}
+.comparison small{color:var(--muted);font-size:var(--fs-caption)}
+.comparison span{font-size:var(--fs-body);text-decoration:line-through;color:var(--muted);font-variant-numeric:tabular-nums}
+.comparison b{color:var(--risk);font-variant-numeric:tabular-nums}
+.mini-chart{height:200px;margin-top:var(--sp-4);position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 48px,var(--line-2) 49px)}
+.mini-chart svg{width:100%;height:170px}
+.mini-chart path{fill:none;stroke-width:3}
+.original-line{stroke:var(--accent)}
+.modified-line{stroke:var(--risk)}
+
+/* 증빙·정산 화면의 목록과 2단 골격은 design-system.css의 .split / .thumb /
+   .doc-preview / .list 프리셋을 그대로 쓴다. 여기서 다시 정의하지 않는다. */
+
+/* ---------------------------------------------------------------- 캘린더 -- */
+.calendar-layout{display:grid;grid-template-columns:1fr 340px;gap:var(--sp-4);align-items:start}
+.calendar-legend{display:flex;gap:var(--sp-3);align-items:center;font-size:var(--fs-caption);color:var(--muted);margin-bottom:var(--sp-3);flex-wrap:wrap}
+.certainty{display:inline-block;width:9px;height:9px;border-radius:var(--r-full)}
+.certainty.confirmed{background:var(--ink)}
+.certainty.range{background:var(--muted)}
+.certainty.predicted{border:2px solid var(--muted);background:var(--surface)}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.calendar-day{min-height:104px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:var(--sp-2);font-size:var(--fs-caption);position:relative;background:var(--surface)}
+.calendar-day.head{min-height:auto;background:var(--surface-2);text-align:center;color:var(--muted);font-weight:800;padding:var(--sp-2) 0}
+/* 이전 달 날짜도 읽혀야 한다 (예전 값은 흰 배경 대비 1.48이었다) */
+.calendar-day.muted{color:var(--faint);background:var(--surface-2)}
+.calendar-day.risk{background:var(--risk-bg)}
+/* 선택은 색이 아니라 검정 아웃라인으로. 위험(빨간 면)과 축을 달리한다. */
+.calendar-day.selected{outline:2px solid var(--ink);outline-offset:-2px;z-index:1}
+.calendar-day.selected .daynum{font-weight:800}
+.calendar-day button{position:absolute;inset:0;border:0;background:transparent;border-radius:0}
+/* 셀에는 유형만. 금액은 잘리므로 상세에서 본다. */
+.calendar-event{display:block;padding:2px var(--sp-1);border-radius:var(--r-sm);margin-top:var(--sp-1);background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);font-size:var(--fs-caption)}
+.calendar-event.risk{background:var(--risk-bg);border-color:var(--risk-line);color:var(--risk);font-weight:700}
+.day-balance{display:grid;gap:var(--sp-1);background:var(--risk-bg);border:1px solid var(--risk-line);padding:var(--sp-3);border-radius:var(--r-md);margin-bottom:var(--sp-3)}
+.day-balance span{font-size:var(--fs-caption);color:var(--risk);font-weight:700}
+
+/* ------------------------------------------------------ 리포트 · 브리핑 -- */
+.report-hero{border-left:3px solid var(--ai)}
+.source-links{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+.bar-list{display:grid;gap:var(--sp-4)}
+.bar-list .r{display:flex;justify-content:space-between;font-size:var(--fs-body);gap:var(--sp-3)}
+.bar-list .r b{font-variant-numeric:tabular-nums}
+.bar-list .t{display:block;height:8px;background:var(--line-2);border-radius:var(--r-full);margin-top:var(--sp-1)}
+.bar-list .t i{display:block;height:100%;background:var(--accent);border-radius:var(--r-full)}
+.bar-scale{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--muted);margin-top:var(--sp-2)}
+.delta{font-variant-numeric:tabular-nums}
+.delta.bad{color:var(--warn);font-weight:700}
+
+/* --------------------------------------------------------------- 오버레이 -- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,24,31,.28);z-index:200;display:grid;place-items:center;padding:var(--sp-4)}
+.modal-backdrop[hidden]{display:none}
+.modal-head{padding:var(--sp-6) var(--sp-6) 0}
+.modal-body{padding:var(--sp-6);overflow:auto}
+.modal-foot{padding:0 var(--sp-6) var(--sp-6)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3)}
+.span-2{grid-column:span 2}
+
+/* 알림은 오른쪽 위에서 내려온다. 하단 고정 버튼(모바일)과 겹치지 않는다. */
+.toast-host{position:fixed;right:var(--sp-6);top:var(--sp-6);transform:translateY(-16px);opacity:0;pointer-events:none;transition:.2s;z-index:300;width:min(400px,calc(100% - 32px))}
+.toast-host.show{opacity:1;transform:translateY(0);pointer-events:auto}
+/* Maze식 흰 카드 토스트 — 검은 막대 대신 표면색에 그림자 */
+.toast-host .toast{background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:var(--e-overlay);border-radius:var(--r-lg);padding:var(--sp-4)}
+.toast-host .toast button{color:var(--accent)}
+
+/* ------------------------------------------------------------- Responsive -- */
+@container shell (max-width:1099px){
+  .wide-left,.scenario-layout,.calendar-layout{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:repeat(2,1fr)}
+  .accuracy-grid{grid-template-columns:1fr}
+  /* 7열이 정직하게 안 들어가는 폭에서는 열을 자르지 않고 카드로 바꾼다 */
+  .tx-table{display:none}
+  .tx-cards{display:grid}
+  .chart{height:260px}
+}
+
+@container shell (max-width:759px){
+  .hero-grid,.two-column,.pattern-grid,.scenario-layout{grid-template-columns:1fr}
+  .accuracy-grid{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:1fr 1fr}
+  .gap-summary,.comparison,.pattern-data{grid-template-columns:1fr 1fr}
+  .balance-card .hero-money{font-size:var(--fs-page)}
+  /* 표를 자르는 대신 카드로 바꾼다 */
+  .tx-table{display:none}
+  .tx-cards{display:grid}
+  .calendar-layout{grid-template-columns:1fr}
+  .calendar-card{overflow-x:auto}
+  .calendar{min-width:680px}
+  .calendar-day{min-height:88px}
+  .day-detail{order:-1}
+  /* 조건을 고치고 결과를 보는 반복이 이 화면의 본질이다. 조건을 위에 둔다. */
+  .scenario-layout .builder{order:-1}
+  .form-grid{grid-template-columns:1fr}
+  .span-2{grid-column:auto}
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   P0·P1 전 기능 시연용 화면
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* 다사업장 통합 (P1-12) */
+.biz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--sp-3)}
+.transfer-flow{display:grid;grid-template-columns:1fr 40px 1fr;gap:var(--sp-3);align-items:center}
+.transfer-flow .arrow{display:grid;place-items:center;font-size:var(--fs-section);color:var(--accent)}
+
+/* 신용등급 (P1-14) */
+.grade-scale{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--sp-1)}
+.grade-scale div{
+  text-align:center;padding:var(--sp-2) var(--sp-1);border:1px solid var(--line);
+  border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-caption);color:var(--muted)
+}
+.grade-scale div b{display:block;font-size:var(--fs-section);color:var(--ink)}
+.grade-scale div.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.grade-scale div.on b{color:var(--accent)}
+.grade-scale div.next{border-style:dashed;border-color:var(--warn);color:var(--warn)}
+
+/* 품목 가계부 (P1-03) */
+.item-list{--cols:1fr 88px 110px 96px}
+
+/* 정확도 (P1-05) */
+.acc-list{--cols:1fr 72px 88px 96px 1.2fr}
+
+/* 지원 제도 (P1-15) */
+.program-card{display:grid;gap:var(--sp-2)}
+.program-card .meta{display:flex;flex-wrap:wrap;gap:var(--sp-1) var(--sp-3);font-size:var(--fs-caption);color:var(--muted)}
+
+/* 문서 편집기 (P1-16) */
+.doc-editor{display:grid;grid-template-columns:1fr 260px;gap:var(--sp-4);align-items:start}
+.doc-paper{
+  border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);
+  padding:var(--sp-6);min-height:280px;line-height:1.9;font-size:var(--fs-card)
+}
+.doc-paper h4{margin:0 0 var(--sp-2);font-size:var(--fs-card)}
+.doc-paper p{margin:0 0 var(--sp-4);color:var(--ink-2)}
+.doc-paper mark{background:var(--ai-bg);color:var(--ai);padding:0 2px;border-radius:3px}
+
+/* 시연 목차 시트 */
+.demo-index{--cols:64px 1fr auto}
+@container shell (max-width:759px){
+  .demo-index{--cols:1fr}
+  .demo-index .list-row.head{display:none}
+  .demo-index .list-row{align-items:start;gap:var(--sp-1)}
+}
+.demo-index .list-row b{font-family:ui-monospace,monospace}
+
+@container shell (max-width:1099px){
+  .doc-editor{grid-template-columns:1fr}
+}
+@container shell (max-width:759px){
+  .transfer-flow{grid-template-columns:1fr}
+  .transfer-flow .arrow{transform:rotate(90deg)}
+  .item-list,.acc-list{--cols:1fr}
+  .item-list .list-row.head,.acc-list .list-row.head{display:none}
+  .grade-scale{grid-template-columns:repeat(5,1fr);font-size:10px}
+}

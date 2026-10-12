@@ -1,0 +1,60 @@
+/* Tailwind v4 — 새로 만드는 화면에만 쓴다. 기존 v7 화면은 CSS 그대로 둔다.
+ *
+ * ## preflight 를 일부러 뺐다
+ *
+ * `@import "tailwindcss"` 한 줄이면 preflight(전역 리셋)까지 들어와 기존 화면의
+ * 여백·글꼴·버튼 모양이 통째로 바뀐다. 그래서 theme 과 utilities 만 골라 넣는다.
+ * 새 화면의 기본값은 styles/base.css 가 이미 깔아 둔다.
+ *
+ * ## 색은 토큰 하나만 본다
+ *
+ * `@theme inline` 은 값을 복사하지 않고 `var(--…)` 참조를 그대로 남긴다.
+ * 그래서 `bg-surface` 와 `background: var(--surface)` 가 **같은 값**을 가리키고,
+ * 테마 전환도 기존 `:root[data-theme='light']` 하나로 양쪽 다 먹는다.
+ * 여기서 색을 새로 정의하면 안 된다 — 진실은 tokens.css 에만 있다.
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+/* @import 'tailwindcss/preflight.css' layer(base);  ← 넣지 않는다(위 주석) */
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme inline {
+  /* 바탕 */
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-glass: var(--glass);
+  --color-raised: var(--raised);
+  --color-hover: var(--hover);
+
+  /* 선 */
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-control-line: var(--control-line);
+
+  /* 글자 */
+  --color-ink: var(--text);
+  --color-ink-soft: var(--text-soft);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+  --color-muted: var(--muted);
+
+  /* 강조 */
+  --color-accent: var(--lavender);
+  --color-accent-deep: var(--accent-deep);
+  --color-on-accent: var(--on-accent);
+
+  /* 상태 — 색만으로 뜻을 말하지 않는다(도메인 규칙 6). 아이콘·글자를 함께 둔다. */
+  --color-peach: var(--peach);
+  --color-mint: var(--mint);
+  --color-rose: var(--rose);
+
+  /* 판 위에 겹치는 막 */
+  --color-veil-1: var(--veil-1);
+  --color-veil-2: var(--veil-2);
+  --color-veil-3: var(--veil-3);
+  --color-veil-4: var(--veil-4);
+  --color-veil-5: var(--veil-5);
+
+  --font-sans: var(--sans);
+}

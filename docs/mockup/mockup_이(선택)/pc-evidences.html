@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 증빙·신고 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<link rel="stylesheet" href="forms.css">
+<style>
+/* SC-07 증빙 · 신고자료 (P0-10 · P1-02 · P0-12)
+   PC 는 정밀 검토가 일입니다. 왼쪽 목록에서 고르고, 가운데를 좌우로 나눠
+   원본과 읽어낸 값을 나란히 보고, 오른쪽에서 거래에 붙입니다. */
+.evlist .ev { display:flex; align-items:baseline; gap:var(--s3); padding:var(--s4) var(--s3);
+              border-radius:8px; width:100%; text-align:left; position:relative; }
+.evlist .ev.on { background:var(--ink); color:var(--ground); }
+.evlist .ev.on .m, .evlist .ev.on .a { color:rgb(250 249 245 / .78); }
+.evlist .ev .n { font-size:12.5px; font-weight:600; display:block; }
+.evlist .ev .m { font-size:11px; color:var(--ink-3); display:block; margin-top:1px; }
+.evlist .ev .a { margin-left:auto; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+
+/* 원본 — 영수증 종이를 흉내 냅니다. 여기는 상자가 필요한 자리입니다. */
+.paper { background:#f4efe4; border-radius:6px; padding:var(--s7) var(--s6);
+         box-shadow:0 2px 14px rgb(20 20 19 / .12); font-variant-numeric:tabular-nums; }
+.paper .ph { font-size:13px; font-weight:800; text-align:center; letter-spacing:.04em; }
+.paper .pb { font-size:10.5px; color:#6b6455; text-align:center; margin-top:3px; }
+.paper hr { border:0; border-top:1px dashed #cdc4b2; margin:var(--s5) 0; }
+.paper .pr { display:flex; gap:var(--s3); font-size:11.5px; padding:2px 0; }
+.paper .pr span:last-child { margin-left:auto; }
+.paper .pt { display:flex; gap:var(--s3); font-size:12.5px; font-weight:800; padding-top:var(--s3); }
+.paper .pt span:last-child { margin-left:auto; }
+
+/* ── 찍어 올린 사진 ──
+   모바일에서 찍은 영수증이 PC 에서는 이 자리에 사진으로 섭니다. 사진 위에 OCR 이 읽은 자리를
+   네모로 표시하고, 그 네모를 누르면 오른쪽의 해당 칸으로 갑니다. 사진과 값이 눈으로 이어집니다. */
+.shot { position:relative; background:#22201c; border-radius:10px; padding:var(--s7) var(--s6);
+        box-shadow:0 6px 22px rgb(20 20 19 / .28); overflow:hidden; }
+.shot::after { content:""; position:absolute; inset:0; pointer-events:none;
+               background:linear-gradient(118deg, rgb(255 255 255 / .16) 0 18%, transparent 34% 100%); }
+.shot .sheet { transform:rotate(-1.1deg); }
+.shot .paper { box-shadow:0 3px 18px rgb(0 0 0 / .45); }
+.ocrbox { position:relative; outline:1px dashed rgb(30 120 160 / .85); outline-offset:1px; border-radius:2px;
+          background:rgb(60 160 200 / .12); cursor:pointer; }
+.ocrbox:hover, .ocrbox.on { background:rgb(60 160 200 / .26); outline-style:solid; }
+.ocrbox .cfd { position:absolute; top:-13px; right:-2px; font-size:8.5px; font-weight:800; letter-spacing:.02em;
+               color:#0d5c7a; background:rgb(255 255 255 / .92); border-radius:2px; padding:0 2px; }
+.ocrbox.low { outline-color:var(--danger); background:rgb(160 40 30 / .12); }
+.ocrbox.low .cfd { color:#93261f; }
+.exif { font-size:10.5px; color:var(--ink-3); margin-top:var(--s4); line-height:1.6; font-variant-numeric:tabular-nums; }
+.exif b { color:var(--ink-2); font-weight:700; }
+
+/* ── 저장 줄 ── 고친 값이 몇 개인지, 저장이 됐는지 한 줄로 */
+.savebar { display:flex; align-items:center; gap:var(--s3); margin-top:var(--s6); padding-top:var(--s5);
+           box-shadow:inset 0 1px 0 var(--hair); }
+.savebar .msg { font-size:11.5px; color:var(--ink-3); }
+.savebar .msg.dirty { color:var(--caution-ink, #7a6210); font-weight:700; }
+.savebar .msg.done { color:var(--safe); font-weight:700; }
+.savebar .btn { margin-left:auto; }
+.savebar .btn + .btn { margin-left:0; }
+.uses { margin-top:var(--s5); padding:var(--s5); border-radius:8px; background:var(--ground-2); }
+.uses h4 { font-size:11px; font-weight:800; letter-spacing:.06em; color:var(--ink-3); margin:0; }
+.uses .u { display:flex; gap:var(--s3); font-size:11.5px; padding:3px 0; }
+.uses .u span:last-child { margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums; }
+.uses .u a { color:inherit; }
+
+/* 읽어낸 값 — 고칠 수 있습니다 */
+.fld { margin-bottom:var(--s4); }
+.fld label { font-size:11px; font-weight:700; color:var(--ink-3); letter-spacing:.03em; display:block; }
+.fld input { width:100%; height:32px; margin-top:4px; padding:0 var(--s3); border:0; border-radius:8px;
+             background:var(--ground-2); font-size:13px; font-variant-numeric:tabular-nums; }
+.fld input:focus, .fld select:focus { outline:2px solid var(--ink); background:#fff; }
+.fld select { width:100%; height:32px; margin-top:4px; padding:0 var(--s3); border:0; border-radius:8px;
+              background:var(--ground-2); font:inherit; font-size:12.5px; color:var(--ink); }
+.fld .cf { font-size:10.5px; color:var(--ink-3); margin-top:3px; }
+.fld.low input { box-shadow:inset 0 0 0 1.5px var(--caution); }
+/* 읽지 못한 값. 주의색이 아니라 위험색을 쓰는 까닭: 확인이 필요한 게 아니라 틀린 값입니다. */
+.fld.bad input { box-shadow:inset 0 0 0 1.5px var(--danger); }
+.fld.bad .dnote { color:var(--danger); }
+.fld.low .cf { color:var(--caution-ink, #7a6210); font-weight:700; }
+.items { margin-top:var(--s5); padding-top:var(--s4); box-shadow:inset 0 1px 0 var(--hair); }
+.items .it { display:flex; gap:var(--s3); font-size:11.5px; padding:3px 0; }
+.items .it span:last-child { margin-left:auto; font-variant-numeric:tabular-nums; }
+
+.cnd { display:flex; align-items:baseline; gap:var(--s3); padding:var(--s4) 0; position:relative; }
+.cnd + .cnd::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.cnd .sc { font-size:15px; font-weight:800; width:38px; flex:none; font-variant-numeric:tabular-nums; }
+.cnd.best .sc { color:var(--safe); }
+.cnd .n { font-size:12.5px; font-weight:600; display:block; }
+.cnd .m { font-size:11px; color:var(--ink-3); display:block; margin-top:1px; }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">찍어 올린 영수증</p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede">신고를 대신하지 않습니다. 신고에 필요한 자료를 미리 정리해 둘 뿐입니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <aside class="side">
+    <div class="grp">
+      <h3>상태</h3>
+      <div class="checks" id="stChecks">
+        <button class="check" data-s="unmatched" aria-pressed="false"><i aria-hidden="true"></i>거래를 못 찾음</button>
+        <button class="check" data-s="review" aria-pressed="false"><i aria-hidden="true"></i>확인이 필요</button>
+        <button class="check" data-s="matched" aria-pressed="false"><i aria-hidden="true"></i>붙었습니다</button>
+      </div>
+    </div>
+    <div class="grp">
+      <h3>증빙</h3>
+      <div class="evlist" id="evlist"></div>
+    </div>
+    <div class="grp">
+      <h3>올린 서식</h3>
+      <div class="evlist" id="doclist"></div>
+    </div>
+    <div class="grp">
+      <button class="btn btn-pri btn-block" id="autoAll">확실한 것 한 번에 붙이기</button>
+      <button class="btn btn-sub btn-block" style="margin-top:var(--s3)" id="mkExport">신고자료 만들기</button>
+    </div>
+  </aside>
+
+  <main class="body">
+    <div class="split">
+      <section>
+        <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-bottom:var(--s4)">올린 원본</h3>
+        <div id="paper"></div>
+      </section>
+      <section>
+        <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-bottom:var(--s4)">읽어낸 값 · 고칠 수 있습니다</h3>
+        <div id="fields"></div>
+      </section>
+    </div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s9)">이번 분기 증빙 현황</h3>
+    <div class="figs" style="margin-top:var(--s5)" id="evFigs"></div>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script src="forms.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = pcTop('evidence');
+wireSwitch();
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* 품목은 합계가 금액과 맞게 둡니다. 안 맞으면 검산이 틀렸다고 알립니다. */
+var ITEMS = {
+  0: [['스텐 밧드 3호', 2, 18600], ['집게 대', 3, 4800], ['고무장갑', 4, 8800]],
+  1: [['돼지 목살', 12, 15800], ['대파', 8, 4200], ['양파 20kg', 1, 32800], ['배추김치 10kg', 2, 31200]],
+  2: [['상추', 6, 5800], ['깻잎', 4, 3200], ['청양고추', 3, 8400], ['마늘 1kg', 2, 12800],
+      ['애호박', 5, 2400], ['버섯', 4, 5600], ['부추', 3, 4800]],
+  3: [['일회용 용기 대', 4, 18400], ['비닐봉투', 3, 9600], ['주방 세제', 2, 8200], ['수세미', 6, 3400]],
+  4: [['원두 1kg', 2, 12400]]
+};
+/* OCR 이 읽은 자리마다 신뢰도가 다릅니다. 낮은 값은 사장이 고쳐야 합니다.
+   분류는 서식 항목으로 이어집니다 — 이 값이 신고서 초안과 시나리오에 그대로 갑니다. */
+var KINDS = [
+  ['MATERIALS','재료 매입','부표 ⑮ 당기 상품매입액'],
+  ['SUPPLIES','소모품비','부표 ㉞ 소모품비'],
+  ['UTILITIES','공과금','부표 ㊴ 기타'],
+  ['RENT','임차료','부표 ㉗ 임차료'],
+  ['PERSONAL','개인 지출','항목에서 빼기']
+];
+var GUESS = { '대성철물':'SUPPLIES', '삼우유통':'MATERIALS', '서울우유':'MATERIALS', '성수농협':'MATERIALS',
+              '이마트':'SUPPLIES', '카페':'PERSONAL' };
+function guessKind(who) {
+  var k = null;
+  Object.keys(GUESS).forEach(function (w) { if (who.indexOf(w) >= 0) k = GUESS[w]; });
+  return k || 'MATERIALS';
+}
+var PHONE = 'iPhone 13 · 3024×4032';
+
+var E = EVIDENCES.map(function (e, i) {
+  var items = ITEMS[i] || [];
+  var sum = items.reduce(function (a,x) { return a + x[1]*x[2]; }, 0);
+  var o = { id:i, who:e[0], date:e[1], amt:e[2], memo:e[3], st:e[4], conf:e[5],
+            items:items, sum:sum, txId:null,
+            kind:guessKind(e[0]), pay:'카드', shotAt:e[1].slice(5).replace('-','.') + ' ' + (11 + i) + ':' + (12 + i * 7),
+            file:'IMG_' + (2100 + i * 13) + '.jpg', savedAt:null };
+  /* OCR 이 처음 읽은 값. 「원래대로」가 돌아갈 자리입니다 */
+  o.raw = { who:o.who, date:o.date, amt:o.amt, memo:o.memo, kind:o.kind, pay:o.pay };
+  /* 자리마다 신뢰도 — 금액은 대개 잘 읽고 상호는 덜 읽습니다 */
+  o.cf = { who:e[5], date:Math.min(0.99, e[5] + 0.08), amt:Math.min(0.99, e[5] + 0.12), memo:Math.max(0.42, e[5] - 0.2) };
+  return o;
+});
+var sel = 0;
+/* 올린 서식. 영수증과 같은 자리(「올린 원본」)에 서식을 폅니다 — 사장이 올린 종이는 둘 다 원본입니다. */
+var DOCS = [
+  { k:'main', up:'2026-09-02 11:04' },
+  { k:'sub',  up:'2026-09-02 11:04' }
+];
+var selDoc = null;                 /* null 이면 영수증을 봅니다 */
+var F = { st:[] };
+
+/* 붙일 후보 거래 — 금액·날짜·거래처로 점수를 냅니다. 실제 계산입니다. */
+function candidates(e) {
+  return TX.map(function (t, i) {
+    var score = 0;
+    var amtDiff = Math.abs(t[4] - e.amt) / e.amt;
+    if (amtDiff < 0.001) score += 60; else if (amtDiff < 0.05) score += 40; else if (amtDiff < 0.2) score += 12;
+    var dd = Math.abs(new Date('2026-' + t[0]) - new Date(e.date)) / 86400000;
+    if (dd === 0) score += 25; else if (dd <= 1) score += 18; else if (dd <= 3) score += 8;
+    var a = t[1].replace(/\s/g,''), b = e.who.replace(/\s/g,'');
+    if (a === b) score += 15;
+    else if (a.indexOf(b.slice(0,3)) >= 0 || b.indexOf(a.slice(0,3)) >= 0) score += 9;
+    if (t[3] === 'in') score -= 40;   /* 증빙은 지출에 붙습니다 */
+    return { i:i, t:t, score:Math.max(0, score) };
+  }).filter(function (c) { return c.score > 10; })
+    .sort(function (a,b) { return b.score - a.score; }).slice(0, 4);
+}
+
+function list() {
+  return E.filter(function (e) { return !F.st.length || F.st.indexOf(e.st) >= 0; });
+}
+
+var ST = { matched:['붙었습니다','st-safe','safe'], review:['확인하세요','st-caution','caution'],
+           unmatched:['거래를 못 찾음','st-danger','danger'] };
+
+function render() {
+  var ls = list(), e = E[sel];
+  var unm = E.filter(function (x) { return x.st !== 'matched'; }).length;
+
+  document.getElementById('hero').innerHTML = unm === 0
+    ? '증빙이 <b>모두 거래에 붙었습니다</b>'
+    : '<b><span class="n">' + unm + '건</span></b>이 아직 거래에 못 붙었습니다';
+
+  /* 왼쪽 목록 */
+  document.getElementById('evlist').innerHTML = ls.length ? ls.map(function (x) {
+    return '<button class="ev' + (!selDoc && x.id === sel ? ' on' : '') + '" data-id="' + x.id + '">'
+      + '<span><span class="n">' + x.who + '</span>'
+      + '<span class="m">' + mdKo(x.date) + ' · ' + ST[x.st][0] + '</span></span>'
+      + '<span class="a">' + won(x.amt) + '</span></button>';
+  }).join('') : '<p class="empty" style="padding:var(--s6) 0;font-size:12px">조건에 맞는 증빙이 없습니다.</p>';
+
+  /* 곁줄 · 올린 서식 */
+  document.getElementById('doclist').innerHTML = DOCS.map(function (d) {
+    var c = formStats(d.k);
+    return '<button class="ev' + (selDoc === d.k ? ' on' : '') + '" data-doc="' + d.k + '">'
+      + '<span><span class="n">' + FORMS[d.k].name + '</span>'
+      + '<span class="m">' + FORMS[d.k].file.split('_')[0] + ' · ' + c.filled + '/' + c.all + '칸</span></span></button>';
+  }).join('');
+
+  /* 서식을 고르면 「올린 원본」 자리에 서식이 섭니다 */
+  if (selDoc) { renderDoc(); return; }
+
+  /* 가운데 왼쪽 · 찍어 올린 사진 · 가운데 오른쪽 · 인식값 */
+  document.getElementById('paper').innerHTML = shotHTML(e);
+  document.getElementById('fields').innerHTML = fieldsHTML(e);
+
+  /* 오른쪽 · 붙일 후보 */
+  var cs = candidates(e);
+  document.getElementById('detail').innerHTML = '<h3>붙일 거래 후보</h3>'
+    + (e.txId !== null
+        ? '<p class="dm" style="margin-top:var(--s4)"><span class="st st-safe">'
+          + '<span class="mk mk-safe"></span>붙었습니다</span> ' + TX[e.txId][1] + '</p>'
+          + '<button class="btn btn-sub btn-block" data-a="unlink" style="margin-top:var(--s4)">떼어내기</button>'
+        : (cs.length ? '<div style="margin-top:var(--s4)">' + cs.map(function (c, k) {
+            return '<div class="cnd' + (k === 0 ? ' best' : '') + '">'
+              + '<span class="sc">' + c.score + '</span>'
+              + '<span><span class="n">' + c.t[1] + '</span>'
+              + '<span class="m">2026. ' + c.t[0].replace('-','. ') + ' · ' + won(c.t[4]) + '원</span></span>'
+              + '<button class="btn btn-sm ' + (k === 0 ? 'btn-pri' : 'btn-sub') + '" data-a="link" data-tx="' + c.i + '"'
+                + ' style="margin-left:auto">붙이기</button></div>';
+          }).join('') + '</div>'
+          + '<p class="dm" style="margin-top:var(--s5)">점수는 금액(60) · 날짜(25) · 거래처 이름(15)으로 냅니다. '
+            + '60점 이상이면 금액이 정확히 같습니다.</p>'
+          : '<p class="dm" style="margin-top:var(--s4)">금액과 날짜가 비슷한 거래가 없습니다. '
+            + '거래내역을 먼저 넣으셨는지 확인해 주세요.</p>'));
+
+  /* 현황 */
+  var mt = E.filter(function (x) { return x.st === 'matched'; }).length;
+  var over3 = TX.filter(function (t) { return t[3] === 'out' && t[4] > 30000; }).length;
+  document.getElementById('evFigs').innerHTML =
+      '<div class="fig in"><span class="k">붙은 증빙</span><span class="v">' + mt + ' / ' + E.length + '</span>'
+      + '<span class="s">금액 · 날짜 · 거래처가 맞은 것</span>'
+      + '<span class="rail"><i style="width:' + Math.round(mt/E.length*100) + '%"></i></span></div>'
+    + '<div class="fig in"><span class="k">3만원 넘는 지출</span><span class="v">' + over3 + '<small>건</small></span>'
+      + '<span class="s">법정지출증빙을 받아야 하는 거래입니다</span></div>'
+    + '<div class="fig in"><span class="k">모은 금액</span><span class="v">'
+      + won(E.reduce(function (a,x) { return a+x.amt; }, 0)) + '<small>원</small></span>'
+      + '<span class="s">종합소득세와 부가세 신고에 쓰입니다</span></div>'
+    + '<div class="fig in"><span class="k">부가세 매입분</span><span class="v">'
+      + won(Math.round(E.reduce(function (a,x) { return a+x.amt/11; }, 0))) + '<small>원</small></span>'
+      + '<span class="s">10% 가정. 세무전문가 확인이 필요합니다</span></div>';
+}
+
+/* ── 찍어 올린 사진 ──
+   사진 위에 OCR 이 읽은 자리를 네모로 두릅니다. 신뢰도가 0.8 아래면 붉게 두릅니다 —
+   확인이 필요한 게 아니라 틀렸을 수 있는 값입니다. */
+function shotHTML(e) {
+  var box = function (f, txt) {
+    var c = e.cf[f] || e.conf;
+    return '<span class="ocrbox' + (c < 0.8 ? ' low' : '') + '" data-go="' + f + '" role="button" tabindex="0">'
+      + txt + '<span class="cfd">' + Math.round(c * 100) + '</span></span>';
+  };
+  return '<div class="shot"><div class="sheet"><div class="paper">'
+    + '<p class="ph">' + box('who', e.who) + '</p>'
+    + '<p class="pb">사업자 214-08-' + (31000 + e.id * 137) + ' · ' + box('date', e.date.replace(/-/g,'.')) + '</p>'
+    + '<hr>'
+    + e.items.map(function (x) {
+        return '<div class="pr"><span>' + x[0] + '</span><span>' + x[1] + '</span><span>' + won(x[1]*x[2]) + '</span></div>';
+      }).join('')
+    + '<hr>'
+    + '<div class="pt"><span>합계</span><span>' + won(e.sum) + '</span></div>'
+    + '<p class="pb" style="margin-top:var(--s5)">카드 승인 ' + box('amt', won(e.amt) + '원') + '</p>'
+    + '</div></div></div>'
+    + '<p class="exif"><b>' + e.file + '</b> · ' + e.shotAt + ' 찍음 · ' + PHONE + ' · 모바일에서 올림<br>'
+      + '네모는 OCR 이 읽은 자리입니다. 숫자는 읽기 신뢰도(%)이고, 누르면 오른쪽 칸으로 갑니다.</p>'
+    + (Math.abs(e.sum - e.amt) > 100
+        ? '<p style="font-size:11px;color:var(--caution-ink,#7a6210);margin-top:var(--s4);line-height:1.55;font-weight:700">'
+          + '품목 합계 ' + won(e.sum) + '원과 카드 승인 ' + won(e.amt) + '원이 ' + won(Math.abs(e.sum-e.amt))
+          + '원 다릅니다. 읽기 오류이거나 할인이 있었을 수 있습니다.</p>'
+        : '<p style="font-size:11px;color:var(--safe);margin-top:var(--s4);font-weight:700">'
+          + '품목 합계와 카드 승인 금액이 맞습니다.</p>');
+}
+
+/* ── 인식값 고치기 ──
+   고치면 저장 줄이 깨어나고, 저장하면 어디에 쓰이는지 그 자리에서 말합니다.
+   저장하지 않은 값은 아무 데도 가지 않습니다. */
+function dirtyKeys(e) {
+  var base = e.savedAt ? e.saved : e.raw;
+  return ['who','date','amt','memo','kind','pay'].filter(function (k) { return e[k] !== base[k]; });
+}
+function fieldsHTML(e) {
+  var dk = dirtyKeys(e), low = e.cf.who < 0.8;
+  var cf = function (f) {
+    var c = e.cf[f]; if (c === undefined) return '';
+    return '<p class="cf">읽기 신뢰도 ' + Math.round(c*100) + '%' + (c < 0.8 ? ' · 확인이 필요합니다' : '') + '</p>';
+  };
+  return '<div class="fld' + (low ? ' low' : '') + '"><label>공급자</label>'
+      + '<input value="' + e.who + '" data-f="who" id="f-who">' + cf('who') + '</div>'
+    + '<div class="fld"><label>거래일</label><input value="' + e.date + '" data-f="date" id="f-date">' + cf('date') + '</div>'
+    + '<div class="fld"><label>금액</label><input value="' + won(e.amt) + '" data-f="amt" id="f-amt">' + cf('amt') + '</div>'
+    + '<div class="fld"><label>부가세 (10% 가정)</label>'
+      + '<input value="' + won(Math.round(e.amt/11)) + '" data-f="vat" readonly></div>'
+    + '<div class="fld"><label>분류 · 서식 항목으로 이어집니다</label>'
+      + '<select data-f="kind">' + KINDS.map(function (k) {
+          return '<option value="' + k[0] + '"' + (k[0] === e.kind ? ' selected' : '') + '>' + k[1] + ' · ' + k[2] + '</option>';
+        }).join('') + '</select></div>'
+    + '<div class="fld"><label>결제수단</label><select data-f="pay">'
+      + ['카드','현금','계좌이체'].map(function (p) {
+          return '<option' + (p === e.pay ? ' selected' : '') + '>' + p + '</option>'; }).join('')
+      + '</select></div>'
+    + '<div class="fld"><label>적요</label><input value="' + e.memo + '" data-f="memo" id="f-memo">' + cf('memo') + '</div>'
+    + '<div class="items"><p style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.03em">'
+      + '읽어낸 품목 ' + e.items.length + '개</p>'
+      + e.items.map(function (x) {
+          return '<div class="it"><span>' + x[0] + '</span><span>' + x[1] + '개</span><span>' + won(x[1]*x[2]) + '</span></div>';
+        }).join('') + '</div>'
+    + '<div class="savebar">'
+      + '<span class="msg' + (dk.length ? ' dirty' : (e.savedAt ? ' done' : '')) + '">'
+        + (dk.length ? '고친 값 ' + dk.length + '개 · 저장 안 됨'
+                     : (e.savedAt ? e.savedAt + ' 저장했습니다' : 'OCR 이 읽은 값 그대로입니다')) + '</span>'
+      + '<button class="btn btn-sub btn-sm" data-a="revert"' + (dk.length ? '' : ' disabled') + '>원래대로</button>'
+      + '<button class="btn btn-pri btn-sm" data-a="save"' + (dk.length ? '' : ' disabled') + '>저장</button>'
+    + '</div>'
+    + usesHTML(e);
+}
+
+/* 저장한 값이 어디에 쓰이는지. 증빙 하나가 신고서 · 부가세 · 예보로 흘러갑니다 */
+function usesHTML(e) {
+  var k = KINDS.filter(function (x) { return x[0] === e.kind; })[0];
+  var day = mdKo(e.date);
+  return '<div class="uses"><h4>저장하면 여기에 쓰입니다</h4>'
+    + '<div class="u"><span>신고서 초안 · ' + k[2] + '</span><span>' + (e.kind === 'PERSONAL' ? '빼기' : '+' + won(e.amt)) + '</span></div>'
+    + '<div class="u"><span>부가세 매입분 (10% 가정)</span><span>' + won(Math.round(e.amt/11)) + '</span></div>'
+    + '<div class="u"><span>예보 · ' + day + ' 나간 돈</span><span>' + (e.txId !== null ? '거래에 붙음' : '거래 대기') + '</span></div>'
+    + '<div class="u"><span>시나리오 · 반복되는 지출로 볼지</span><span>' + (e.amt >= 300000 ? '후보' : '아님') + '</span></div>'
+    + '</div>';
+}
+
+/* ── 올린 서식을 그립니다 ──
+   왼쪽은 서식 종이(좁은 칸이라 접어서), 오른쪽은 서식에서 읽어낸 값입니다.
+   서식은 거래에 붙이지 않으므로 오른쪽 곁줄은 초안 화면으로 보냅니다. */
+function renderDoc() {
+  var d = DOCS.filter(function (x) { return x.k === selDoc; })[0];
+  var c = formStats(selDoc);
+  document.getElementById('paper').innerHTML = '<div class="gvbox">' + formSheet(selDoc) + '</div>'
+    + '<p style="font-size:11px;color:var(--ink-3);margin-top:var(--s4);line-height:1.55">'
+    + FORMS[selDoc].file + ' · ' + d.up + ' 올림 · 출처와 근거는 <a href="pc-docs.html">신고서 초안</a>에서 봅니다.</p>';
+
+  var v = [
+    ['총수입금액 (부표 ⑬)', won(FORM_V.adjRev)],
+    ['필요경비 계 (부표 ㊵)', won(FORM_V.expSum)],
+    ['해당 연도 소득금액 (본표 ㉒)', won(FORM_V.income)]
+  ];
+  document.getElementById('fields').innerHTML =
+      '<p style="font-size:12.5px;line-height:1.7;color:var(--ink-2)">서식 <b>' + c.all + '칸</b> 가운데 <b>'
+      + c.filled + '칸</b>을 8월 자료로 채웠습니다. 확인이 필요한 칸 ' + c.review + ', 빈 칸 ' + c.empty
+      + ', 직접 입력할 칸 ' + c.sens + '개입니다.</p>'
+    + '<div class="items" style="margin-top:var(--s5)">'
+      + v.map(function (x) { return '<div class="it"><span>' + x[0] + '</span><span>' + x[1] + '</span></div>'; }).join('')
+      + '</div>'
+    + '<p style="font-size:11px;color:var(--ink-3);margin-top:var(--s5);line-height:1.6">'
+      + '값은 고치지 않습니다. 서식의 칸은 거래와 증빙에서 집계됩니다 — 고칠 것이 있으면 거래내역에서 분류를 바꿉니다.</p>'
+    + '<a class="btn btn-pri btn-block" href="pc-docs.html" style="margin-top:var(--s5)">신고서 초안에서 보기</a>';
+
+  document.getElementById('detail').innerHTML = '<h3>이 서식은</h3>'
+    + '<p class="dm" style="margin-top:var(--s4)">거래에 붙이지 않습니다. 증빙은 거래 하나에 붙지만 서식은 기간 전체를 집계한 결과입니다.</p>'
+    + '<p class="dm" style="margin-top:var(--s4)">확인이 필요한 칸 ' + c.review + '개와 빈 칸 ' + c.empty
+      + '개는 초안 화면의 「확인할 것」에 이유가 적혀 있습니다.</p>';
+}
+
+/* ── 손잡이 ── */
+document.getElementById('doclist').addEventListener('click', function (e) {
+  var b = e.target.closest('.ev'); if (!b) return;
+  selDoc = b.dataset.doc; render();
+});
+document.getElementById('evlist').addEventListener('click', function (e) {
+  var b = e.target.closest('.ev'); if (!b) return;
+  sel = +b.dataset.id; selDoc = null; render();
+});
+document.getElementById('stChecks').addEventListener('click', function (e) {
+  var b = e.target.closest('.check'); if (!b) return;
+  var s = b.dataset.s, i = F.st.indexOf(s);
+  if (i < 0) F.st.push(s); else F.st.splice(i, 1);
+  b.setAttribute('aria-pressed', String(i < 0));
+  var ls = list(); if (ls.length && ls.indexOf(E[sel]) < 0) sel = ls[0].id;
+  render();
+});
+document.body.addEventListener('click', function (ev) {
+  var b = ev.target.closest('[data-a]'); if (!b) return;
+  var e = E[sel];
+  if (b.dataset.a === 'link') { e.txId = +b.dataset.tx; e.st = 'matched'; render(); }
+  if (b.dataset.a === 'unlink') { e.txId = null; e.st = 'review'; render(); }
+});
+/* 사진의 네모를 누르면 오른쪽 그 칸으로 갑니다 */
+document.getElementById('paper').addEventListener('click', function (ev) {
+  var b = ev.target.closest('[data-go]'); if (!b) return;
+  var el = document.getElementById('f-' + b.dataset.go); if (!el) return;
+  el.focus(); el.select && el.select();
+  document.querySelectorAll('.ocrbox.on').forEach(function (x) { x.classList.remove('on'); });
+  b.classList.add('on');
+});
+
+/* 고치면 저장 줄만 다시 그립니다. 칸을 다시 그리면 글자를 치는 중에 커서가 튑니다 */
+function refreshSave() {
+  var e = E[sel], dk = dirtyKeys(e);
+  var bar = document.querySelector('.savebar'); if (!bar) return;
+  var msg = bar.querySelector('.msg');
+  msg.className = 'msg' + (dk.length ? ' dirty' : (e.savedAt ? ' done' : ''));
+  msg.textContent = dk.length ? '고친 값 ' + dk.length + '개 · 저장 안 됨'
+    : (e.savedAt ? e.savedAt + ' 저장했습니다' : 'OCR 이 읽은 값 그대로입니다');
+  bar.querySelectorAll('.btn').forEach(function (b) { b.disabled = !dk.length; });
+}
+document.getElementById('fields').addEventListener('input', function (ev) {
+  var f = ev.target.dataset.f; if (!f) return;
+  var e = E[sel];
+  if (f === 'amt') e.amt = +ev.target.value.replace(/[^0-9]/g,'') || e.amt;
+  else if (f === 'who') e.who = ev.target.value;
+  else if (f === 'memo') e.memo = ev.target.value;
+  else if (f === 'date') e.date = ev.target.value;
+  else if (f === 'kind') e.kind = ev.target.value;
+  else if (f === 'pay') e.pay = ev.target.value;
+  refreshSave();
+});
+document.getElementById('fields').addEventListener('change', function (ev) {
+  if (ev.target.dataset.f === 'kind' || ev.target.dataset.f === 'pay') { render(); }
+});
+document.getElementById('fields').addEventListener('click', function (ev) {
+  var b = ev.target.closest('[data-a]'); if (!b) return;
+  var e = E[sel];
+  if (b.dataset.a === 'save') {
+    e.saved = { who:e.who, date:e.date, amt:e.amt, memo:e.memo, kind:e.kind, pay:e.pay };
+    var d = new Date();
+    e.savedAt = (d.getMonth()+1) + '.' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    /* 고친 값은 사장이 확정한 값이라 신뢰도를 100 으로 올립니다 */
+    Object.keys(e.cf).forEach(function (k) { e.cf[k] = 1; });
+    if (e.st === 'review') e.st = e.txId !== null ? 'matched' : 'review';
+  }
+  if (b.dataset.a === 'revert') {
+    var base = e.savedAt ? e.saved : e.raw;
+    ['who','date','amt','memo','kind','pay'].forEach(function (k) { e[k] = base[k]; });
+  }
+  render();
+});
+document.getElementById('autoAll').addEventListener('click', function () {
+  var n = 0;
+  E.forEach(function (e) {
+    if (e.st === 'matched') return;
+    var c = candidates(e)[0];
+    if (c && c.score >= 75) { e.txId = c.i; e.st = 'matched'; n++; }
+  });
+  this.textContent = n ? n + '건을 붙였습니다' : '확실한 것이 없습니다';
+  var t = this; setTimeout(function () { t.textContent = '확실한 것 한 번에 붙이기'; }, 1600);
+  render();
+});
+document.getElementById('mkExport').addEventListener('click', function () {
+  /* 신고자료는 초안 화면에서 항목별로 확인합니다 */
+  location.href = 'pc-docs.html';
+});
+
+/* ── 읽어낸 값을 고치면 반영합니다 ──
+   전에는 입력란이 열려 있는데 고쳐도 아무 데도 닿지 않았습니다.
+   고칠 수 있게 해 놓고 안 먹으면, 사장은 고쳤다고 믿고 넘어갑니다.
+
+   금액을 고치면 부가세와 붙일 후보 점수가 따라 바뀝니다(후보는 금액 차이로 점수를 냅니다).
+   사람이 손댄 값은 읽기 신뢰도를 100% 로 올립니다. 모델보다 사람이 맞습니다.
+   render() 를 바로 부르면 입력 중에 포커스가 날아가므로,
+   금액만 후보를 다시 그리고 나머지는 값만 담아 둡니다. */
+document.addEventListener('input', function (ev) {
+  var el = ev.target.closest && ev.target.closest('input[data-f]');
+  if (!el || el.readOnly) return;
+  var e = E[sel], f = el.dataset.f;
+
+  if (f === 'amt') {
+    var v = +el.value.replace(/[^0-9]/g, '');
+    if (!v) return;
+    e.amt = v;
+    /* 금액이 바뀌면 부가세와 후보 점수가 같이 바뀌므로 화면을 다시 그립니다.
+       다시 그리면 포커스가 날아가니 같은 칸으로 되돌려 놓고 커서를 끝에 둡니다.
+       그러지 않으면 한 글자 칠 때마다 커서가 사라져서 금액을 고칠 수 없습니다. */
+    render();
+    var again = document.querySelector('input[data-f="amt"]');
+    if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
+    return;
+  } else if (f === 'who')  e.who  = el.value;
+  else if (f === 'date') {
+    /* 날짜는 아무 글자나 받으면 안 됩니다.
+       읽히지 않는 값을 그대로 담으면 목록이 'NaN월 NaN일'이 됩니다.
+       못 읽으면 칸만 표시하고 값은 그대로 둡니다. */
+    var iso = el.value.trim().replace(/[.\s/]+/g, '-').replace(/-+$/, '');
+    var m = iso.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    var ok = false;
+    if (m) {
+      var y = +m[1], mo = +m[2], dd = +m[3];
+      var probe = new Date(Date.UTC(y, mo - 1, dd));
+      ok = mo >= 1 && mo <= 12 && dd >= 1
+        && probe.getUTCMonth() === mo - 1 && probe.getUTCDate() === dd;
+      if (ok) e.date = y + '-' + String(mo).padStart(2,'0') + '-' + String(dd).padStart(2,'0');
+    }
+    el.closest('.fld').classList.toggle('bad', !ok);
+    var dn = el.parentNode.querySelector('.dnote');
+    if (!ok) {
+      if (!dn) {
+        dn = document.createElement('p');
+        dn.className = 'cf dnote'; el.parentNode.appendChild(dn);
+      }
+      dn.textContent = '날짜로 읽지 못했습니다. 2026-08-31 처럼 적어 주십시오';
+    } else if (dn) dn.remove();
+  }
+  else if (f === 'memo')   e.memo = el.value;
+
+  e.conf = 1;
+  var cf = document.querySelector('.fld .cf');
+  if (cf) cf.textContent = '직접 고쳤습니다 · 모델이 다시 바꾸지 않습니다';
+  var lowBox = document.querySelector('.fld.low');
+  if (lowBox) lowBox.classList.remove('low');
+  /* 왼쪽 목록의 이름·금액도 따라갑니다 */
+  list();
+});
+
+render();
+mountFeatures('pc-evidences');
+</script>
+</body>
+</html>

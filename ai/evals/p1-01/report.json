@@ -1,0 +1,599 @@
+{
+  "dataset": "p1-01",
+  "generatedAt": "2026-09-10T02:07:58+00:00",
+  "model": "claude-sonnet-5",
+  "promptVersion": "transaction-classification/v2",
+  "effort": "medium",
+  "labeled": 300,
+  "batches": 15,
+  "batchSize": 20,
+  "repeat": 3,
+  "confirmThreshold": 0.85,
+  "pass": {
+    "macroF1": 0.85,
+    "acceptanceRate": 0.8
+  },
+  "aggregate": {
+    "transactionMacroF1": {
+      "mean": 0.9226,
+      "stdev": 0.0074,
+      "runs": [
+        0.9144,
+        0.9247,
+        0.9287
+      ]
+    },
+    "merchantMacroF1": {
+      "mean": 0.938,
+      "stdev": 0.0087,
+      "runs": [
+        0.932,
+        0.9339,
+        0.948
+      ]
+    },
+    "transactionAccuracy": {
+      "mean": 0.9411,
+      "stdev": 0.0038,
+      "runs": [
+        0.9367,
+        0.9433,
+        0.9433
+      ]
+    },
+    "acceptanceRate": {
+      "mean": 0.9927,
+      "stdev": 0.0002,
+      "runs": [
+        0.9926,
+        0.9929,
+        0.9925
+      ]
+    },
+    "autoConfirmed": {
+      "mean": 136.6667,
+      "stdev": 3.0551,
+      "runs": [
+        136,
+        140,
+        134
+      ]
+    },
+    "needsConfirmation": {
+      "mean": 163.3333,
+      "stdev": 3.0551,
+      "runs": [
+        164,
+        160,
+        166
+      ]
+    }
+  },
+  "totalElapsedSec": 674.8,
+  "totalEstimatedUsd": 0.9265,
+  "runs": [
+    {
+      "scored": 300,
+      "transaction": {
+        "macroF1": 0.9144,
+        "accuracy": 0.9367,
+        "correct": 281
+      },
+      "merchant": {
+        "macroF1": 0.932,
+        "accuracy": 0.9273,
+        "groups": 110,
+        "correct": 102
+      },
+      "acceptance": {
+        "rate": 0.9926,
+        "autoConfirmed": 136,
+        "autoCorrect": 135,
+        "needsConfirmation": 164
+      },
+      "perCategory": {
+        "ADVERTISING": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6667
+        },
+        "CARD_SETTLEMENT": {
+          "support": 40,
+          "precision": 0.9756,
+          "recall": 1.0,
+          "f1": 0.9877
+        },
+        "CASH_SALES": {
+          "support": 13,
+          "precision": 0.9286,
+          "recall": 1.0,
+          "f1": 0.963
+        },
+        "EQUIPMENT": {
+          "support": 8,
+          "precision": 0.875,
+          "recall": 0.875,
+          "f1": 0.875
+        },
+        "INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_DISBURSEMENT": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_REPAYMENT": {
+          "support": 13,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "MATERIALS": {
+          "support": 41,
+          "precision": 0.9756,
+          "recall": 0.9756,
+          "f1": 0.9756
+        },
+        "OTHER_EXPENSE": {
+          "support": 3,
+          "precision": 0.4,
+          "recall": 0.6667,
+          "f1": 0.5
+        },
+        "OTHER_INCOME": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "OWNER_FUNDING": {
+          "support": 4,
+          "precision": 0.6667,
+          "recall": 1.0,
+          "f1": 0.8
+        },
+        "PAYROLL": {
+          "support": 16,
+          "precision": 1.0,
+          "recall": 0.9375,
+          "f1": 0.9677
+        },
+        "PERSONAL": {
+          "support": 12,
+          "precision": 0.9231,
+          "recall": 1.0,
+          "f1": 0.96
+        },
+        "PLATFORM_FEE": {
+          "support": 10,
+          "precision": 0.9091,
+          "recall": 1.0,
+          "f1": 0.9524
+        },
+        "PLATFORM_SETTLEMENT": {
+          "support": 26,
+          "precision": 1.0,
+          "recall": 0.8077,
+          "f1": 0.8936
+        },
+        "RENT": {
+          "support": 4,
+          "precision": 0.8,
+          "recall": 1.0,
+          "f1": 0.8889
+        },
+        "SOCIAL_INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SUBSCRIPTION": {
+          "support": 12,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SUPPLIES": {
+          "support": 14,
+          "precision": 0.8,
+          "recall": 0.8571,
+          "f1": 0.8276
+        },
+        "TAX": {
+          "support": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TELECOM": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TRANSFER_SALES": {
+          "support": 15,
+          "precision": 0.75,
+          "recall": 0.8,
+          "f1": 0.7742
+        },
+        "UTILITIES": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "meta": {
+        "elapsedSec": 226.8,
+        "usage": {
+          "calls": 15,
+          "input_tokens": 27419,
+          "output_tokens": 25641,
+          "cache_read_input_tokens": 39970,
+          "cache_creation_input_tokens": 2855
+        },
+        "estimatedUsd": 0.311248,
+        "discarded": 0,
+        "failedBatches": 0,
+        "stopped": null
+      }
+    },
+    {
+      "scored": 300,
+      "transaction": {
+        "macroF1": 0.9247,
+        "accuracy": 0.9433,
+        "correct": 283
+      },
+      "merchant": {
+        "macroF1": 0.9339,
+        "accuracy": 0.9364,
+        "groups": 110,
+        "correct": 103
+      },
+      "acceptance": {
+        "rate": 0.9929,
+        "autoConfirmed": 140,
+        "autoCorrect": 139,
+        "needsConfirmation": 160
+      },
+      "perCategory": {
+        "ADVERTISING": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6667
+        },
+        "CARD_SETTLEMENT": {
+          "support": 40,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "CASH_SALES": {
+          "support": 13,
+          "precision": 0.9286,
+          "recall": 1.0,
+          "f1": 0.963
+        },
+        "EQUIPMENT": {
+          "support": 8,
+          "precision": 0.7778,
+          "recall": 0.875,
+          "f1": 0.8235
+        },
+        "INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_DISBURSEMENT": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_REPAYMENT": {
+          "support": 13,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "MATERIALS": {
+          "support": 41,
+          "precision": 0.9756,
+          "recall": 0.9756,
+          "f1": 0.9756
+        },
+        "OTHER_EXPENSE": {
+          "support": 3,
+          "precision": 0.6667,
+          "recall": 0.6667,
+          "f1": 0.6667
+        },
+        "OTHER_INCOME": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "OWNER_FUNDING": {
+          "support": 4,
+          "precision": 0.5714,
+          "recall": 1.0,
+          "f1": 0.7273
+        },
+        "PAYROLL": {
+          "support": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "PERSONAL": {
+          "support": 12,
+          "precision": 0.8571,
+          "recall": 1.0,
+          "f1": 0.9231
+        },
+        "PLATFORM_FEE": {
+          "support": 10,
+          "precision": 0.9091,
+          "recall": 1.0,
+          "f1": 0.9524
+        },
+        "PLATFORM_SETTLEMENT": {
+          "support": 26,
+          "precision": 1.0,
+          "recall": 0.8077,
+          "f1": 0.8936
+        },
+        "RENT": {
+          "support": 4,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SOCIAL_INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SUBSCRIPTION": {
+          "support": 12,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SUPPLIES": {
+          "support": 14,
+          "precision": 0.9333,
+          "recall": 1.0,
+          "f1": 0.9655
+        },
+        "TAX": {
+          "support": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TELECOM": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TRANSFER_SALES": {
+          "support": 15,
+          "precision": 0.6875,
+          "recall": 0.7333,
+          "f1": 0.7097
+        },
+        "UTILITIES": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "meta": {
+        "elapsedSec": 231.6,
+        "usage": {
+          "calls": 15,
+          "input_tokens": 27419,
+          "output_tokens": 26237,
+          "cache_read_input_tokens": 42825,
+          "cache_creation_input_tokens": 0
+        },
+        "estimatedUsd": 0.317208,
+        "discarded": 0,
+        "failedBatches": 0,
+        "stopped": null
+      }
+    },
+    {
+      "scored": 300,
+      "transaction": {
+        "macroF1": 0.9287,
+        "accuracy": 0.9433,
+        "correct": 283
+      },
+      "merchant": {
+        "macroF1": 0.948,
+        "accuracy": 0.9455,
+        "groups": 110,
+        "correct": 104
+      },
+      "acceptance": {
+        "rate": 0.9925,
+        "autoConfirmed": 134,
+        "autoCorrect": 133,
+        "needsConfirmation": 166
+      },
+      "perCategory": {
+        "ADVERTISING": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6667
+        },
+        "CARD_SETTLEMENT": {
+          "support": 40,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "CASH_SALES": {
+          "support": 13,
+          "precision": 0.9286,
+          "recall": 1.0,
+          "f1": 0.963
+        },
+        "EQUIPMENT": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 0.875,
+          "f1": 0.9333
+        },
+        "INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_DISBURSEMENT": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "LOAN_REPAYMENT": {
+          "support": 13,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "MATERIALS": {
+          "support": 41,
+          "precision": 0.9762,
+          "recall": 1.0,
+          "f1": 0.988
+        },
+        "OTHER_EXPENSE": {
+          "support": 3,
+          "precision": 0.6,
+          "recall": 1.0,
+          "f1": 0.75
+        },
+        "OTHER_INCOME": {
+          "support": 8,
+          "precision": 0.8889,
+          "recall": 1.0,
+          "f1": 0.9412
+        },
+        "OWNER_FUNDING": {
+          "support": 4,
+          "precision": 0.5714,
+          "recall": 1.0,
+          "f1": 0.7273
+        },
+        "PAYROLL": {
+          "support": 16,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "PERSONAL": {
+          "support": 12,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "PLATFORM_FEE": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "PLATFORM_SETTLEMENT": {
+          "support": 26,
+          "precision": 1.0,
+          "recall": 0.8077,
+          "f1": 0.8936
+        },
+        "RENT": {
+          "support": 4,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SOCIAL_INSURANCE": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "SUBSCRIPTION": {
+          "support": 12,
+          "precision": 1.0,
+          "recall": 0.9167,
+          "f1": 0.9565
+        },
+        "SUPPLIES": {
+          "support": 14,
+          "precision": 0.7778,
+          "recall": 1.0,
+          "f1": 0.875
+        },
+        "TAX": {
+          "support": 9,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TELECOM": {
+          "support": 8,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "TRANSFER_SALES": {
+          "support": 15,
+          "precision": 0.6667,
+          "recall": 0.6667,
+          "f1": 0.6667
+        },
+        "UTILITIES": {
+          "support": 10,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "meta": {
+        "elapsedSec": 216.4,
+        "usage": {
+          "calls": 15,
+          "input_tokens": 27419,
+          "output_tokens": 24322,
+          "cache_read_input_tokens": 42825,
+          "cache_creation_input_tokens": 0
+        },
+        "estimatedUsd": 0.298058,
+        "discarded": 0,
+        "failedBatches": 0,
+        "stopped": null
+      }
+    }
+  ],
+  "caveat": "합성 데이터라 실제보다 점수가 높게 나온다. 프롬프트 A/B 비교에 쓰고 절대 판정에는 쓰지 않는다 (evals/p1-01/라벨_분포표.md)."
+}

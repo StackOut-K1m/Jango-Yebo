@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 반복·예정 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-05 반복 거래 · 예정 거래 (P0-03·04·05)
+   승인하면 실제로 목록이 옮겨지고, 예정 거래가 생기고, 왼쪽 예보 반영 수가 바뀝니다.
+   승인하지 않은 후보는 예보에 들어가지 않습니다. */
+.cand { padding:var(--s6) 0; position:relative; }
+.cand + .cand::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.cand.on { background:var(--ground-2); margin:0 calc(var(--s5) * -1); padding-left:var(--s5); padding-right:var(--s5);
+           border-radius:10px; }
+.cand.on::before, .cand.on + .cand::before { opacity:0; }
+.cand .ask { font-family:var(--serif); font-size:18px; font-weight:700; line-height:1.5; }
+.cand .ask b { box-shadow:inset 0 -8px 0 rgb(202 165 33 / .3); }
+.cand .meta { font-size:12px; color:var(--ink-2); margin-top:var(--s3); font-variant-numeric:tabular-nums; }
+.cand .obs { display:flex; gap:2px; margin-top:var(--s4); align-items:flex-end; height:22px; }
+.cand .obs i { flex:1; max-width:14px; background:var(--ink-3); border-radius:2px; opacity:.5; }
+.cand .obs i.hit { background:var(--ink); opacity:1; }
+.gone2 { display:none; }
+.done { padding:var(--s5) 0; position:relative; display:flex; align-items:baseline; gap:var(--s4); }
+.done + .done::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.done .nm { font-size:13.5px; font-weight:600; }
+.done .mt { font-size:11.5px; color:var(--ink-3); display:block; margin-top:1px; }
+.done .a { margin-left:auto; font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+.done button { font-size:11.5px; font-weight:700; color:var(--ink-3); }
+.done button:hover { color:var(--danger); }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">거래에서 찾아낸 규칙</p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede">승인하지 않은 후보는 예보에 들어가지 않습니다. 서비스가 임의로 미래를 확정하지 않습니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <aside class="side">
+    <div class="grp">
+      <h3>예보에 들어간 것</h3>
+      <div id="sideFigs"></div>
+    </div>
+    <div class="grp">
+      <h3>신뢰도</h3>
+      <div class="checks" id="confChecks">
+        <button class="check" data-c="HIGH" aria-pressed="false"><i aria-hidden="true"></i>높음</button>
+        <button class="check" data-c="MEDIUM" aria-pressed="false"><i aria-hidden="true"></i>보통</button>
+        <button class="check" data-c="LOW" aria-pressed="false"><i aria-hidden="true"></i>낮음</button>
+      </div>
+    </div>
+    <div class="grp">
+      <h3>방향</h3>
+      <div class="pills" id="dirPills">
+        <button class="pill" data-d="all" aria-pressed="true">전체</button>
+        <button class="pill" data-d="in">들어옴</button>
+        <button class="pill" data-d="out">나감</button>
+      </div>
+    </div>
+    <div class="grp">
+      <button class="btn btn-sub btn-block" id="undo">되돌리기</button>
+    </div>
+  </aside>
+
+  <main class="body">
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3)">확인이 필요한 후보</h3>
+    <div id="cands" style="margin-top:var(--s4)"></div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s9)">이미 확정한 규칙</h3>
+    <div id="dones" style="margin-top:var(--s4)"></div>
+
+    <h3 style="font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink-3);margin-top:var(--s9)">이 규칙에서 나온 예정 거래</h3>
+    <div class="tbl" style="--cols:80px minmax(0,1fr) 150px 156px;margin-top:var(--s4)">
+      <div class="th"><span>예정일</span><span>내용</span><span>확실성</span><span class="r">금액</span></div>
+      <div id="planned"></div>
+    </div>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = pcTop('patterns');
+wireSwitch();
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+var CONF = { HIGH:'높음', MEDIUM:'보통', LOW:'낮음', UNPREDICTABLE:'예측 불가' };
+var P = PATTERNS.map(function (p, i) {
+  return { id:i, name:p[0], cycle:p[1], dir:p[2], min:p[3][0], max:p[3][1],
+           obs:p[4], conf:p[5], status:p[6], why:p[7] };
+});
+var undoStack = [];   /* history 라는 이름을 쓰면 window.history 와 부딪힙니다 */
+var sel = null;
+var F = { conf:[], dir:'all' };
+
+/* 다음 예정일 — 주기에서 계산합니다 */
+function nextDates(p, n) {
+  var out = [], i;
+  if (/화요일/.test(p.cycle)) { for (i = 0; i < days.length && out.length < n; i++) if (new Date(days[i].date).getDay() === 2) out.push(days[i].date); }
+  else if (/금요일/.test(p.cycle)) { for (i = 0; i < days.length && out.length < n; i++) if (new Date(days[i].date).getDay() === 5) out.push(days[i].date); }
+  else if (/영업일/.test(p.cycle)) { for (i = 1; i < days.length && out.length < n; i++) if (new Date(days[i].date).getDay() !== 1) out.push(days[i].date); }
+  else { var dm = (p.cycle.match(/(\d+)일/) || [])[1];
+         for (i = 0; i < days.length && out.length < n; i++) if (+days[i].date.slice(-2) === +dm) out.push(days[i].date); }
+  return out;
+}
+
+function cands() {
+  return P.filter(function (p) { return p.status === 'CANDIDATE'; }).filter(function (p) {
+    if (F.conf.length && F.conf.indexOf(p.conf) < 0) return false;
+    if (F.dir !== 'all' && p.dir !== F.dir) return false;
+    return true;
+  });
+}
+function dones() { return P.filter(function (p) { return p.status === 'CONFIRMED'; }); }
+
+function render() {
+  var cs = cands(), ds = dones();
+  var left = P.filter(function (p) { return p.status === 'CANDIDATE'; }).length;
+
+  document.getElementById('hero').innerHTML = left === 0
+    ? '후보를 <b>모두 확인했습니다</b>'
+    : '후보 <b><span class="n">' + left + '건</span></b>을 확인하면 예보가 더 맞습니다';
+
+  /* 왼쪽 · 예보에 실제로 들어간 수 */
+  var plannedN = ds.reduce(function (a,p) { return a + nextDates(p, 5).length; }, 0);
+  document.getElementById('sideFigs').innerHTML =
+      '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">확정한 규칙</span>'
+      + '<span class="b">' + ds.length + '건</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">예정 거래</span>'
+      + '<span class="b">' + plannedN + '건</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">확인 대기</span>'
+      + '<span class="b">' + left + '건</span></div>'
+    + '<div class="res" style="padding:var(--s3) 0"><span class="k" style="width:auto">예보 정확도</span>'
+      + '<span class="b">84.2%</span></div>'
+    + '<p class="dm" style="font-size:11px;color:var(--ink-3);margin-top:var(--s4);line-height:1.55">'
+      + '확인 대기 중인 후보는 예보에 들어가지 않습니다.</p>';
+
+  /* 후보 */
+  document.getElementById('cands').innerHTML = cs.length ? cs.map(function (p) {
+    return '<div class="cand' + (sel === p.id ? ' on' : '') + '" data-id="' + p.id + '">'
+      + '<p class="ask">' + p.why + ' <b>' + p.name + '</b>으로 등록할까요?</p>'
+      + '<p class="meta">' + p.cycle + ' · ' + (p.dir === 'in' ? '들어옴' : '나감') + ' '
+        + won(p.min) + '~' + won(p.max) + '원 · 관측 ' + p.obs + '회 · 신뢰도 ' + CONF[p.conf] + '</p>'
+      + '<div class="obs" aria-hidden="true">'
+        + Array.from({length:Math.min(p.obs, 8)}).map(function (_, k) {
+            return '<i class="hit" style="height:' + (10 + (k*5) % 13) + 'px"></i>'; }).join('')
+      + '</div>'
+      + '<div class="btn-row">'
+        + '<button class="btn btn-pri" data-a="ok" data-id="' + p.id + '">등록</button>'
+        + '<button class="btn btn-sub" data-a="sel" data-id="' + p.id + '">금액 고치기</button>'
+        + '<button class="btn btn-sub" data-a="no" data-id="' + p.id + '">반복 아닙니다</button>'
+      + '</div></div>';
+  }).join('') : '<p class="empty">' + (left ? '걸러낸 조건에 맞는 후보가 없습니다.' : '확인할 후보가 없습니다.') + '</p>';
+
+  /* 확정 */
+  document.getElementById('dones').innerHTML = ds.length ? ds.map(function (p) {
+    return '<div class="done"><span><span class="nm">' + p.name + '</span>'
+      + '<span class="mt">' + p.cycle + ' · 관측 ' + p.obs + '회 · 신뢰도 ' + CONF[p.conf] + '</span></span>'
+      + '<span class="a">' + (p.dir === 'in' ? '+' : '−') + won(p.min)
+        + (p.min !== p.max ? '~' + won(p.max) : '') + '</span>'
+      + '<button data-a="undo" data-id="' + p.id + '">해제</button></div>';
+  }).join('') : '<p class="empty">확정한 규칙이 없습니다.</p>';
+
+  /* 예정 거래 — 확정 규칙에서 실제로 생성합니다 */
+  var rows = [];
+  ds.forEach(function (p) {
+    nextDates(p, 4).forEach(function (dt) {
+      rows.push({ dt:dt, name:p.name, dir:p.dir, min:p.min, max:p.max,
+                  cert: p.min === p.max ? 'CONFIRMED' : 'RANGE' });
+    });
+  });
+  rows.sort(function (a,b) { return a.dt.localeCompare(b.dt); });
+  var CERT = { CONFIRMED:['확정',''], RANGE:['범위',''], PREDICTED:['예보','bd-est'] };
+  document.getElementById('planned').innerHTML = rows.length ? rows.map(function (r) {
+    var c = CERT[r.cert];
+    return '<div class="tr" style="cursor:default"><span class="dt">' + md(r.dt) + '</span>'
+      + '<span class="nm">' + r.name + '</span>'
+      + '<span><span class="bd ' + c[1] + '">' + c[0] + '</span></span>'
+      + '<span class="r amt' + (r.dir === 'in' ? ' in' : '') + '">'
+        + (r.dir === 'in' ? '+' : '−') + won(r.min)
+        + (r.min !== r.max ? '~' + won(r.max) : '') + '</span></div>';
+  }).join('') : '<p class="empty">확정한 규칙이 없어 예정 거래도 없습니다.</p>';
+
+  drawDetail();
+}
+
+function drawDetail() {
+  var el = document.getElementById('detail');
+  if (sel === null) {
+    el.innerHTML = '<h3>고른 후보</h3><p class="dm" style="margin-top:var(--s4)">'
+      + '「금액 고치기」를 누르면 여기에서 주기와 금액 범위를 조정할 수 있습니다.</p>';
+    return;
+  }
+  var p = P[sel], nd = nextDates(p, 3);
+  el.innerHTML = '<h3>' + p.name + '</h3>'
+    + '<p class="dm" style="margin-top:var(--s4)">' + p.why + '</p>'
+    + '<dl style="margin-top:var(--s5)">'
+      + '<div class="kv"><dt>주기</dt><dd>' + p.cycle + '</dd></div>'
+      + '<div class="kv"><dt>방향</dt><dd>' + (p.dir === 'in' ? '들어옴' : '나감') + '</dd></div>'
+      + '<div class="kv"><dt>관측</dt><dd>' + p.obs + '회</dd></div>'
+      + '<div class="kv"><dt>신뢰도</dt><dd>' + CONF[p.conf] + '</dd></div>'
+      + '<div class="kv"><dt>다음 예정</dt><dd>' + nd.map(md).join(', ') + '</dd></div>'
+    + '</dl>'
+    + '<div class="grp"><h3>금액 범위 고치기</h3>'
+      + '<div class="knob" style="margin-top:var(--s4)">'
+        + '<div class="kt"><span class="n">가장 적을 때</span><span class="v" id="minV">' + won(p.min) + '</span></div>'
+        + '<input type="range" id="minR" min="0" max="' + (p.max) + '" step="10000" value="' + p.min + '">'
+      + '</div>'
+      + '<div class="knob">'
+        + '<div class="kt"><span class="n">가장 많을 때</span><span class="v" id="maxV">' + won(p.max) + '</span></div>'
+        + '<input type="range" id="maxR" min="' + p.min + '" max="' + Math.round(p.max*1.6) + '" step="10000" value="' + p.max + '">'
+      + '</div>'
+      + '<button class="btn btn-pri btn-block" data-a="ok" data-id="' + p.id + '" style="margin-top:var(--s4)">'
+        + '이 범위로 등록</button>'
+    + '</div>';
+
+  document.getElementById('minR').addEventListener('input', function () {
+    p.min = +this.value; document.getElementById('minV').textContent = won(p.min);
+  });
+  document.getElementById('maxR').addEventListener('input', function () {
+    p.max = +this.value; document.getElementById('maxV').textContent = won(p.max);
+  });
+}
+
+/* ── 손잡이 ── */
+document.body.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-a]'); if (!b) return;
+  var p = P[+b.dataset.id], a = b.dataset.a;
+  if (a === 'ok')   { undoStack.push([p.id, p.status]); p.status = 'CONFIRMED'; sel = null; render(); }
+  if (a === 'no')   { undoStack.push([p.id, p.status]); p.status = 'DISMISSED'; sel = null; render(); }
+  if (a === 'undo') { undoStack.push([p.id, p.status]); p.status = 'CANDIDATE'; render(); }
+  if (a === 'sel')  { sel = p.id; render(); }
+});
+document.getElementById('cands').addEventListener('click', function (e) {
+  if (e.target.closest('[data-a]')) return;
+  var c = e.target.closest('.cand'); if (!c) return;
+  sel = +c.dataset.id; render();
+});
+document.getElementById('confChecks').addEventListener('click', function (e) {
+  var b = e.target.closest('.check'); if (!b) return;
+  var c = b.dataset.c, i = F.conf.indexOf(c);
+  if (i < 0) F.conf.push(c); else F.conf.splice(i, 1);
+  b.setAttribute('aria-pressed', String(i < 0)); render();
+});
+document.getElementById('dirPills').addEventListener('click', function (e) {
+  var b = e.target.closest('.pill'); if (!b) return;
+  F.dir = b.dataset.d;
+  this.querySelectorAll('.pill').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  render();
+});
+document.getElementById('undo').addEventListener('click', function () {
+  var h = undoStack.pop(); if (!h) { this.textContent = '되돌릴 것이 없습니다'; var t = this;
+    setTimeout(function () { t.textContent = '되돌리기'; }, 1200); return; }
+  P[h[0]].status = h[1]; render();
+});
+
+render();
+mountFeatures('pc-patterns');
+</script>
+</body>
+</html>

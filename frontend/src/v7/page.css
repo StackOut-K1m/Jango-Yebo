@@ -1,0 +1,1429 @@
+/* ══════════════════════════════════════════════════════════════════
+   v7 하위 화면 — 계좌 · 거래
+   대시보드(styles.css)의 topbar·brand·avatar 규칙을 그대로 쓰고,
+   여기서는 본문 틀과 기존 화면의 클래스만 v7 재질로 옮긴다.
+   ══════════════════════════════════════════════════════════════════ */
+
+.v7-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(110% 60% at 12% -6%, color-mix(in srgb, var(--lavender) 7%, transparent), transparent 60%),
+    var(--page);
+  color: var(--text);
+  /* 글꼴 스택은 tokens.css 한 곳에 둔다. 'Pretendard' 로 적으면 실제로 적재된 이름('Pretendard Variable')과
+     달라 시스템 글꼴로 떨어지고, 대시보드와 글자 폭이 달라 상단 바가 화면을 옮길 때마다 흔들린다. */
+  font-family: var(--sans);
+  word-break: keep-all;
+  /* 안에 섞인 옛 컴포넌트(빈 상태·거래 표)는 옛 흰 테마의 글자·선 토큰을 읽는다. v7 토큰으로 잇는다 —
+     잇지 않으면 다크에서 어두운 회색 글자가 어두운 판 위에 남는다(대비 1.9:1). */
+  --ink: var(--text);
+  --ink-2: var(--text-2);
+  --ink-3: var(--muted);
+  --hair: var(--line);
+}
+.v7-page__store {
+  font-size: var(--fs-12_5, 12.5px);
+  color: var(--muted);
+  padding: 0 12px;
+  border-left: 1px solid var(--line);
+}
+/* 메뉴가 8개라 최소 폭(760px)에서 상단 바가 넘친다. 가게 이름은 대시보드에서 보인다. */
+@media (max-width: 900px) {
+  .v7-page__store { display: none; }
+}
+
+.v7-page__body {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 40px max(20px, 4vw) 80px;
+  display: grid;
+  gap: 22px;
+}
+.v7-page__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 6px;
+}
+/* 제목 칸만 늘린다. 되돌아가는 링크만 남은 화면에서는 이 규칙이 링크 칸에 걸려
+   왼쪽 끝까지 늘어났다 */
+.v7-page__head > div:first-child:not(.v7-page__actions) { flex: 1; min-width: 240px; }
+/* 그 화면에서 링크는 제목이 있을 때 앉던 자리 그대로 오른쪽 끝이다 */
+.v7-page__head > .v7-page__actions:only-child { margin-left: auto; }
+.v7-page__head h1 {
+  margin: 0;
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.v7-page__head p {
+  margin: 12px 0 0;
+  font-size: var(--fs-14, 14px);
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+/* ── 구획 ─────────────────────────────────────────────────── */
+.v7-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  /* 메인 판들과 같은 입체감 — 윗변 빛, 가까운 그림자와 먼 그림자 */
+  box-shadow: inset 0 1px 0 var(--sheen-2), 0 1px 2px var(--shadow-1), 0 16px 32px -18px var(--shadow-3);
+  padding: 24px 26px 22px;
+  min-width: 0;
+}
+/* 제목과 구획 단위 조작을 한 줄에 둔다. 좁아지면 조작이 아래로 내려간다. */
+.v7-panel__head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.v7-panel__head-row .v7-panel__head { margin-bottom: 0; }
+.v7-panel__head {
+  margin: 0 0 18px;
+  font-size: var(--fs-13, 13px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+/* ══ 기존 화면 클래스를 v7 재질로 ══════════════════════════ */
+
+/* ── 폼 칸 (계좌 연결 등) ─────────────────────────────────── */
+.v7-page .auth-field { display: block; }
+.v7-page .auth-field + .auth-field { margin-top: 16px; }
+.v7-page .auth-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: var(--fs-12_5, 12.5px);
+  font-weight: 600;
+  color: var(--muted);
+}
+.v7-page input:not([type='checkbox'], [type='radio'], [type='file']),
+.v7-page .auth-field select,
+.v7-page select,
+.v7-page textarea {
+  min-height: 44px;
+  padding: 0 13px;
+  border-radius: 11px;
+  border: 1px solid var(--control-line);
+  background: var(--veil-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-14, 14px);
+}
+.v7-page input:focus-visible,
+.v7-page select:focus-visible {
+  outline: none;
+  border-color: var(--lavender);
+  background: var(--veil-4);
+}
+.v7-page ::placeholder { color: color-mix(in srgb, var(--muted) 72%, transparent); }
+/* 폼 칸은 선택칸과 같은 너비로 채운다. 입력칸만 내용 폭으로 줄어 칸마다 길이가 달랐다. */
+.v7-page .auth-field :is(input:not([type='checkbox'], [type='radio'], [type='file']), select, textarea) {
+  width: 100%;
+  min-width: 0;
+}
+/* transaction.css(옛 흰 테마)가 .v7-page select 와 같은 우선순위로 뒤에 읽혀 선택칸 글자가
+   배경에 묻혔다. 거래 화면의 필터·업로드 칸만 한 단계 높여 다크 칸으로 맞춘다. */
+.v7-page :is(.tx-filters, .tx-upload) select {
+  min-height: 44px;
+  padding: 0 13px;
+  border-radius: 11px;
+  border: 1px solid var(--control-line);
+  background: var(--veil-2);
+  color: var(--text);
+  font-size: var(--fs-14, 14px);
+}
+.v7-page :is(.tx-filters, .tx-upload) :is(input, select):focus-visible {
+  border-color: var(--lavender);
+  background: var(--veil-4);
+}
+/* 파일 입력은 손대지 않으면 브라우저 기본 모양(「파일 선택 | 선택된 파일 없음」)으로 나온다.
+ * 한때 CSV 업로드(.tx-upload)에만 걸어 두어 증빙 화면 입력이 맨몸으로 남았다 —
+ * 화면마다 같은 입력이 다르게 보이면 같은 서비스로 안 읽힌다. 44px 은 손가락이 닿는 최소 높이다. */
+.v7-page input[type='file'] {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: var(--fs-13, 13px);
+}
+.v7-page input[type='file']::file-selector-button {
+  min-height: 44px;
+  margin-right: 12px;
+  padding: 0 16px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--veil-3);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.v7-page input[type='file']::file-selector-button:hover { background: var(--veil-5); }
+.v7-page .tx-upload__file { flex: 1 1 360px; min-width: 0; display: grid; gap: 6px; }
+/* ⚠ `justify-self` 를 빼지 말 것. 이름표는 격자 칸이라 가만 두면 876px 을 다 덮는데,
+   `for` 가 파일 입력을 가리켜서 <b>그 줄 어디를 눌러도 파일 고르기 창이 열린다</b> —
+   글자는 왼쪽 90px 뿐이라 누른 사람은 왜 열렸는지 알 수 없다. 글자만큼만 차지하게 둔다. */
+.v7-page .tx-upload__file > label {
+  justify-self: start;
+  font-size: var(--fs-12, 12px);
+  font-weight: 600;
+  color: var(--muted);
+}
+/* 고르기 단추와 업로드는 점선 상자 밖, 이 줄에 선다. 파일 이름이 길면 가운데가 늘어나고
+   업로드는 오른쪽 끝에 남는다 */
+.v7-page .tx-upload__row {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+}
+.v7-page .tx-upload__row .auth-submit { margin: 0 0 0 auto; min-width: 0; min-height: 44px; }
+
+/* 상자는 이제 안내문만 안는다 — 끌어다 놓는 자리라는 표시다 */
+.v7-page .tx-upload .tx-drop {
+  display: block;
+  padding: 12px 16px;
+  border-color: var(--line);
+  border-radius: 14px;
+  background: var(--veil-1);
+}
+/* 내용만큼만 차지한다. 100% 로 두면 「파일 선택」 단추와 파일 이름 뒤로 450px 짜리
+   투명한 입력칸이 따라붙어, 오른쪽 「업로드」 단추까지 빈 공간이 된다 */
+.v7-page .tx-drop input[type='file'] { width: auto; min-width: 0; }
+.v7-page .tx-upload .tx-drop.is-over { border-color: var(--lavender); background: color-mix(in srgb, var(--lavender) 8%, transparent); }
+.v7-page .tx-drop__hint { color: var(--muted); font-size: var(--fs-12, 12px); line-height: 1.5; word-break: keep-all; }
+/* 600px 이 아니라 모바일 기준선(760px)에 맞춘다 — 그 사이 구간에서 파일 고르기와
+   업로드 단추가 한 줄에 눌려 있었다 */
+@media (max-width: 760px) {
+  .v7-page .tx-upload .tx-drop {
+    /* 점선 상자는 「여기에 끌어 놓아라」는 표시다. 손가락에는 끌어놓기가 없으니
+       표시만 남으면 눌러야 하는 자리로 오해하게 된다 */
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+  .v7-page .tx-upload__row .auth-submit { width: 100%; margin-left: 0; }
+  /* 없는 동작을 안내하지 않는다 */
+  .tx-drop__drag { display: none; }
+}
+.v7-page .auth-hint { display: block; margin-top: 6px; font-size: var(--fs-11_5, 11.5px); color: var(--muted); }
+.v7-page .auth-error,
+.v7-page .auth-form-error { display: block; margin-top: 7px; font-size: var(--fs-12, 12px); color: var(--w-rain); }
+.v7-page .auth-submit {
+  min-height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--lavender);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: var(--fs-14_5, 14.5px);
+  font-weight: 700;
+  cursor: pointer;
+}
+.v7-page .auth-submit:hover:not(:disabled) { background: var(--accent-lite); }
+/* 누를 수 없는 버튼은 누를 수 없어 보여야 한다. 흐리게만(투명도 0.55) 두었더니
+   강조색이 그대로 남아 「지금 누를 수 있다」로 읽혔고, 커서도 위에서 물려받은 손가락이라
+   눌러 본 뒤에야 막힌 것을 알았다 — 조건을 아직 못 갖췄다는 뜻이 어디에도 없었다.
+   회색으로 칠하고 커서를 막음 표시로 바꾼다. 채도를 빼면 강조색 버튼들 사이에서 저절로
+   뒤로 물러난다.
+   색은 토큰끼리 섞어 만든다. --muted 도 --surface 도 테마마다 다른 값이라, 이 한 줄이
+   다크에서는 밝은 회색을, 라이트에서는 어두운 회색을 알아서 낸다. */
+.v7-page .auth-submit:disabled {
+  background: color-mix(in srgb, var(--muted) 22%, var(--surface));
+  color: var(--muted);
+  opacity: 1;
+  cursor: not-allowed;
+}
+/* 칸 바로 뒤에 오는 버튼은 여백이 없어 칸에 붙었다(자금 안전·계좌 연결·1원 인증).
+   격자 간격으로 이미 떨어뜨리는 폼(.v7-settlement-form)은 건드리지 않는다. */
+.v7-page form:not(.v7-settlement-form) > :is(.auth-field, .auth-form-error) + .auth-submit { margin-top: 22px; }
+
+/* ── 계좌 목록 ────────────────────────────────────────────── */
+/* 네 칸 격자: 이름 · 상태 · 잔액 · 버튼. 칸 너비가 행마다 같아 배지·잔액·버튼이 한 줄로 맞는다.
+   옛 화면용 business.css 의 밝은 배지(--ground-2)·흐린 글자(--ink-3)를 여기서 다크로 덮는다. */
+.v7-page .account-list { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+.v7-page .account-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7.5rem minmax(0, 15rem) 12rem;
+  align-items: center;
+  gap: 16px;
+  background: var(--veil-1);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.v7-page .account-list > li:hover {
+  border-color: color-mix(in srgb, var(--lavender) 42%, transparent);
+  background: var(--veil-3);
+}
+.v7-page .account-id { min-width: 0; }
+.v7-page .account-id strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.v7-page .account-id small {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-12_5, 12.5px);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.v7-page .account-primary {
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--lavender) 45%, transparent);
+  background: color-mix(in srgb, var(--lavender) 12%, transparent);
+  color: var(--lavender);
+  font-size: var(--fs-11, 11px);
+  font-weight: 600;
+}
+/* 상태 배지 — 색만으로 말하지 않는다. 아이콘과 상태명이 함께 붙는다(도메인 규칙 6). */
+/* .account-list 까지 붙여 우선순위를 올린다 — business.css 의 [data-status] 밝은 배경과
+   우선순위가 같으면 나중에 불러오는 그쪽이 이겨 배지가 흰 알약으로 남았다. */
+.v7-page .account-list .account-status {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--veil-1);
+  color: var(--text);
+  font-size: var(--fs-12, 12px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* 연결됨은 가장 흔한 정상 상태라 옅으면 다른 상태와 섞여 보인다 — 바탕을 깔고 테두리를 진하게 */
+.v7-page .account-list .account-status[data-status='CONNECTED'] {
+  color: var(--mint);
+  font-weight: 700;
+  border-color: color-mix(in srgb, var(--mint) 70%, transparent);
+  background: color-mix(in srgb, var(--mint) 14%, transparent);
+}
+/* 인증 대기 — 이어질 고리를 점선으로 그린다. 아직 이어지지 않았다는 뜻이다. */
+.v7-page .account-list .account-status[data-status='PENDING_VERIFICATION'] {
+  color: var(--w-cloud);
+  border-color: color-mix(in srgb, var(--w-cloud) 35%, transparent);
+}
+.v7-page .account-list .account-status[data-status='PENDING_VERIFICATION'] svg { stroke-dasharray: 2.4 2.4; }
+/* 연결 끊김은 사장님이 직접 해제한 정상 상태일 수 있다 — 경고색이 아니라 차분한 회색이다. */
+.v7-page .account-list .account-status[data-status='DISCONNECTED'] {
+  color: var(--muted);
+  border-color: var(--line);
+}
+/* 인증 만료는 다시 인증해야 이어진다 — 할 일이 있어 보라로 둔다. */
+.v7-page .account-list .account-status[data-status='VERIFICATION_EXPIRED'] {
+  color: var(--w-rain);
+  border-color: color-mix(in srgb, var(--w-rain) 35%, transparent);
+}
+.v7-page :is(.account-sync__state, .account-sync__busy, .account-sync__error) {
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+}
+.v7-page .account-sync__state b {
+  display: block;
+  font-size: var(--fs-14_5, 14.5px);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.v7-page .account-sync__state small {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.v7-page .account-sync__state[data-sync='FAILED'] small { color: var(--w-rain); }
+.v7-page .account-sync__busy { display: inline-flex; align-items: center; gap: 8px; color: var(--text); font-size: var(--fs-12_5, 12.5px); }
+.v7-page .account-sync__busy i { background: var(--lavender); }
+.v7-page .account-sync__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.v7-page .account-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: normal;
+  text-align: right;
+  font-size: var(--fs-12, 12px);
+  line-height: 1.6;
+  color: var(--muted);
+}
+@media (max-width: 1100px) {
+  /* 좁으면 두 줄로 접는다 — 위: 이름 · 상태, 아래: 잔액 · 버튼.
+     네 칸을 900px 까지 버티면 이름 칸이 140px 로 줄어 은행·계좌번호가 두 줄로 꺾인다. */
+  .v7-page .account-list > li { grid-template-columns: minmax(0, 1fr) auto; row-gap: 12px; }
+  /* 오른쪽 칸 폭이 행마다 달라지므로 배지를 오른쪽 끝에 붙여 줄을 맞춘다 */
+  .v7-page .account-list .account-status { justify-self: end; }
+  .v7-page .account-sync__actions { justify-content: flex-end; }
+}
+.v7-page .account-sync__btn,
+.v7-page .account-disconnect,
+.v7-page .account-confirm button,
+.v7-page .verify-resend,
+.v7-page .tx-pager button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--veil-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-12_5, 12.5px);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.v7-page .account-sync__btn:hover:not(:disabled),
+.v7-page .account-confirm button:hover,
+.v7-page .verify-resend:hover,
+.v7-page .tx-pager button:hover:not(:disabled) {
+  background: var(--veil-5);
+  border-color: var(--accent-deep);
+}
+.v7-page .account-disconnect { color: var(--w-rain); }
+.v7-page .account-sync__error { color: var(--w-rain); font-size: var(--fs-12, 12px); }
+
+/* ── 거래 표 ──────────────────────────────────────────────── */
+.v7-page .tx-filters { display: flex; flex-wrap: wrap; gap: 12px; }
+.v7-page .tx-filters label { display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-12, 12px); color: var(--muted); }
+/* 커스텀 select 는 고른 항목 글자 폭으로 줄어든다(「전체」면 45px). 필터끼리 폭을 맞춘다. */
+.v7-page .tx-filters select { min-width: 7.5rem; }
+.v7-page .tx-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin-top: 18px;
+}
+.v7-page .tx-table { width: 100%; border-collapse: collapse; font-size: var(--fs-13, 13px); }
+.v7-page .tx-table th {
+  text-align: left;
+  padding: 13px 16px;
+  font-size: var(--fs-11_5, 11.5px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--veil-1);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.v7-page .tx-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+}
+.v7-page .tx-table tbody tr:last-child td { border-bottom: 0; }
+.v7-page .tx-table tbody tr { transition: background 0.16s ease; }
+.v7-page .tx-table tbody tr:hover { background: var(--veil-2); }
+.v7-page .tx-table .tx-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 출금은 비(보라) — 예보 화면의 날씨와 같은 말을 쓴다. */
+.v7-page .tx-table td[data-direction='WITHDRAWAL'] { color: var(--text); }
+.v7-page .tx-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: var(--fs-11_5, 11.5px);
+  color: var(--muted);
+}
+.v7-page .tx-status[data-status='CONFIRMED'] { color: var(--mint); }
+.v7-page .tx-status[data-status='SUGGESTED'] { color: var(--w-sun-text); }
+.v7-page .tx-category {
+  min-height: 34px;
+  vertical-align: middle;
+  white-space: nowrap;
+  border-radius: 9px;
+  border: 1px solid var(--control-line);
+  background: var(--veil-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-12_5, 12.5px);
+}
+.v7-page .tx-pager { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 16px; font-size: var(--fs-12_5, 12.5px); color: var(--muted); }
+.v7-page .tx-pager .tx-pager__page { min-width: 36px; padding: 0 10px; font-variant-numeric: tabular-nums; }
+/* 지금 보는 쪽. 색만으로 두지 않고 채운 바탕과 굵기로도 구분한다 */
+.v7-page .tx-pager .tx-pager__page[aria-current='page'],
+.v7-page .tx-pager .tx-pager__page[aria-current='page']:hover { background: var(--lavender); border-color: var(--lavender); color: var(--on-accent); font-weight: 700; }
+.v7-page .tx-pager__gap { min-width: 20px; text-align: center; color: var(--muted); }
+.v7-page .tx-error, .v7-page .tx-result__reject { color: var(--w-rain); font-size: var(--fs-12_5, 12.5px); }
+.v7-page .tx-spec summary { cursor: pointer; color: var(--muted); font-size: var(--fs-12_5, 12.5px); }
+.v7-page .tx-spec__note { font-size: var(--fs-11_5, 11.5px); color: var(--muted); line-height: 1.75; }
+
+/* ── 빈 상태 ──────────────────────────────────────────────── */
+.v7-page .empty-state {
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--veil-1);
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  /* 좁은 화면 여백. 본문과 판이 같은 값을 써야 판이 정확히 화면 끝에 맞는다 */
+  .v7-page { --m-gut: 16px; }
+
+  .v7-page__body { padding: 28px 16px 60px; }
+  .v7-panel { padding: 20px 18px; border-radius: 16px; }
+}
+
+/* ══ 예보 · 정산 공백 화면 ═══════════════════════════════════ */
+.v7-cols {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr));
+}
+
+.v7-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+}
+.v7-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.v7-legend__conf { margin-left: auto; }
+
+/* 날짜별 예보 띠 */
+.v7-strip {
+  display: grid;
+  gap: 4px;
+  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+.v7-strip > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 11px 2px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-11, 11px);
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s var(--ease);
+}
+.v7-strip > button:hover { background: var(--veil-2); color: var(--text); }
+.v7-strip > button[aria-pressed='true'] {
+  background: var(--veil-4);
+  border-color: var(--line);
+  color: var(--text);
+  transform: translateY(-3px);
+}
+.v7-strip .glyph { width: 22px; height: 22px; }
+.v7-strip .glyph-sunny { color: var(--w-sun); }
+.v7-strip .glyph-cloudy { color: var(--w-cloud); }
+.v7-strip .glyph-rainy { color: var(--w-rain); }
+.v7-strip__cash { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.v7-strip > button[aria-pressed='true'] .v7-strip__cash { font-weight: 700; }
+
+/* 숫자 · 사실 */
+.v7-figure { margin: 0; font-size: var(--fs-12_5, 12.5px); color: var(--muted); }
+.v7-amount {
+  margin: 9px 0 0;
+  font-size: clamp(26px, 3.2vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.038em;
+  font-variant-numeric: tabular-nums;
+}
+.v7-amount small { font-size: 0.5em; font-weight: 600; }
+.v7-amount.is-gap { color: var(--w-rain); }
+.v7-facts { margin: 20px 0 0; display: grid; gap: 11px; }
+.v7-facts--wide { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 16px; margin-top: 0; }
+.v7-facts > div { display: flex; align-items: baseline; gap: 12px; font-size: var(--fs-12_5, 12.5px); }
+.v7-facts--wide > div { flex-direction: column; gap: 6px; }
+.v7-facts dt { color: var(--muted); flex: none; width: 88px; }
+.v7-facts--wide dt { width: auto; }
+.v7-facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.v7-facts dd.is-gap { color: var(--w-rain); }
+.v7-muted { color: var(--muted); font-weight: 400; }
+
+/* 목록 */
+.v7-rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.v7-rows li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  font-size: var(--fs-13, 13px);
+}
+.v7-rows li:last-child { border-bottom: 0; }
+.v7-rows .t { flex: none; width: 46px; font-size: var(--fs-11, 11px); color: var(--muted); font-variant-numeric: tabular-nums; }
+.v7-rows .d { flex: 1; min-width: 0; }
+.v7-rows .d small { display: block; margin-top: 3px; font-size: var(--fs-11, 11px); color: var(--muted); }
+.v7-rows .v { flex: none; font-weight: 600; font-size: var(--fs-12_5, 12.5px); font-variant-numeric: tabular-nums; }
+.v7-rows .v.in { color: var(--mint); }
+.v7-rows .v.out { color: var(--text); }
+
+.v7-subhead {
+  margin: 22px 0 4px;
+  font-size: var(--fs-12, 12px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.v7-gap-top {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  align-items: start;
+}
+
+/* 위험도 배지. 이름과 아이콘으로 말한다 — 색만으로 구분하지 않는다(도메인 규칙 6) */
+.v7-gap-risk {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--veil-3); color: var(--text-2);
+  font-size: var(--fs-11, 11px); font-weight: 700;
+}
+/* 뜻이 무거운 둘만 비 색을 쓴다. 넷 모두 같은 색이면 「안전」도 위험해 보인다 */
+.v7-gap-risk[data-risk='DANGER'],
+.v7-gap-risk[data-risk='GAP'] { color: var(--w-rain); }
+
+/* 안내 — 미구현·대기는 오류가 아니다 */
+.v7-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 15px 17px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--veil-1);
+  font-size: var(--fs-13, 13px);
+  line-height: 1.75;
+  color: var(--muted);
+}
+.v7-note strong { display: block; color: var(--text); font-size: var(--fs-13_5, 13.5px); }
+.v7-note span { display: block; margin-top: 5px; }
+.v7-note--wait > svg { color: var(--w-cloud); flex: none; }
+.v7-note--good { border-color: color-mix(in srgb, var(--mint) 40%, transparent); }
+.v7-note--good > svg { color: var(--mint); flex: none; }
+.v7-note--bad { border-color: color-mix(in srgb, var(--w-rain) 42%, transparent); }
+.v7-note--bad > svg { color: var(--w-rain); flex: none; }
+.v7-note--small {
+  display: block;
+  margin-top: 16px;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font-size: var(--fs-11_5, 11.5px);
+}
+.v7-note--small b { color: var(--text); font-weight: 600; }
+.v7-note--small a { color: var(--lavender); }
+
+.v7-warnings { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 8px; }
+.v7-warnings li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+}
+
+/* 화면 이름. 넓은 화면에서는 낭독기에만 읽히고, 760px 아래에서 눈에 보이게 돌아온다 */
+.v7-page__title,
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v7-strip > button { transition: none; }
+}
+
+/* ══ 정산 대사 ═══════════════════════════════════════════════════════ */
+.v7-settlement-form { display: grid; gap: 16px; }
+.v7-settlement-form .auth-field + .auth-field { margin-top: 0; }
+.v7-settlement-form .auth-submit { justify-self: start; margin-top: 2px; }
+.v7-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.v7-form-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.v7-form-grid .auth-field { min-width: 0; }
+.v7-form-grid input { width: 100%; min-width: 0; }
+.v7-page .v7-form-grid select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v7-page .v7-form-grid select option { white-space: normal; }
+.v7-secondary-button {
+  /* 인라인 <svg> 는 글자의 기준선에 앉는다. 기준선 아래 내림폭만큼 아이콘이 글자보다
+     위로 떠 보였다 — 조건 추가·초기화처럼 아이콘과 글자를 같이 넣은 버튼에서 눈에 띈다.
+     가운데로 맞추고 사이 간격도 여기서 준다. 링크 꼴(a.v7-secondary-button)은 이미
+     이렇게 하고 있었으니, 버튼만 다르게 굴던 것을 맞추는 셈이다. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--veil-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-12, 12px);
+}
+.v7-secondary-button:hover:not(:disabled) {
+  background: var(--veil-5);
+  border-color: var(--accent-deep);
+}
+/* 보조 버튼에는 비활성 모양이 아예 없었다 — 신고자료 검토의 「선택한 거래에 적용」이 이것이라
+   아무것도 안 골랐을 때도 멀쩡히 살아 보였다. 주 버튼과 같은 회색·같은 커서로 맞춘다.
+   테두리까지 흐려야 판 위에 뜬 상자가 아니라 잠긴 자리로 읽힌다. */
+.v7-secondary-button:disabled {
+  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--line) 55%, transparent);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+.v7-alerts { list-style: none; margin: 0; padding: 0; display: grid; }
+.v7-alerts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+}
+.v7-alerts li:last-child { border-bottom: 0; }
+.v7-alerts li > svg { flex: none; margin-top: 2px; color: var(--w-rain); }
+.v7-alerts li > span { flex: 1; min-width: 0; }
+.v7-alerts strong { display: block; font-size: var(--fs-13, 13px); }
+.v7-alerts small { display: block; margin-top: 5px; color: var(--muted); line-height: 1.65; }
+.v7-inline-error { margin: 12px 0 0; color: var(--w-rain); font-size: var(--fs-12, 12px); }
+.v7-settlement-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: var(--fs-12, 12px);
+  color: var(--muted);
+}
+.v7-settlement-status[data-status='MATCHED'] { color: var(--mint); }
+.v7-settlement-status[data-status='MISMATCHED'] { color: var(--w-rain); }
+.v7-period small,
+.v7-page .tx-table td small { display: block; margin-top: 4px; color: var(--muted); font-size: var(--fs-10_5, 10.5px); }
+
+@media (max-width: 1000px) {
+  .v7-form-grid { grid-template-columns: 1fr; }
+  .v7-alerts li { flex-wrap: wrap; }
+}
+
+/* ══ 반복·예정 ═══════════════════════════════════════════════════════ */
+.v7-acts {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.v7-ask { font-size: var(--fs-11_5, 11.5px); line-height: 1.6; color: var(--w-rain); }
+.v7-date { white-space: nowrap; }
+/* 목록이 길어지면 페이지 대신 카드 안에서 내린다. 키보드로도 내릴 수 있게 tabIndex 를 준다. */
+/* 스크롤 상자. 막대를 <b>안쪽으로 들여</b> 세운다 —
+   상자에 둥근 모서리가 있는데 스크롤 자리는 네모라, 기본 막대를 그대로 두면 막대가
+   모서리 곡선 밖으로 삐져나와 상자에서 떨어져 나온 것처럼 보인다.
+   투명 테두리 + background-clip 으로 막대를 3px 안쪽에 그린다. */
+.v7-scroll {
+  max-height: 440px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.v7-scroll::-webkit-scrollbar { width: 12px; height: 12px; }
+.v7-scroll::-webkit-scrollbar-track { background: transparent; }
+.v7-scroll::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+.v7-scroll::-webkit-scrollbar-thumb:hover { background: var(--control-line); background-clip: padding-box; }
+.v7-scroll::-webkit-scrollbar-corner { background: transparent; }
+.v7-scroll:focus-visible { outline: 2px solid var(--lavender); outline-offset: 2px; }
+.v7-rows.v7-scroll { padding-right: 6px; }
+/* ⚠ 세로로 스크롤하는 상자는 <b>모서리를 둥글게 두지 않는다.</b>
+   막대 자리는 테두리 상자 안쪽에 네모로 잡히는데 테두리만 안으로 휘어서, 곡선 구간에서
+   막대가 테두리 밖으로 삐져나오고 머리글 옆에 빈 홈이 남는다. 막대를 안으로 들이거나
+   트랙 끝을 잘라 봐도 곡선이 있는 한 어딘가는 어긋난다 — 곡선을 없애는 쪽이 원인 제거다.
+   둥근 느낌은 이 상자를 감싼 `.v7-panel`(radius 20)이 이미 준다.
+
+   바탕을 깔아 두는 것은 머리글이 `position: sticky` 라 스크롤 중 그 옆 막대 자리가
+   비어 보이기 때문이다. */
+.v7-page .tx-table-wrap.v7-scroll { max-height: 520px; border-radius: 0; background: var(--surface); }
+/* 내려도 머리글이 남는다. 반투명 바탕이면 아래 행이 비쳐 판 색을 깔고, 붙은 머리글에서 사라지는 선은 그림자로 대신한다. */
+.v7-page .v7-scroll .tx-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(var(--veil-1), var(--veil-1)), var(--surface);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+.v7-rows li > svg { flex: none; color: var(--muted); }
+/* 멈춘 반복은 지운 것이 아니다 — 목록에 남기되 글자만 물린다. 「멈춤」 글자가 함께 붙는다. */
+.v7-rows li[data-paused] .d,
+.v7-rows li[data-paused] .v { color: var(--muted); }
+.v7-rows li:has(.v7-ask) { flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .v7-rows li:has(.v7-acts) { flex-wrap: wrap; }
+  .v7-rows .v7-acts { width: 100%; justify-content: flex-start; }
+}
+
+/* ══ 증빙 ═══════════════════════════════════════════════════════════ */
+.v7-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.v7-chips > button {
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--veil-1);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-12, 12px);
+  cursor: pointer;
+}
+.v7-chips > button[aria-pressed='true'] {
+  color: var(--text);
+  border-color: var(--lavender);
+  background: color-mix(in srgb, var(--lavender) 12%, transparent);
+}
+a.v7-secondary-button { text-decoration: none; white-space: nowrap; }
+/* 증빙 검토 — 종류·다시 읽기 줄과 연결 후보 */
+.v7-page .evidence-manage { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; margin-bottom: 16px; }
+.v7-page .evidence-manage label { display: grid; gap: 6px; font-size: var(--fs-12, 12px); color: var(--muted); }
+.v7-page .evidence-manage small { flex-basis: 100%; font-size: var(--fs-12, 12px); color: var(--text-2); word-break: keep-all; }
+.v7-page .evidence-candidates tr[data-recommended] { background: color-mix(in srgb, var(--mint) 7%, transparent); }
+.v7-page .evidence-candidates .tax-badge { margin-left: 8px; }
+.v7-review {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: start;
+}
+.v7-original {
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--veil-1);
+}
+.v7-original img { display: block; max-width: 100%; max-height: 72vh; object-fit: contain; }
+.v7-original iframe { width: 100%; height: 72vh; border: 0; }
+.v7-original .v7-note { margin: 18px; }
+.v7-gap-form { margin-top: 18px; }
+/* 확신이 낮게 읽힌 칸. 색만 쓰지 않고 칸 아래 문장이 함께 붙는다. */
+.v7-page .v7-field-low input { border-color: color-mix(in srgb, var(--w-cloud) 75%, transparent); }
+.v7-page .v7-field-low .auth-hint,
+.v7-field-low .v7-subhead { color: var(--w-cloud); }
+.v7-page .v7-items input { width: 100%; min-width: 0; min-height: 36px; padding: 0 9px; font-size: var(--fs-12_5, 12.5px); }
+.v7-page .v7-items td { padding-top: 8px; padding-bottom: 8px; }
+.v7-reasons { margin: 6px 0 0; padding-left: 18px; line-height: 1.8; }
+.v7-review-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.v7-review-actions .auth-submit { margin-top: 0; }
+.v7-page .v7-review-actions > :is(.auth-submit, .v7-secondary-button) { width: auto; min-height: 46px; }
+.v7-page :is(.evidence-manage, .tax-bulk, .tax-inline-form, .support-filters) > .v7-secondary-button { min-height: 44px; }
+@media (max-width: 1000px) {
+  .v7-review { grid-template-columns: 1fr; }
+}
+
+/* ══ 시나리오 비교 ═══════════════════════════════════════════════════ */
+.v7-scenario-row {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--veil-1);
+}
+.v7-scenario-row legend { padding: 0 6px; font-size: var(--fs-12_5, 12.5px); font-weight: 700; color: var(--text-2); }
+/* 빼기는 카드 우측 상단이다. 값 입력 칸 아래에 두면 잘못 누르기 쉽고, 줄이 여러 개일 때
+   어느 줄의 빼기인지 흐려진다. */
+.v7-scenario-row { position: relative; }
+.v7-scenario-row__remove {
+  /* z-index 가 있어야 한다. 상품별 매출 줄의 .v7-product-pick 은 후보 목록을 띄우려고
+     position: relative 인데, 자리가 잡힌 형제끼리는 z-index 가 같으면 **나중에 나온
+     쪽이 위로 올라온다.** 빼기 버튼이 DOM 에서 먼저라 상품 칸이 x 자를 덮었고, 칸 위로
+     비어져 나온 몇 px 만 눌렸다. 다른 줄은 첫 칸이 자리 잡힌 요소가 아니라 멀쩡했다. */
+  position: absolute; top: 8px; right: 8px; z-index: 1; display: grid; place-items: center;
+  /* base.css 가 모든 button 에 min-height: var(--ctl)(40px) 를 건다. 풀어 주지 않으면
+     height 26px 가 눌리지 않아 26×40 타원이 된다. */
+  width: 26px; height: 26px; min-height: 0; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--muted); cursor: pointer;
+}
+.v7-scenario-row__remove:hover { background: var(--raised-strong); color: var(--text); }
+.v7-scenario-line { width: 16px; height: 0; border-top: 2.5px solid var(--lavender); }
+/* 두 곡선은 대비되는 단색이다. 값에 따라 색이 변하면 한 곡선이 구간마다 달라 보인다. */
+.v7-scenario-line--base { border-top: 2.5px solid var(--mint); }
+
+/* 범례 조각이 곧 버튼이다 — 누르면 그 곡선만 남는다 */
+.v7-legend-pick {
+  display: inline-flex; align-items: center; gap: 7px;
+  min-height: 0; padding: 3px 7px; border: 1px solid transparent; border-radius: 999px;
+  background: none; color: inherit; font: inherit; cursor: pointer;
+}
+.v7-legend-pick:hover { border-color: var(--line); background: var(--veil-2); }
+/* 고른 것은 테두리로도 말한다 — 색만으로 구분하지 않는다(도메인 규칙 6) */
+.v7-legend-pick[aria-pressed='true'] { border-color: var(--accent-deep); background: var(--veil-3); }
+.v7-legend__hint { color: var(--muted); font-size: var(--fs-11_5, 11.5px); }
+/* 가로 정렬. 조건 칸이 좁아 세로로 쌓으면 주 입력인 직접 조합하기를 화면 밖으로 민다. */
+.v7-presets { display: flex; gap: 8px; }
+.v7-preset {
+  /* 넷이 한 줄을 고르게 나눈다. flex-basis 0 + min-width 0 이라야 글자 길이가 달라도
+     칸이 벌어지지 않고, 좁아지면 글자가 두 줄로 접힌다(가로 스크롤을 만들지 않는다). */
+  flex: 1 1 0;
+  min-width: 0;
+  /* 칸이 좁으니 아이콘을 글자 위에 얹는다. 나란히 두면 글자가 설 자리가 없다 */
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--veil-1);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-12_5, 12.5px);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+  word-break: keep-all;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.v7-preset > svg { flex: none; color: var(--lavender); }
+.v7-preset:hover { border-color: var(--line-accent); background: var(--veil-3); }
+.v7-preset[aria-pressed='true'] { border-color: var(--lavender); box-shadow: inset 0 0 0 1px var(--lavender); background: color-mix(in srgb, var(--lavender) 8%, transparent); }
+.v7-preset-slider { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+.v7-preset-slider > span { flex: none; min-width: 72px; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.v7-preset-slider input { flex: 1; accent-color: var(--lavender); }
+.v7-compose > summary { cursor: pointer; margin: 0; list-style: revert; }
+.v7-compose[open] > summary { margin-bottom: 18px; }
+
+/* ══ 예정 거래 달력 ═════════════════════════════════════════════════ */
+.v7-cal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.v7-cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.v7-cal__head strong { font-size: 15px; }
+.v7-cal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.v7-cal__weekday { padding: 2px 0 4px; text-align: center; font-size: var(--fs-11_5, 11.5px); color: var(--muted); }
+.v7-cal__day {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 76px;
+  padding: 6px 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--veil-1);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.v7-cal__day:hover:not(:disabled) { border-color: var(--line-accent); background: var(--veil-3); }
+.v7-cal__day:disabled { cursor: default; color: var(--dim); background: none; border-color: transparent; }
+.v7-cal__day[aria-selected='true'] { border-color: var(--lavender); box-shadow: inset 0 0 0 1px var(--lavender); }
+.v7-cal__day:focus-visible { outline: 2px solid var(--lavender); outline-offset: 2px; }
+.v7-cal__top { display: flex; align-items: center; justify-content: space-between; }
+.v7-cal__num { font-size: var(--fs-12_5, 12.5px); font-weight: 600; font-variant-numeric: tabular-nums; }
+.v7-cal__day[data-today] .v7-cal__num { padding: 0 6px; border-radius: 999px; background: var(--lavender); color: var(--on-accent); }
+.v7-cal__day .glyph { width: 15px; height: 15px; }
+.v7-cal__day .glyph-sunny { color: var(--w-sun); }
+.v7-cal__day .glyph-cloudy { color: var(--w-cloud); }
+.v7-cal__day .glyph-rainy { color: var(--w-rain); }
+.v7-cal__chip {
+  overflow: hidden;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: var(--fs-11, 11px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-2);
+  background: var(--veil-4);
+}
+.v7-cal__chip[data-direction='DEPOSIT'] { color: var(--mint); background: color-mix(in srgb, var(--mint) 12%, transparent); }
+.v7-cal__more { font-size: var(--fs-11, 11px); color: var(--muted); }
+.v7-cal-panel { padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--veil-1); }
+.v7-cal-panel__date { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+.v7-cal-panel .v7-rows { margin-top: 10px; }
+.v7-cal-panel__form { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+@media (max-width: 1000px) {
+  .v7-cal-layout { grid-template-columns: 1fr; }
+}
+.v7-cal__chip[draggable='true'] { cursor: grab; }
+.v7-cal__chip[data-moved] { outline: 1.5px dashed currentColor; outline-offset: -1.5px; }
+.v7-cal__day[data-drop] { border-color: var(--lavender); background: color-mix(in srgb, var(--lavender) 14%, transparent); }
+
+/* ---- 시나리오 · 조건 4 : 그래프 6 ------------------------------------------
+   세로로 늘어놓으면 손잡이를 움직인 뒤 스크롤해야 곡선이 보인다. 한 화면에 둬야
+   "무엇을 바꿨더니 무엇이 달라졌다" 가 이어진다. */
+/* 결과가 왼쪽 6, 조건이 오른쪽 4. DOM 순서도 같아 보이는 순서와 탭 순서가 어긋나지 않는다 */
+.v7-scenario-work { display: grid; grid-template-columns: 6fr 4fr; gap: 22px; align-items: start; }
+/* 칸이 내용에 밀려 넘치지 않게 한다 — 없으면 곡선·표가 4:6 을 깨고 가로 스크롤을 만든다 */
+.v7-scenario-work > * { min-width: 0; }
+
+.v7-scenario-controls__head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.v7-scenario-controls__head h2 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+/* 달력은 제목 옆에 붙는다 — 조건을 넣는 또 하나의 길이라 조건 설정과 한 덩어리로 읽혀야 한다 */
+.v7-scenario-controls__cal {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 8px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--veil-2); color: var(--text-2); cursor: pointer;
+  font: inherit; font-size: var(--fs-12, 12px); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.v7-scenario-controls__cal:hover { border-color: var(--accent-deep); color: var(--text); }
+/* 초기화는 반대쪽 끝이다. 조건을 넣는 버튼들과 섞이면 잘못 누른다 */
+.v7-scenario-controls__reset { margin-left: auto; }
+
+/* 비교하기·저장하기는 평소 회색이고 마우스를 올리면 테두리에 보라가 든다.
+   --ink 는 테마별로 다시 정의되지 않아 다크에서 배경에 묻힌다. 다른 버튼과 같은
+   방식(v7-secondary-button)으로 맞춰야 두 테마에서 모두 읽힌다.
+   둘이 한 줄을 고르게 나눠 크기가 같다 — 나란히 선 버튼의 폭이 다르면 하나가 더 중요한
+   동작으로 읽힌다. */
+.v7-review-actions .v7-scenario-action {
+  flex: 1 1 0; min-width: 0; border: 1px solid var(--line);
+  background: var(--veil-2); color: var(--text);
+}
+.v7-review-actions .v7-scenario-action:hover:not(:disabled) {
+  background: var(--veil-5); border-color: var(--accent-deep); color: var(--text);
+}
+/* 아래 「가상 시나리오」와 붙어 있으면 버튼 줄이 그쪽에 딸린 것으로 읽힌다 */
+.v7-scenario-controls .v7-review-actions { margin-bottom: var(--s7); }
+.v7-scenario-controls > .v7-compose { margin-top: var(--s8); }
+
+/* 좁아지면 한 줄로 접는다. DOM 순서를 따라 곡선이 먼저 선다 — 정산 공백 화면과 같다 */
+@media (max-width: 1000px) {
+  .v7-scenario-work { grid-template-columns: 1fr; }
+  /* 한 줄이 되면 차트가 전체 폭을 받는다. 시나리오 차트는 좁은 칸에 맞춰 viewBox 를
+     560x260 으로 좁혀 두었으므로(BalanceChart 의 narrow), 그대로 두면 배율이 1.9배까지
+     올라 높이가 500px 를 넘는다. 상한만 건다. */
+  .v7-scenario-view .balance-chart > svg { max-height: 340px; }
+}
+
+/* ---- 곡선 크게 보기 팝업 ---- */
+.v7-chart-dialog {
+  width: min(1040px, calc(100vw - 32px)); max-height: min(680px, calc(100vh - 48px));
+  /* 전역 리셋이 margin 을 0 으로 둬서 dialog 가 왼쪽 위에 붙는다 */
+  margin: auto; padding: 0; border: 1px solid var(--line-strong); border-radius: 20px;
+  background: var(--raised); color: var(--text); box-shadow: 0 24px 60px var(--shadow-2);
+  word-break: keep-all;
+}
+.v7-chart-dialog::backdrop { background: var(--scrim); }
+.v7-chart-dialog__body { padding: 24px 26px 26px; overflow: auto; max-height: inherit; }
+.v7-chart-dialog__top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;
+}
+.v7-chart-dialog__top h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
+.v7-chart-dialog__top button {
+  /* min-height 를 풀어야 원이 된다 — 사정은 .v7-scenario-row__remove 주석에 적었다 */
+  display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0;
+  border-radius: 50%; color: var(--muted);
+}
+.v7-chart-dialog__top button:hover { background: var(--raised-strong); color: var(--text); }
+
+/* ---- 달력 팝업 (basis-dialog 와 같은 네이티브 dialog 방식) ---- */
+.v7-cal-dialog {
+  width: min(900px, calc(100vw - 32px)); max-height: min(760px, calc(100vh - 48px));
+  /* 전역 리셋이 margin 을 0 으로 둬서 dialog 가 왼쪽 위에 붙는다. 가운데로 되돌린다 */
+  margin: auto; padding: 0; border: 1px solid var(--line-strong); border-radius: 20px;
+  background: var(--raised); color: var(--text); box-shadow: 0 24px 60px var(--shadow-2);
+  word-break: keep-all;
+}
+.v7-cal-dialog::backdrop { background: var(--scrim); }
+/* 달력이 길어 넘칠 수 있다. 팝업 자체가 아니라 본문이 스크롤해야 머리말이 붙어 있다 */
+.v7-cal-dialog__body { padding: 24px 26px 26px; overflow: auto; max-height: inherit; }
+.v7-cal-dialog__top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;
+}
+.v7-cal-dialog__top h2 { margin: 0; font-size: 18px; letter-spacing: -.02em; }
+.v7-cal-dialog__top button {
+  /* min-height 를 풀어야 원이 된다 — 사정은 .v7-scenario-row__remove 주석에 적었다 */
+  display: grid; place-items: center; width: 34px; height: 34px; min-height: 0; padding: 0;
+  border-radius: 50%; color: var(--muted);
+}
+.v7-cal-dialog__top button:hover { background: var(--raised-strong); color: var(--text); }
+
+/* ---- 고른 공백의 간단 정보 ----
+   곡선에서 띠를 누르면 여기에 재는 것만 편다. 원인·제안은 팝업으로 넘긴다 — 곡선 아래에
+   같이 쌓으면 띠를 누를 때마다 화면이 길어져 곡선이 위로 밀려난다. */
+.v7-gap-brief { display: grid; gap: 12px; justify-items: start; }
+.v7-gap-brief__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.v7-gap-brief .v7-amount { margin: 0; }
+.v7-gap-brief .v7-facts { margin: 0; width: 100%; }
+
+/* ---- 정산 공백: 곡선과 고른 구간 ----
+   곡선이 먼저고 고른 구간이 그 옆이다. 아래에 두면 띠를 누를 때마다 눈이 곡선과 숫자를
+   위아래로 왕복하고, 카드가 길어질수록 곡선이 위로 밀려난다. */
+/* 처음에는 곡선만 선다. 띠를 누르면 카드가 들어오면서 곡선이 자리를 내준다 */
+.v7-gap-work { display: grid; grid-template-columns: 1fr; gap: 22px; align-items: start; }
+.v7-gap-work.has-brief { grid-template-columns: 7fr 3fr; }
+/* 칸이 내용에 밀려 넘치지 않게 한다 — 없으면 곡선이 7:3 을 깨고 가로 스크롤을 만든다 */
+.v7-gap-work > * { min-width: 0; }
+.v7-gap-work__brief {
+  padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--veil-1);
+  /* 오른쪽에서 들어온다. 옆에서 새로 온 것과 원래 있던 것은 다르게 읽힌다.
+     움직임을 줄이는 설정이면 base.css 가 통째로 걷어낸다. */
+  animation: v7-gap-brief-in .26s var(--ease);
+}
+@keyframes v7-gap-brief-in {
+  from { opacity: 0; transform: translateX(40px); }
+}
+.v7-gap-work__brief-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.v7-gap-work__brief-top .v7-subhead { margin: 0; }
+.v7-gap-work__brief-top button {
+  /* base.css 가 모든 button 에 min-height 40px 을 건다 — 풀어야 원이 된다 */
+  display: grid; place-items: center; width: 28px; height: 28px; min-height: 0; padding: 0;
+  border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer;
+}
+.v7-gap-work__brief-top button:hover { background: var(--raised-strong); color: var(--text); }
+.v7-gap-work__brief .v7-gap-brief { margin-top: 12px; }
+/*
+ * 좁아지면 한 줄로 접는다. 곡선이 먼저고 고른 구간이 뒤다 — 눌러야 볼 것이 생긴다.
+ *
+ * 한 줄이 되면 곡선이 본문 폭을 다 받는다. 시나리오 차트와 같은 좁은 viewBox(560x260)를
+ * 쓰므로 그대로 두면 배율이 1.6 을 넘어 높이가 430px 까지 간다. 상한만 건다 — 시나리오의
+ * .v7-scenario-view 와 같은 사정이다.
+ */
+@media (max-width: 1000px) {
+  .v7-gap-work { grid-template-columns: 1fr; }
+  .v7-gap-work__chart .balance-chart > svg { max-height: 340px; }
+}
+
+/* 구획 머리의 조작. 제목이 13px --muted 인 조용한 라벨이라 버튼 껍데기를 두면
+   제목보다 무거워진다 — 같은 무게의 글자로 두고 호버에서만 밑줄을 준다. */
+.v7-panel__head-action {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-13, 13px);
+  cursor: pointer;
+}
+.v7-panel__head-action:hover:not(:disabled) {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.v7-panel__head-action:disabled { opacity: .55; cursor: default; }
+
+/* ---- 시나리오 결과의 근거 ----
+   지우지 않고 접는다. 곡선 아래에 경고가 늘 펼쳐져 있으면 숫자를 다 읽기도 전에 그것부터
+   만나고, 없애면 곡선만 남아 완전한 계산처럼 보인다(도메인 규칙 1). 닫힌 줄에서 신뢰
+   수준과 알림 건수는 보이게 해, 펼쳐 볼지 말지를 열기 전에 정한다. */
+.v7-scenario-basis { margin-top: 18px; }
+/* 근거의 본문. 곡선이 무엇으로 만들어졌는지를 대는 자리라 글이 좀 길다 —
+   읽는 흐름을 끊지 않게 줄 간격을 넉넉히 두고, 소제목으로만 덩어리를 나눈다. */
+.v7-page .v7-basis { margin-top: 12px; color: var(--text-2); font-size: 12.5px; line-height: 1.8; word-break: keep-all; }
+.v7-page .v7-basis h4 { margin: 14px 0 6px; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.v7-page .v7-basis h4:first-child { margin-top: 0; }
+.v7-page .v7-basis p { margin: 0 0 4px; }
+.v7-page .v7-basis ul { margin: 0; padding-left: 1.1em; display: grid; gap: 5px; }
+/* display: flex 를 걸면 크롬이 펼침 삼각형(::marker)을 지운다 — 눌러서 펼치는 줄이라는
+   표시가 사라진다. 기본 list-item 을 그대로 두고 옆 글자는 margin 으로 띄운다. */
+.v7-scenario-basis > summary { cursor: pointer; list-style: revert; margin: 0; }
+.v7-scenario-basis[open] > summary { margin-bottom: 10px; }
+.v7-scenario-basis > summary span { margin-left: 10px; font-size: var(--fs-12, 12px); font-weight: 600; color: var(--muted); }
+.v7-scenario-basis .v7-note { margin: 8px 0 0; }
+/* 확신 등급 계산표. 근거 안에서 또 접는다 — 곡선 이야기를 읽다가 공식을 만나면 흐름이 끊긴다 */
+.v7-page .v7-grade { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.v7-page .v7-grade > summary { cursor: pointer; color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.v7-page .v7-grade table { margin: 10px 0; border-collapse: collapse; font-size: 12px; }
+.v7-page .v7-grade th, .v7-page .v7-grade td { padding: 4px 16px 4px 0; text-align: left; font-weight: 400; }
+.v7-page .v7-grade th { color: var(--muted); font-size: 11px; }
+.v7-page .v7-grade td:last-child { color: var(--text); font-weight: 600; }
+.v7-page .v7-grade > p { margin: 12px 0 4px; color: var(--text); font-weight: 600; }
+/* 앞 줄에 이어지는 문장. `.v7-note--small` 은 위에 구분선을 그리는데, 이어지는 줄까지
+   선을 그으면 두 문장이 다른 구획처럼 갈린다 — 선을 걷고 바짝 붙인다.
+   ⚠ 바로 위 규칙과 무게가 같아야 이긴다(클래스 둘) — 그래서 여기, 그 아래에 둔다.
+   경고는 저마다 제 항목이라 선을 그대로 둔다(그래서 인접 선택자가 아니라 전용 클래스다). */
+.v7-scenario-basis .v7-note--cont { margin-top: 3px; padding-top: 0; border-top: 0; }
+
+/* ---- 상품 고르기 ----
+   datalist 는 열 수 있다는 표시가 없다. 무엇을 팔았는지 기억나지 않을 때 빈 칸을 눌러
+   전부 훑는 길이 있어야 해서 목록을 직접 그린다. */
+.v7-product-pick { position: relative; }
+.v7-product-pick__row { position: relative; display: flex; align-items: center; }
+.v7-product-pick__row > input { width: 100%; padding-right: 34px; }
+.v7-product-pick__toggle {
+  /* base.css 가 모든 button 에 min-height 40px 을 건다 — 칸 안에 들어가려면 풀어야 한다 */
+  position: absolute; right: 6px; width: 26px; height: 26px; min-height: 0; padding: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer;
+}
+.v7-product-pick__toggle:hover { background: var(--raised-strong); color: var(--text); }
+.v7-product-pick__list {
+  position: absolute; z-index: 30; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 6px;
+  list-style: none; max-height: 240px; overflow-y: auto;
+  border: 1px solid var(--line-strong); border-radius: 12px; background: var(--raised);
+  box-shadow: 0 18px 40px var(--shadow-2);
+}
+.v7-product-pick__list button {
+  width: 100%; min-height: 0; padding: 8px 10px; border: 0; border-radius: 8px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  background: none; color: var(--text-2); font: inherit; font-size: var(--fs-13, 13px); text-align: left;
+  cursor: pointer;
+}
+.v7-product-pick__list button:hover,
+.v7-product-pick__list button.is-on { background: var(--raised-strong); color: var(--text); }
+.v7-product-pick__list em { flex: none; font-style: normal; font-size: var(--fs-11_5, 11.5px); color: var(--muted); }
+
+/* ---- 조건 추가 판 ----
+   종류마다 버튼을 두면 여럿 넣을 때 버튼을 여러 번 오가야 하고, 종류가 늘 때마다 줄이
+   길어진다. 켜 두었다가 한 번에 넣는다 — 무엇을 넣을지 먼저 정하고 그다음 넣는 순서다. */
+.v7-add-panel {
+  margin-bottom: 18px; padding: 14px; border: 1px solid var(--line-strong); border-radius: 14px;
+  background: var(--veil-1);
+}
+/* 눌린 모양은 .v7-chips 의 aria-pressed 규칙이 이미 잡는다. 여기서는 굵기만 더한다 —
+   색과 테두리 말고도 켜졌다는 단서가 하나 더 있어야 한다(도메인 규칙 6). 아이콘도 체크로 바뀐다 */
+.v7-add-panel .v7-chips > button[aria-pressed='true'] { font-weight: 650; }
+.v7-add-panel .v7-chips { margin-bottom: 0; }
+.v7-add-panel__foot { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.v7-add-panel__foot > button { flex: none; }
+.v7-scenario-controls__add { margin-left: auto; }
+/* 조건 추가가 auto 를 가져갔으니 초기화는 바로 옆에 붙는다 */
+.v7-scenario-controls__reset { margin-left: 0; }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   좁은 화면 — 판을 걷어내고 화면 폭을 되돌려 준다
+
+   PC 에서 구획은 「떠 있는 판」이다. 375px 에서는 그 판이 자리를 먹는다 —
+   본문 여백 16px 에 판 안쪽 26px 이 겹쳐 양쪽 42px, 화면의 1/4 가 테두리 값으로 나간다.
+   좁은 화면에서는 구획을 화면 끝까지 늘이고 위아래 실선으로만 가른다. sky.css 가
+   「카드 없음」이라고 적은 것과 같은 말이고, 폰에서는 그게 절약이기도 하다.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 760px) {
+  /* 좁은 화면 여백. 본문과 판이 같은 값을 써야 판이 정확히 화면 끝에 맞는다 */
+  .v7-page { --m-gut: 16px; }
+
+  .v7-page__body {
+    /* 여백은 본문이 쥔다. 0 으로 두면 판이 아닌 것들(메뉴 목록 · 머리말 · 화면 이름)이
+       화면 왼쪽 끝에 붙어 버린다 — 판만 예외로 빼낸다(바로 아래) */
+    padding: 14px var(--m-gut) 86px;
+    gap: 10px;
+  }
+
+  .v7-panel {
+    /* 본문 여백을 거슬러 화면 끝까지 나간다. 안쪽 여백으로 글은 제자리에 둔다 */
+    margin-inline: calc(var(--m-gut) * -1);
+    /* 좌우 테두리와 둥근 모서리를 지운다. 화면 끝에 닿은 모서리는 잘린 것처럼 보인다 */
+    border-width: 1px 0;
+    border-radius: 0;
+    /* 떠 있지 않으니 그림자도 없앤다. 남기면 실선 위아래로 때가 낀다 */
+    box-shadow: none;
+    padding: 18px var(--m-gut);
+  }
+
+  /* ⚠ 단추를 `width: 100%` 로 두지 않는다. Chrome 은 파일 입력을 flex 한 줄로 그려서
+     단추가 폭을 다 가지면 <b>고른 파일 이름이 0폭으로 눌려 사라진다</b> — 무엇을 골랐는지
+     확인할 수 없는 편이 기본 모양보다 나쁘다. 좁은 화면에서는 단추를 조금 줄여 이름 쪽에
+     자리를 넘긴다. */
+  .v7-page input[type='file']::file-selector-button {
+    margin-right: 10px;
+    padding: 0 13px;
+  }
+
+  /* 화면 이름 — PC 는 2차 메뉴 바가 「여기가 어디인가」를 말해 주지만 좁은 화면에는
+     그 줄이 없다(header.css 가 숨긴다). 이름이 없으면 어느 화면에 들어왔는지 알 길이 없다 */
+  .v7-page__title {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    margin: 0 0 2px;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: var(--text);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   좁은 화면 — 밀도를 손가락과 눈에 맞춘다
+
+   폭만 줄이고 밀도를 그대로 두면 「좁아진 데스크톱」이 된다. 실측: 본문 글자 211 개가
+   13px, 컨트롤 69 개 중 65 개가 44px 미만(칩 32 · 체크상자 16)이었다.
+
+   글자 크기는 파일 곳곳에 93 군데 흩어져 있어 하나씩 덮지 않는다. 각 자리를
+   `var(--fs-13, 13px)` 꼴로 바꿔 두었으므로 <b>여기 한 곳</b>이 전부를 올린다.
+   기본값이 원래 값이라 760px 위에서는 아무 일도 일어나지 않는다.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 760px) {
+  .v7-page {
+    --fs-10: 12.5px;
+    --fs-10_5: 13px;
+    --fs-11: 13px;
+    --fs-11_5: 13.5px;
+    --fs-12: 14px;
+    --fs-12_5: 14.5px;
+    --fs-13: 15px;
+    --fs-13_5: 15.5px;
+    --fs-14: 16px;
+    --fs-14_5: 16.5px;
+  }
+
+  /* `.v7-page` 를 겹쳐 쓴 것은 멋이 아니다 — 컨트롤 크기를 못 박는 규칙들이
+     `.v7-page .tax-check input` 처럼 <b>같은 무게로 뒤에</b> 서 있어(tax · support ·
+     hometax 세 곳) 그냥 쓰면 진다. 하나씩 덮으면 네 번째가 생길 때 또 샌다. */
+
+  /* 손가락이 닿는 최소 크기. 아이콘만 있는 단추도 44px 을 채운다 —
+     32px 칩은 눈으로 보이는 것보다 훨씬 자주 빗나간다.
+
+     ⚠ <b>본문 안으로 한정한다.</b> `.v7-page` 전체에 걸면 상단 바까지 닿아, 35×35 원으로
+     그려진 프로필 아바타가 35×44 타원으로 찌그러진다 — 지름이 폭에서 오는 둥근 것들은
+     높이만 밀어 올리면 깨진다. 상단 바는 제 크기가 header.css 에 따로 잡혀 있다. */
+  .v7-page.v7-page .v7-page__body :is(button, select, a.v7-chip, [role='button']) { min-height: 44px; }
+  /* 체크상자·라디오는 16px 로 그려져 있었다. 글자가 커진 만큼 같이 키운다 */
+  .v7-page.v7-page .v7-page__body input:is([type='checkbox'], [type='radio']) { width: 22px; height: 22px; }
+  /* 줄 간격도 함께 벌린다. 글자만 키우면 줄이 서로 붙어 더 빽빽해 보인다 */
+  .v7-page { line-height: 1.55; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   좁은 화면 — 표를 줄 목록으로
+
+   가로 스크롤 막대는 데스크톱 장치다. 폰에서 옆으로 미는 표는 열 이름이 화면 밖으로
+   나가 있어서, 지금 보는 숫자가 「합계」인지 「발행일」인지 알 수 없다.
+
+   `<table>` 마크업은 그대로 둔다(CLAUDE.md — div 격자 금지). 낭독기와 넓은 화면에는
+   여전히 표이고, 좁은 화면에서만 칸을 「이름 : 값」 한 줄씩으로 편다. 이름은 각 칸의
+   `data-label` 에서 온다 — thead 를 숨기면 열 이름이 갈 곳이 없기 때문이다.
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 760px) {
+  /* 스크롤 장치를 통째로 끈다. 높이 제한도 푼다 — 줄로 펴지면 세로로 길어지는 게 맞다 */
+  .v7-page .tx-table-wrap,
+  .v7-page .tx-table-wrap.v7-scroll { overflow: visible; max-height: none; }
+
+  /* 열 이름 줄은 각 칸이 제 이름을 달고 다니므로 필요 없다. 낭독기에는 남는다 */
+  .v7-page .tx-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  /* ⚠ `.tax-fields--guided` 는 비껴간다. 그 표는 <b>제 나름의 세로 배치를 이미 갖고 있다</b>
+     (tax.css — 라벨을 값 <b>위에</b> 블록으로 얹는다). 두 벌을 겹치면 이쪽의 「왼쪽에 띄운
+     라벨」과 저쪽의 `padding: 0` 이 만나 라벨이 값 위로 포개진다. 한 표에 배치는 하나만 건다. */
+
+  .v7-page .tx-table:not(.tax-fields--guided),
+  .v7-page .tx-table:not(.tax-fields--guided) tbody,
+  .v7-page .tx-table:not(.tax-fields--guided) tr,
+  .v7-page .tx-table:not(.tax-fields--guided) td { display: block; width: auto; }
+  /* 열이 많은 표는 가로 스크롤을 만들려고 바닥 폭을 못 박아 둔다(`.loan-table` 은 900px).
+     줄로 펴는 마당에 그 바닥이 남아 있으면 화면 밖으로 214px 삐져나간다.
+     클래스를 겹쳐 쓴 것은 같은 무게로 뒤에 서는 규칙을 이기기 위해서다. */
+  .v7-page.v7-page .tx-table { min-width: 0; }
+
+  /* 한 줄이 한 덩어리다. 덩어리끼리는 실선으로 가른다 */
+  .v7-page .tx-table:not(.tax-fields--guided) tr { position: relative; padding: 12px 0; border-bottom: 1px solid var(--line); }
+
+  /* 고르기 상자는 값이 아니라 <b>이 덩어리 전체에 대한 동작</b>이다. 줄로 펴지면서
+     혼자 한 줄을 차지해 「이름 : 값」 목록의 첫 줄인 것처럼 보였다 — 덩어리 오른쪽 위로
+     빼면 무엇에 붙은 상자인지 한눈에 들어오고 줄도 아낀다. */
+  .v7-page .tx-table:not(.tax-fields--guided) td:has(> input:is([type='checkbox'], [type='radio'])) {
+    position: absolute;
+    /* 덩어리 첫 줄과 눈높이를 맞춘다. 10px 은 어림값이었고 글자가 커지자 어긋났다 —
+       칸 위 여백(5px)에 줄상자와 상자의 차이 절반을 더해 잰다 */
+    top: calc(5px + (1lh - 22px) / 2);
+    right: 16px;
+    padding: 0;
+  }
+  .v7-page .tx-table:not(.tax-fields--guided) tbody tr:last-child { border-bottom: 0; }
+
+  .v7-page .tx-table:not(.tax-fields--guided) td {
+    /* ⚠ grid·flex 를 쓰지 않는다. 칸 안의 맨글자와 `<small>` 이 <b>각각 격자 항목</b>이 되어
+       「receipt.png」 아래 붙어야 할 「종류 미정」이 이름 칸 자리로 떨어져 나간다.
+       이름을 띄워 두고 값은 평범한 블록으로 흐르게 두면 안쪽 구조가 무엇이든 성립한다. */
+    position: relative;
+    /* 왼쪽은 이름 자리로 비워 둔다 — 값들이 세로로 줄을 맞춰야 훑을 수 있다 */
+    padding: 5px 16px 5px calc(5.5rem + 16px);
+    border: 0;
+    min-height: 0;
+  }
+  .v7-page .tx-table:not(.tax-fields--guided) td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 16px;
+    top: 5px;
+    width: 5.5rem;
+    color: var(--muted);
+    font-size: var(--fs-11_5, 11.5px);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  /* 이름이 없는 칸(검토 단추처럼 열 제목이 빈 곳)은 폭을 다 쓴다 */
+  .v7-page .tx-table:not(.tax-fields--guided) td:not([data-label]) { padding-left: 16px; }
+  /* 금액을 오른쪽에 붙이던 것은 열이 있을 때 얘기다. 줄로 펴지면 값끼리 왼쪽을 맞춘다 */
+  .v7-page .tx-table .tx-num { text-align: left; }
+  /* 줄 전체를 칠하던 hover 는 손가락에 없다 */
+  .v7-page .tx-table tbody tr:hover { background: none; }
+}
+
+/* 고른 파일 이름. 표시일 뿐이라 누르는 자리가 아니다 — 파일 입력을 감추고 이 글자를
+   따로 그리는 이유가 그것이다(TransactionList 주석) */
+.v7-page .tx-upload__name {
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--fs-13, 13px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

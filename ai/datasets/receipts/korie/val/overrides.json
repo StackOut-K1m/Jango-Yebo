@@ -1,0 +1,522 @@
+{
+  "version": 1,
+  "description": "KORIE val 라벨 교정. 변환기 출력(korie-val-*.json)은 재현 가능하게 그대로 두고, 평가 시점에 이 파일이 덧씌워진다. 항목마다 이미지 확인 근거를 적는다. 정의 차이(할인 전 총합계 vs 결제금액)는 채점 규칙이 처리하므로 여기 넣지 않는다. 사업자등록번호는 KORIE 에 없어 dev subset 50장을 추가 라벨링했다(labeledFields 로 판정 불가 해제, 미인쇄는 null, 판독 불가는 unreadableFields).",
+  "verifiedOn": "2026-09-07",
+  "records": {
+    "IMG00012": {
+      "fields": {
+        "vatAmount": 1845,
+        "supplierBusinessNo": "301-86-27677"
+      },
+      "reason": "TotalTax 전사가 '면세금액 0' 줄. 영수증: 과세금액 18,455 / 부가세액 1,845 / 면세금액 0 / 청구액 20,300 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00018": {
+      "fields": {
+        "vatAmount": 1417,
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "TotalTax 전사가 '면세물품 1,480' 줄. 영수증: 과세물품 14,173 / 부가세 1,417 / 면세물품 1,480 / 합계 17,070 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00020": {
+      "fields": {
+        "vatAmount": 3124,
+        "supplierBusinessNo": "220-81-60348"
+      },
+      "reason": "TotalTax 전사가 '면세물품 9,990' 줄. 영수증: 과세물품 31,236 / 부가세 3,124 / 면세물품 9,990 / 결제대상금액 44,350 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00088": {
+      "fields": {
+        "vatAmount": 4682,
+        "supplierBusinessNo": null
+      },
+      "reason": "TotalTax 전사가 '면세물품 6,990' 줄. 영수증: 부가세 4,682 / 면세물품 6,990 / 결제대상금액 58,480 | 홈플러스 헤더 인쇄가 흐려 사업자번호 판독 불가 (맥락상 220-81-60348 이나 라벨하지 않음)",
+      "verified": "image",
+      "unreadableFields": [
+        "supplierBusinessNo"
+      ],
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00091": {
+      "fields": {
+        "vatAmount": 345,
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "TotalTax 전사가 '면세물품 1,990' 줄. 영수증: 과세물품 3,455 / 부가세 345 / 면세물품 1,990 / 합계 5,790 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00099": {
+      "fields": {
+        "vatAmount": 1360,
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "TotalTax 전사가 '면세물품 600' 줄. 영수증: 과세물품 13,610 / 부가세 1,360 / 면세물품 600 / 합계 15,570 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00022": {
+      "fields": {
+        "supplierName": "오지 (OHJI)",
+        "supplierBusinessNo": "386-18-01062"
+      },
+      "reason": "MerchantName 전사 'OHJD' 는 오타. 원본 해상도에서 '오지 (OHJI)' 로 선명히 읽힘 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00024": {
+      "fields": {
+        "supplierName": "주)아성다이소_청주본점",
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "MerchantName 전사 '마이스' 는 전사 오류. 영수증 매장명 줄: 주)아성다이소_청주본점 (상단 로고 다이소) | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00048": {
+      "fields": {
+        "supplierName": "이마트 청주점",
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "MerchantName 전사 '&nart' 는 로고(emart) 오독. 영수증 매장명 줄: 이마트 청주점 (043)210-1234 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00089": {
+      "fields": {
+        "supplierName": "주)한국마트",
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "MerchantName 전사 '주)한국미트' 는 오타. 영수증 상단: 주)한국마트 408-86-16530 | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00093": {
+      "fields": {
+        "supplierName": "이마트 청주점",
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "MerchantName 전사 '이마트 정주점' 은 오타. 영수증 매장명 줄: 이마트 청주점 (다른 이마트 청주점 영수증 IMG00048 과 동일 점포) | 사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00001": {
+      "fields": {
+        "supplierBusinessNo": null
+      },
+      "reason": "요기요 배달 전표 — 사업자번호 미인쇄 (전체 확인)",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00002": {
+      "fields": {
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00003": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00007": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00013": {
+      "fields": {
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00014": {
+      "fields": {
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00016": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00019": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00021": {
+      "fields": {
+        "supplierBusinessNo": "405-09-51390"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00025": {
+      "fields": {
+        "supplierBusinessNo": "220-81-60348"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00032": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00035": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00041": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00043": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00044": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00045": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00047": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00049": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00050": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00051": {
+      "fields": {
+        "supplierBusinessNo": "206-86-50913"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00052": {
+      "fields": {
+        "supplierBusinessNo": "899-87-03164"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00058": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00059": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00060": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00064": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00066": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00067": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00068": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00071": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00072": {
+      "fields": {
+        "supplierBusinessNo": "301-27-18088"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00078": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00092": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00095": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00096": {
+      "fields": {
+        "supplierBusinessNo": "405-09-51390"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00097": {
+      "fields": {
+        "supplierBusinessNo": "408-86-16530"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00100": {
+      "fields": {
+        "supplierBusinessNo": "213-81-52063"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00101": {
+      "fields": {
+        "supplierBusinessNo": "405-09-51390"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00102": {
+      "fields": {
+        "supplierBusinessNo": null
+      },
+      "reason": "배달의민족 배달 전표 — 사업자번호 미인쇄 (전체 확인)",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    },
+    "IMG00104": {
+      "fields": {
+        "supplierBusinessNo": "405-09-51390"
+      },
+      "reason": "사업자번호: 헤더 크롭을 눈으로 대조해 v2 예측값과 일치 확인, 체크섬 통과",
+      "verified": "image",
+      "labeledFields": [
+        "supplierBusinessNo"
+      ]
+    }
+  },
+  "businessNoLabeledOn": "2026-09-08"
+}

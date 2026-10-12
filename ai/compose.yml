@@ -1,0 +1,25 @@
+name: jango-ai-local
+services:
+  ai:
+    build:
+      context: .
+      args:
+        UV_VERSION: ${UV_VERSION:?Set UV_VERSION to the installed uv version}
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file: .env
+    environment:
+      BACKEND_BASE_URL: http://host.docker.internal:8080
+      # .env 의 STORAGE_ROOT(./artifacts/uploads) 는 호스트 기준 상대 경로라 컨테이너에서는 덮어쓴다
+      STORAGE_ROOT: /data/uploads
+    volumes:
+      - ./artifacts/uploads:/data/uploads:ro
+      # 운영과 같은 자리에 가중치를 붙인다 (infra/compose.yml 은 ./ai-artifacts).
+      # 로컬에서는 artifacts/residual-gru.pt 가 이미 여기 있으니 그대로 쓰인다.
+      # FORECAST_MODE=live 로 컨테이너에서 예측을 시험할 때 필요하다.
+      - ./artifacts:/app/artifacts:ro
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

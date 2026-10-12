@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 화면별 기능 대응표</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   화면별 기능 대응표 — 팀이 화면을 나눠 맡을 때 보는 판
+
+   화면 하나마다 「이 화면이 맡는 기능」을 아래에 붙입니다.
+   근거: 기능명세서_SRS.md 7.1·7.2 (기능) · 화면구성도.md 2.3 (화면 ↔ 기능)
+
+   ── 상태를 감추지 않습니다 ──
+   있음 · 부분 · 없음 을 그대로 적습니다. 「없음」이 곧 할 일입니다.
+   맨 아래 「화면이 없는 기능」은 만들 화면 목록입니다.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --ground:#faf9f5; --ground-2:#f2ece1; --hair:#e3dbcf;
+  --ink:#141413; --ink-2:#46443f; --ink-3:#7d786e; --coral:#cc785c;
+  --y:#137a4d; --p:#a8811a; --n:#b3332b;
+  --serif:"Gowun Batang", serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--ground); color:var(--ink); font-family:Pretendard, system-ui, sans-serif;
+       word-break:keep-all; }
+button, input { font:inherit; color:inherit; }
+button { background:none; border:0; cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+
+.hd { padding:30px 32px 0; }
+.hd .wm { display:flex; align-items:center; gap:7px; font-size:15px; font-weight:700; letter-spacing:-.02em; }
+.hd .wm i { width:8px; height:8px; background:var(--coral); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }
+.hd h1 { font-family:var(--serif); font-size:34px; font-weight:700; letter-spacing:-.02em; margin-top:14px; }
+.hd .lede { font-size:14px; color:var(--ink-2); margin-top:10px; line-height:1.75; max-width:82ch; }
+.hd .lede b { font-weight:700; color:var(--ink); }
+
+/* 전체 진행 */
+.tally { display:flex; gap:30px; flex-wrap:wrap; margin-top:22px; padding-top:20px; border-top:2px solid var(--ink); }
+.tally div { min-width:110px; }
+.tally .k { font-size:11px; font-weight:700; letter-spacing:.05em; color:var(--ink-3); }
+.tally .v { font-size:26px; font-weight:800; letter-spacing:-.03em; margin-top:3px; font-variant-numeric:tabular-nums; }
+.tally .s { font-size:11px; color:var(--ink-3); margin-top:2px; display:block; }
+.tally .y .v { color:var(--y); } .tally .p .v { color:var(--p); } .tally .n .v { color:var(--n); }
+
+.bar { position:sticky; top:0; z-index:20; margin-top:22px;
+       padding:12px 32px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+       background:rgb(250 249 245 / .94); backdrop-filter:blur(8px); box-shadow:0 1px 0 var(--hair); }
+.bar .lb { font-size:11.5px; font-weight:700; color:var(--ink-3); letter-spacing:.04em; }
+.bar button.t { font-size:12px; font-weight:700; color:var(--ink-3); padding:6px 11px; border-radius:99px; }
+.bar button.t[aria-pressed="true"] { background:var(--ink); color:var(--ground); }
+.bar input[type=range] { width:120px; accent-color:var(--ink); }
+.bar .pct { font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; min-width:38px; }
+.bar .g { display:flex; align-items:center; gap:6px; }
+
+/* 화면 한 짝 */
+.pair { padding:28px 32px 34px; border-top:1px solid var(--hair); }
+.pair .meta { display:flex; align-items:baseline; gap:11px; flex-wrap:wrap; margin-bottom:15px; }
+.pair .meta h2 { font-family:var(--serif); font-size:24px; font-weight:700; letter-spacing:-.02em; }
+.pair .meta .sc { font-size:11px; font-weight:800; letter-spacing:.06em; color:var(--ink-3);
+                  padding:3px 7px; border-radius:4px; background:var(--ground-2); }
+.pair .meta .job { font-size:12.5px; color:var(--ink-2); }
+.pair .meta .open { margin-left:auto; display:flex; gap:14px; }
+.pair .meta .open a { font-size:11.5px; font-weight:700; border-bottom:1.5px solid currentColor; padding-bottom:1px; }
+.pair .meta .open .nom { font-size:11.5px; color:var(--ink-3); }
+
+/* 화면 + 기능표를 좌우로 */
+.split { display:flex; gap:34px; align-items:flex-start; flex-wrap:wrap; }
+.frames { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; flex:none; }
+.fr .cap { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:800;
+           letter-spacing:.06em; color:var(--ink-3); margin-bottom:7px; }
+.fr .cap b { font-variant-numeric:tabular-nums; color:var(--ink-2); }
+.shell { display:block; overflow:hidden; border-radius:9px;
+         box-shadow:0 2px 16px rgb(20 20 19 / .12); background:#fff; }
+.shell iframe { display:block; border:0; transform-origin:0 0; }
+.gone { display:none !important; }
+
+/* 기능표 */
+.feat { flex:1; min-width:340px; }
+.feat .fh { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+            padding-bottom:9px; border-bottom:2px solid var(--ink); }
+.feat .fh .t { font-size:12px; font-weight:800; letter-spacing:.07em; color:var(--ink-3); }
+.feat .fh .c { font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; margin-left:auto; }
+.fr2 { display:grid; grid-template-columns:64px minmax(0,1fr) 46px; gap:14px;
+       align-items:baseline; padding:11px 0 11px 13px; position:relative; }
+.fr2 + .fr2::before { content:""; position:absolute; left:13px; right:0; top:0; height:1px; background:var(--hair); }
+.fr2::after { content:""; position:absolute; left:0; top:11px; bottom:11px; width:3px; border-radius:2px; }
+.fr2.y::after { background:var(--y); } .fr2.p::after { background:var(--p); } .fr2.n::after { background:var(--n); }
+.fr2 .id { font-size:11.5px; font-weight:800; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.fr2 .nm { font-size:13.5px; font-weight:600; }
+.fr2 .mn { display:inline-block; font-size:9.5px; font-weight:800; margin-left:6px; padding:1px 5px;
+           border-radius:3px; background:var(--ink); color:var(--ground); vertical-align:1px; }
+.fr2 .no { display:block; font-size:11.5px; color:var(--ink-3); margin-top:3px; line-height:1.6; }
+.fr2 .ac { display:block; font-size:11.5px; color:var(--ink-2); margin-top:4px; line-height:1.6;
+           padding-left:9px; border-left:2px solid var(--hair); }
+.fr2 .st { text-align:right; font-size:11.5px; font-weight:800; white-space:nowrap; }
+.fr2.y .st { color:var(--y); } .fr2.p .st { color:var(--p); } .fr2.n .st { color:var(--n); }
+
+/* 화면이 없는 기능 */
+.foot { padding:34px 32px 70px; border-top:2px solid var(--ink); margin-top:24px; }
+.foot h2 { font-family:var(--serif); font-size:26px; font-weight:700; letter-spacing:-.02em; }
+.foot .sub { font-size:13px; color:var(--ink-2); margin-top:9px; line-height:1.75; max-width:82ch; }
+.foot .sub b { font-weight:700; color:var(--ink); }
+.ns { display:grid; grid-template-columns:64px 108px minmax(0,1fr); gap:16px;
+      padding:15px 0 15px 13px; position:relative; align-items:baseline; }
+.ns + .ns::before { content:""; position:absolute; left:13px; right:0; top:0; height:1px; background:var(--hair); }
+.ns::after { content:""; position:absolute; left:0; top:15px; bottom:15px; width:3px; border-radius:2px; background:var(--n); }
+.ns.p0::after { background:var(--n); width:5px; }
+.ns .id { font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+.ns .id .pr { display:block; font-size:9.5px; font-weight:800; margin-top:3px; padding:1px 5px;
+              border-radius:3px; width:max-content; }
+.ns .id .pr.P0 { background:var(--n); color:#fff; }
+.ns .id .pr.P1 { background:var(--ground-2); color:var(--ink-2); }
+.ns .sc2 { font-size:11.5px; font-weight:700; color:var(--ink-3); }
+.ns .nm { font-size:14px; font-weight:700; }
+.ns .ds { display:block; font-size:12px; color:var(--ink-2); margin-top:4px; line-height:1.7; }
+.ns .ds b { font-weight:700; color:var(--ink); }
+
+.note { font-size:11.5px; color:var(--ink-3); line-height:1.75; margin-top:26px; max-width:84ch; }
+.note b { color:var(--ink-2); }
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <span class="wm"><i aria-hidden="true"></i>잔고예보 v4</span>
+  <h1>화면별 기능 대응표</h1>
+  <p class="lede">
+    화면마다 <b>그 화면이 맡는 기능</b>을 아래에 붙였습니다. 팀에서 화면을 나눠 맡을 때 이 판을 보고 정합니다.<br>
+    기능 이름과 완료 기준은 <b>project/docs/기능명세서_SRS.md</b> 7.1·7.2,
+    화면과 기능의 대응은 <b>project/docs/화면구성도.md</b> 2.3 에서 가져왔습니다.<br>
+    상태는 <b>지금 그 화면 HTML 을 열어 보고</b> 매겼습니다 — <b>「없음」이 곧 할 일</b>입니다.
+    맨 아래 「화면이 없는 기능」은 <b>만들어야 할 화면</b> 목록입니다.
+  </p>
+  <div class="tally" id="tally"></div>
+</header>
+
+<div class="bar">
+  <span class="g">
+    <span class="lb">보기</span>
+    <button class="t" data-v="both" aria-pressed="true">나란히</button>
+    <button class="t" data-v="pc">PC</button>
+    <button class="t" data-v="m">모바일</button>
+  </span>
+  <span class="g">
+    <span class="lb">축척</span>
+    <input type="range" id="zoom" min="20" max="70" step="5" value="32">
+    <span class="pct" id="pct">32%</span>
+  </span>
+  <span class="g">
+    <span class="lb">걸러내기</span>
+    <button class="t f" data-f="all" aria-pressed="true">전부</button>
+    <button class="t f" data-f="todo">할 일 있는 화면만</button>
+  </span>
+</div>
+
+<main id="list"></main>
+
+<section class="foot">
+  <h2>화면이 없는 기능</h2>
+  <p class="sub">화면구성도가 주 화면을 정해 뒀는데 <b>v4 에 그 화면이 없는</b> 것들입니다.
+    이 목록이 곧 <b>만들 화면</b>입니다. <b>P0 는 코어 MVP</b> 라 먼저 잡아야 합니다.</p>
+  <div id="noscreen" style="margin-top:20px"></div>
+  <p class="note" id="foot2"></p>
+</section>
+
+<script src="features.js"></script>
+<script>
+/* 화면 짝 — pc / m 파일과 한 줄 설명 */
+var SCREENS = [
+  { name:'예보',                  job:'언제 비는가, 왜 비는가',            pc:'pc-home',        m:'m-home' },
+  { name:'정산 공백',             job:'언제 · 얼마나 · 무엇이 겹쳤나',     pc:'pc-gap',         m:null },
+  { name:'캘린더',                job:'정해진 지출과 정산을 한 달에 겹쳐', pc:'pc-calendar',    m:'m-calendar' },
+  { name:'거래내역',              job:'이 거래가 무엇인지 맞나',           pc:'pc-transactions',m:'m-transactions' },
+  { name:'반복 후보 · 확인 센터', job:'앞으로도 계속 나갈 돈인가',         pc:'pc-patterns',    m:'m-inbox' },
+  { name:'시나리오',              job:'무엇을 바꾸면 달라지나',            pc:'pc-scenarios',   m:'m-scenarios' },
+  { name:'증빙 · 촬영',           job:'이 영수증을 어디다 붙이나',         pc:'pc-evidences',   m:'m-shoot' },
+  { name:'리포트 · 브리핑',       job:'이번 주에 무슨 일이 있었나',        pc:'pc-reports',     m:'m-brief' },
+  { name:'대출 · 지원 제도',      job:'공백을 무엇으로 메우나',            pc:'pc-loans',       m:'m-loans' },
+  { name:'자금 안전',             job:'얼마씩 모아두면 되나',              pc:'pc-safety',      m:'m-safety' },
+  { name:'세 가게 통합',          job:'옆 가게 통장으로 막을 수 있나',     pc:'pc-overview',    m:'m-overview' },
+  { name:'신고서 초안',           job:'서식 칸이 무엇으로 채워졌나',       pc:'pc-docs',        m:null },
+  { name:'내보내기',              job:'무엇이 파일에 담기나',              pc:'pc-export',      m:null },
+  { name:'전체 메뉴',             job:'PC 는 상단 한 줄 nav 가 대신합니다', pc:null,            m:'m-all' }
+];
+
+var PC = [1440, 900], M = [390, 844];
+var zoom = 0.32;
+var HAVE = { y:'있음', p:'부분', n:'없음' };
+
+/* ── 전체 셈 ──
+   손으로 적지 않고 표에서 셉니다. SCREEN_FEAT 를 고치면 여기가 따라옵니다. */
+(function () {
+  /* ── 셈은 기능 32건을 한 번씩만 봅니다 ──
+     한 기능이 여러 화면에 걸립니다(P0-08 은 예보·공백·대출 셋에 나옵니다).
+     화면 목록을 그냥 더하면 같은 기능을 여러 번 세게 됩니다.
+     처음엔 그렇게 세어 21 + 5 + 10 = 36 이 나왔습니다 — 기능은 32건인데요.
+     그래서 FEAT 를 돌면서 기능마다 「가장 좋은 상태」 하나만 잡습니다.
+     어느 화면에도 안 나오면 없음입니다. 그러면 합이 정확히 32 가 됩니다. */
+  var rank = { n:0, p:1, y:2 };
+  var best = {};
+  Object.keys(SCREEN_FEAT).forEach(function (page) {
+    SCREEN_FEAT[page].forEach(function (f) {
+      if (!best[f[0]] || rank[f[2]] > rank[best[f[0]]]) best[f[0]] = f[2];
+    });
+  });
+
+  var n = { y:0, p:0, n:0 }, byPri = { P0:0, P1:0 };
+  Object.keys(FEAT).forEach(function (id) {
+    n[best[id] || 'n']++;                    /* 어느 화면에도 없으면 없음 */
+    byPri[FEAT[id][0]]++;
+  });
+  var total = Object.keys(FEAT).length;
+  var p0none = Object.keys(FEAT).filter(function (id) {
+    return FEAT[id][0] === 'P0' && (best[id] || 'n') === 'n';
+  }).length;
+
+  document.getElementById('tally').innerHTML =
+    '<div><span class="k">기능 전체</span><span class="v">' + total + '</span>'
+      + '<span class="s">P0 ' + byPri.P0 + ' · P1 ' + byPri.P1 + ' (결번 제외)</span></div>'
+    + '<div class="y"><span class="k">화면에 있음</span><span class="v">' + n.y + '</span>'
+      + '<span class="s">완료 기준을 채웁니다</span></div>'
+    + '<div class="p"><span class="k">부분</span><span class="v">' + n.p + '</span>'
+      + '<span class="s">있지만 완료 기준을 못 채웁니다</span></div>'
+    + '<div class="n"><span class="k">없음</span><span class="v">' + n.n + '</span>'
+      + '<span class="s">그 가운데 <b>P0 가 ' + p0none + '건</b></span></div>'
+    + '<div><span class="k">만들 화면</span><span class="v">' + NO_SCREEN.length + '</span>'
+      + '<span class="s">맨 아래 목록</span></div>'
+    + '<div><span class="k">지금 화면</span><span class="v">' + SCREENS.length + '<small style="font-size:14px">짝</small></span>'
+      + '<span class="s">PC 13 · 모바일 11</span></div>';
+})();
+
+/* ── 화면 + 기능표 ── */
+function frame(cls, cap, page, w, h, name) {
+  if (!page) return '';
+  return '<div class="fr ' + cls + '">'
+    + '<span class="cap">' + cap + ' <b>' + w + ' × ' + h + '</b></span>'
+    + '<span class="shell"><iframe data-src="' + page + '.html" data-w="' + w + '" data-h="' + h + '"'
+    + ' title="' + name + ' ' + cap + '" loading="lazy"></iframe></span></div>';
+}
+
+/* 한 화면 짝의 기능 목록 — PC 와 모바일 것을 합치되 중복은 좋은 쪽으로 */
+function featRows(s) {
+  var merged = {}, order = [];
+  [s.pc, s.m].forEach(function (page) {
+    (SCREEN_FEAT[page] || []).forEach(function (f) {
+      var rank = { n:0, p:1, y:2 };
+      if (!merged[f[0]]) { merged[f[0]] = f.slice(); order.push(f[0]); }
+      else {
+        var cur = merged[f[0]];
+        if (rank[f[2]] > rank[cur[2]]) { cur[2] = f[2]; cur[3] = f[3]; }
+        if (f[1] === 'main') cur[1] = 'main';
+      }
+    });
+  });
+  /* 주 기능 먼저, 그 다음 상태가 나쁜 것 먼저 — 할 일이 위로 옵니다 */
+  var rank = { n:0, p:1, y:2 };
+  order.sort(function (a, b) {
+    var A = merged[a], B = merged[b];
+    if ((A[1] === 'main') !== (B[1] === 'main')) return A[1] === 'main' ? -1 : 1;
+    return rank[A[2]] - rank[B[2]];
+  });
+  return order.map(function (id) { return merged[id]; });
+}
+
+document.getElementById('list').innerHTML = SCREENS.map(function (s) {
+  var rows = featRows(s);
+  var n = { y:0, p:0, n:0 };
+  rows.forEach(function (f) { n[f[2]]++; });
+  var todo = n.p + n.n;
+  var scId = SCREEN_ID[s.pc] || SCREEN_ID[s.m] || '';
+
+  return '<section class="pair' + (todo ? ' hastodo' : '') + '">'
+    + '<div class="meta">'
+      + '<h2>' + s.name + '</h2>'
+      + '<span class="sc">' + scId + '</span>'
+      + '<span class="job">' + s.job + '</span>'
+      + '<span class="open">'
+        + (s.pc ? '<a href="' + s.pc + '.html" target="_blank">PC 원본</a>' : '')
+        + (s.m ? '<a href="' + s.m + '.html" target="_blank">모바일 원본</a>' : '<span class="nom">PC 전용</span>')
+      + '</span>'
+    + '</div>'
+    + '<div class="split">'
+      + '<div class="frames">'
+        + frame('pc', 'PC', s.pc, PC[0], PC[1], s.name)
+        + frame('m', '모바일', s.m, M[0], M[1], s.name)
+      + '</div>'
+      + '<div class="feat">'
+        + '<div class="fh"><span class="t">이 화면이 맡는 기능</span>'
+          + '<span class="c">있음 ' + n.y + ' · 부분 ' + n.p + ' · 없음 ' + n.n + '</span></div>'
+        + (rows.length ? rows.map(function (f) {
+            var m = FEAT[f[0]];
+            return '<div class="fr2 ' + f[2] + '">'
+              + '<span class="id">' + f[0] + '</span>'
+              + '<span><span class="nm">' + m[1] + (f[1] === 'main' ? '<b class="mn">주</b>' : '') + '</span>'
+                + '<span class="no">' + f[3] + '</span>'
+                + (f[2] !== 'y' ? '<span class="ac"><b>완료 기준</b> · ' + m[2] + '</span>' : '')
+              + '</span>'
+              + '<span class="st">' + HAVE[f[2]] + '</span></div>';
+          }).join('')
+          : '<p class="no" style="padding:14px 0;font-size:12.5px;color:var(--ink-3)">'
+            + '기능을 맡지 않는 길찾기 화면입니다.</p>')
+      + '</div>'
+    + '</div></section>';
+}).join('');
+
+/* ── 화면이 없는 기능 ── */
+document.getElementById('noscreen').innerHTML = NO_SCREEN
+  .slice().sort(function (a, b) { return FEAT[a[0]][0] === 'P0' ? -1 : FEAT[b[0]][0] === 'P0' ? 1 : 0; })
+  .map(function (x) {
+    var m = FEAT[x[0]];
+    return '<div class="ns ' + (m[0] === 'P0' ? 'p0' : '') + '">'
+      + '<span class="id">' + x[0] + '<span class="pr ' + m[0] + '">' + m[0] + '</span></span>'
+      + '<span class="sc2">' + x[1] + '</span>'
+      + '<span><span class="nm">' + m[1] + '</span>'
+        + '<span class="ds">' + x[2].replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</span>'
+        + '<span class="ds" style="color:var(--ink-3)"><b>완료 기준</b> · ' + m[2] + '</span></span>'
+      + '</div>';
+  }).join('');
+
+document.getElementById('foot2').innerHTML =
+  '이 판의 상태는 <b>2026-09-04</b> 기준입니다. 화면을 고치면 <b>features.js</b> 의 <code>SCREEN_FEAT</code> 를 함께 고쳐 주세요 — '
+  + '개수와 진행은 그 표에서 세므로 표만 맞으면 이 판이 따라옵니다.<br>'
+  + '화면 하나를 혼자 열어도 맨 아래에 같은 기능 띠가 붙어 있습니다.<br>'
+  + '여기 「화면이 없는 기능」 열 건은 <b>과거/v5/</b> 에 시안이 있습니다 — 필요하면 거기서 가져오면 됩니다.';
+
+/* ── 조작 ── */
+function applyZoom() {
+  document.querySelectorAll('.shell').forEach(function (sh) {
+    var f = sh.querySelector('iframe');
+    var w = +f.dataset.w, h = +f.dataset.h;
+    f.style.width = w + 'px'; f.style.height = h + 'px';
+    f.style.transform = 'scale(' + zoom + ')';
+    sh.style.width = Math.round(w * zoom) + 'px';
+    sh.style.height = Math.round(h * zoom) + 'px';
+  });
+  document.getElementById('pct').textContent = Math.round(zoom * 100) + '%';
+}
+document.getElementById('zoom').addEventListener('input', function () {
+  zoom = +this.value / 100; applyZoom();
+});
+document.querySelectorAll('.bar .t[data-v]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.bar .t[data-v]').forEach(function (o) {
+      o.setAttribute('aria-pressed', String(o === b));
+    });
+    var v = b.dataset.v;
+    document.querySelectorAll('.fr.pc').forEach(function (e) { e.classList.toggle('gone', v === 'm'); });
+    document.querySelectorAll('.fr.m').forEach(function (e) { e.classList.toggle('gone', v === 'pc'); });
+  });
+});
+document.querySelectorAll('.bar .t.f').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.bar .t.f').forEach(function (o) {
+      o.setAttribute('aria-pressed', String(o === b));
+    });
+    var only = b.dataset.f === 'todo';
+    document.querySelectorAll('.pair').forEach(function (p) {
+      p.classList.toggle('gone', only && !p.classList.contains('hastodo'));
+    });
+  });
+});
+
+applyZoom();
+document.querySelectorAll('iframe').forEach(function (f) { f.src = f.dataset.src; });
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 전체</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<style>
+.r .go { margin-left:auto; font-size:17px; color:var(--ink-3); }
+</style>
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">모든 기능</p>
+    <h1 class="hero">무엇을 하시겠습니까</h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>분석</h2>
+    <div class="rows">
+      <a class="r" href="m-home.html"><span class="grow"><span class="nm">잔액 예보</span><span class="mt">앞으로 서른 날</span></span><span class="go">›</span></a>
+      <a class="r" href="m-scenarios.html"><span class="grow"><span class="nm">시나리오</span><span class="mt">무엇을 바꾸면 달라지나</span></span><span class="go">›</span></a>
+      <a class="r" href="m-brief.html"><span class="grow"><span class="nm">브리핑</span><span class="mt">주간 · 월간 흐름</span></span><span class="go">›</span></a>
+      <a class="r" href="m-overview.html"><span class="grow"><span class="nm">세 가게 통합</span><span class="mt" id="ovMt">지갑별 위험과 자금 융통</span></span><span class="go">›</span></a>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>거래 관리</h2>
+    <div class="rows">
+      <a class="r" href="m-transactions.html"><span class="grow"><span class="nm">거래내역</span><span class="mt">확인 필요 5건</span></span><span class="go">›</span></a>
+      <a class="r" href="m-inbox.html"><span class="grow"><span class="nm">확인 센터</span><span class="mt">반복 후보 3건</span></span><span class="go">›</span></a>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>증빙과 세금</h2>
+    <div class="rows">
+      <a class="r" href="m-shoot.html"><span class="grow"><span class="nm">영수증 촬영</span><span class="mt">찍으면 거래에 붙습니다</span></span><span class="go">›</span></a>
+      <a class="r" href="m-calendar.html"><span class="grow"><span class="nm">자금·세금 캘린더</span><span class="mt">9월 · 부족한 날 5일</span></span><span class="go">›</span></a>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>자금과 지원</h2>
+    <div class="rows">
+      <a class="r" href="m-safety.html"><span class="grow"><span class="nm">자금 안전 관리</span><span class="mt">안전선 · 준비금 · 부가세</span></span><span class="go">›</span></a>
+      <a class="r" href="m-loans.html"><span class="grow"><span class="nm">대출과 지원 제도</span><span class="mt">9월 10일 상환</span></span><span class="go">›</span></a>
+    </div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('전체', null);
+document.getElementById('tabs').outerHTML = mTabs('all');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+wireReveal();
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+# 로컬 개발용 DB. 서버(EC2)의 jango-postgres / jango-redis 를 대체한다.
+#
+# ⚠ 로컬 앱을 서버 DB 에 붙이지 않는다.
+#   Flyway 는 앱 부팅 시 실행되므로 서버 DB 에 한 번이라도 붙으면 그 부팅이
+#   V1 을 적용하고 체크섬을 고정한다 — 이후 V1 을 고칠 수 없다.
+#   공유 DB + 각자 로컬 앱은 스키마가 움직이는 동안 상시로 checksum mismatch 를 만든다.
+#
+# 이미지 태그는 운영과 동일하게 고정한다(infra/compose.yml). :latest 를 쓰지 않는다.
+#
+#   기동    docker compose -f backend/compose.yml up -d
+#   정지    docker compose -f backend/compose.yml down
+#   초기화  docker compose -f backend/compose.yml down -v   ← 볼륨까지 삭제, 앱 재기동 시 V1 재적용
+#
+# 스키마(core·forecast)는 별도 init 스크립트 없이 Flyway 가 만든다
+# (spring.flyway.schemas + V1 상단의 CREATE SCHEMA IF NOT EXISTS).
+# 운영은 db/init/01-schemas.sql 로 미리 만들지만 결과는 같다.
+
+# 프로젝트명을 고정한다. 없으면 compose 파일이 있는 디렉터리명(`backend`)이 쓰여
+# Docker Desktop 스택과 볼륨이 `backend_*` 로 잡힌다 — 어느 프로젝트 것인지 알 수 없다.
+name: jango-local
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jango-pg-local
+    restart: unless-stopped
+    environment:
+      # 로컬 전용 자격증명. 운영 시크릿과 무관하며 커밋해도 되는 값이다.
+      - POSTGRES_USER=jango
+      - POSTGRES_DB=jango
+      - POSTGRES_PASSWORD=jango
+      # 금융망 API 가 요청시각 ±5분을 검증한다. 운영과 같은 TZ 를 쓴다.
+      - TZ=Asia/Seoul
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jango -d jango"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: jango-redis-local
+    restart: unless-stopped
+    # 운영은 redis.conf 로 requirepass 를 건다. 앱이 항상 AUTH 를 보내므로
+    # 로컬에도 비밀번호가 있어야 한다 — 없으면 NOAUTH 로 부팅이 실패한다.
+    command: ["redis-server", "--requirepass", "jango"]
+    environment:
+      - TZ=Asia/Seoul
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a jango ping 2>&1 | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  # 실제 이름은 프로젝트명이 붙어 jango-local_pgdata / jango-local_redisdata 가 된다.
+  pgdata:
+  redisdata:

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08090c" />
+    <title>잔고예보 · 예보</title>
+    <!-- tokens.css 가 --sans/--serif 로 이 둘을 가리키는데 정작 싣질 않아 맑은 고딕으로
+         떨어지고 있었다. Pretendard 는 Google Fonts 에 없어 jsDelivr 의 동적 서브셋을 쓴다
+         (한글 전체를 받지 않고 쓰인 글자 묶음만 받는다). -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+    />
+    <!-- 첫 칠 전에 배합을 정한다. 판정은 src/v7/theme.ts 와 같아야 한다. -->
+    <script>
+      try {
+        var saved = localStorage.getItem('jangoyebo.theme');
+        document.documentElement.dataset.theme =
+          saved === 'light' || saved === 'dark'
+            ? saved
+            : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

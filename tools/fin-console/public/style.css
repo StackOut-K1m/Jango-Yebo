@@ -1,0 +1,820 @@
+/* 금융망 콘솔 — 토스 계열의 정리된 화면. 우리 앱의 sky.css 와는 별개다.
+   여기는 내부 개발 도구라 "하늘과 땅" 을 따르지 않고, 대신 값이 잘 읽히는 쪽을 택했다.
+
+   지키는 것: 금액은 1,340,000원 · 음수는 −(U+2212) · 한국어는 keep-all ·
+   상태는 색만으로 구분하지 않는다(라벨을 함께 붙인다). */
+
+:root {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --fill: #f2f4f6;
+
+  --ink: #191f28;
+  --ink-2: #4e5968;
+  --ink-3: #8b95a1;
+  --ink-4: #b0b8c1;
+
+  --line: #e5e8eb;
+
+  --blue: #3182f6;
+  --blue-dark: #1b64da;
+  --blue-weak: #e8f3ff;
+
+  --red: #f04452;
+  --red-weak: #fdf0f1;
+
+  --r: 16px;
+  --r-sm: 12px;
+  --r-xs: 8px;
+
+  --sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  --mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+code,
+.mono {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+
+/* 금액·계좌번호는 자리수가 흔들리면 못 읽는다 */
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ── 골격 ─────────────────────────────────────────────────────────── */
+
+.app {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.main {
+  padding: 40px 40px 96px;
+  max-width: 920px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.head h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.head p {
+  margin-top: 6px;
+  color: var(--ink-3);
+  font-size: 14px;
+  max-width: 56ch;
+}
+
+/* ── 현재 컨텍스트 ────────────────────────────────────────────────── */
+
+.ctx {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctx-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ctx-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+  letter-spacing: 0.02em;
+}
+
+.ctx-value {
+  font-size: 13px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.ctx-value.empty {
+  color: var(--ink-4);
+  font-weight: 500;
+}
+
+.ctx-clear {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.ctx-clear:hover {
+  color: var(--red);
+}
+
+/* ── 왼쪽 목록 ────────────────────────────────────────────────────── */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.nav-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+  padding: 0 8px 6px;
+  letter-spacing: 0.02em;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--r-xs);
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--fill);
+}
+
+.nav-item[aria-current='true'] {
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+  font-weight: 700;
+}
+
+.nav-item .nav-id {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-4);
+  font-family: var(--mono);
+}
+
+.nav-item[aria-current='true'] .nav-id {
+  color: var(--blue);
+}
+
+.nav-item .dot {
+  font-size: 10px;
+  color: var(--red);
+}
+
+.side-foot {
+  border-top: 1px solid var(--line);
+  padding: 12px 8px 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ── 카드 ─────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+
+.tag {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tag.write {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+/* ── 폼 ───────────────────────────────────────────────────────────── */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: 6px;
+}
+
+.field .req {
+  color: var(--blue);
+  margin-left: 2px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  font-weight: 500;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--blue);
+  background: var(--surface);
+}
+
+.field input::placeholder {
+  color: var(--ink-4);
+  font-weight: 400;
+}
+
+.field .hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.field .hint.amount {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--blue);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--blue-dark);
+}
+
+.btn:disabled {
+  background: var(--ink-4);
+  cursor: default;
+}
+
+.btn.ghost {
+  background: var(--fill);
+  color: var(--ink-2);
+  height: 48px;
+  font-size: 15px;
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: #e8ebed;
+}
+
+.btn.danger {
+  background: var(--red);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #d63744;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-row .btn {
+  flex: 1;
+}
+
+/* ── 실행 확인 ────────────────────────────────────────────────────── */
+
+.confirm {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 16px;
+  background: var(--surface-2);
+}
+
+.confirm-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.confirm dl {
+  margin: 0 0 4px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  font-size: 13px;
+}
+
+.confirm dt {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.confirm dd {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ── 결과 ─────────────────────────────────────────────────────────── */
+
+.big {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.big-sub {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 0;
+}
+
+.kv > div {
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+
+.kv > div:nth-child(1),
+.kv > div:nth-child(2) {
+  border-top: none;
+}
+
+.kv .k {
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.kv .v {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  padding: 0 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: top;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+th.r,
+td.r {
+  text-align: right;
+}
+
+tbody tr.pick {
+  cursor: pointer;
+}
+
+tbody tr.pick:hover td {
+  background: var(--surface-2);
+}
+
+tbody tr.on td {
+  background: var(--blue-weak);
+}
+
+.scroll {
+  overflow-x: auto;
+  margin: 0 -8px;
+  padding: 0 8px;
+}
+
+.amt-in {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.amt-out {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--r-xs);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--fill);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.type-badge.in {
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+}
+
+.sum {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sum > div {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+}
+
+.sum .k {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sum .v {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.empty-state {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.err {
+  background: var(--red-weak);
+  border-radius: var(--r-sm);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.err-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.err-msg {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.err-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.ok-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--blue-weak);
+  color: var(--blue-dark);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notice {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* ── 단계 진행(묶음 작업) ─────────────────────────────────────────── */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.step {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-mark {
+  flex: none;
+  width: 18px;
+  font-weight: 700;
+  color: var(--ink-4);
+  font-size: 13px;
+}
+
+.step.done .step-mark {
+  color: var(--blue);
+}
+
+.step.fail .step-mark {
+  color: var(--red);
+}
+
+.step-text {
+  flex: 1;
+  color: var(--ink-2);
+}
+
+.step.done .step-text,
+.step.fail .step-text {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── 원문 ─────────────────────────────────────────────────────────── */
+
+details.raw {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+details.raw summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  list-style: none;
+}
+
+details.raw summary::-webkit-details-marker {
+  display: none;
+}
+
+details.raw summary::before {
+  content: '▸ ';
+}
+
+details.raw[open] summary::before {
+  content: '▾ ';
+}
+
+details.raw pre {
+  margin: 12px 0 0;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.raw-label {
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-4);
+}
+
+.copy {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .main {
+    padding: 24px 16px 64px;
+  }
+
+  .sum {
+    grid-template-columns: 1fr;
+  }
+
+  .kv {
+    grid-template-columns: 1fr;
+  }
+
+  .kv > div {
+    padding: 4px 0;
+    border-top: none;
+  }
+
+  .kv .k {
+    padding-top: 12px;
+  }
+}
+
+/* 거래 일시는 날짜와 시각을 나눠 쌓는다 — 한 줄로 붙으면 스캔이 안 된다 */
+.sub-time {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 나쁜 소식인 상태값(연체·FAIL·OVERDUE 등). 색만으로 구분하지 않으려고
+   배지 안에 코드값을 그대로 남긴 뒤 색을 얹는다 */
+.type-badge.bad {
+  background: var(--red-weak);
+  color: var(--red);
+}
+
+/* 요약과 표 사이 */
+.spacer {
+  height: 20px;
+}

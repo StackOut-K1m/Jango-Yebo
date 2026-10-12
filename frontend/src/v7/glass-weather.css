@@ -1,0 +1,186 @@
+/* 판 두 개(잔액 예보·카드 지갑)는 같은 틀을 쓴다. 유리창 효과(GlassWeather)는 잔액 예보 판에만 붙는다. */
+.forecast-surface.glass-pane,
+.right-page.glass-pane {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--text-2) 20%, transparent);
+  border-radius: 25px;
+  background: var(--glass);
+  box-shadow:
+    inset 0 1px 0 var(--sheen-3),
+    inset 1px 0 0 var(--veil-2),
+    0 18px 40px var(--shadow-1);
+}
+
+/* 잔액 예보 유리창 — 두께 있는 유리판처럼. 윗변·왼변은 빛을 받고 아랫변은 그늘지며,
+   바로 밑의 짙은 띠가 판 두께, 멀리 퍼지는 그림자가 떠 있는 높이를 만든다 */
+.forecast-surface.glass-pane {
+  --pane-gloss: #ffffff1f;
+  --pane-gloss-soft: #ffffff0d;
+  box-shadow:
+    inset 0 2px 0 #ffffff2e,
+    inset 2px 0 0 #ffffff17,
+    inset 0 -3px 0 #00000061,
+    inset -2px 0 0 #00000033,
+    inset 0 -60px 80px -60px #00000070,
+    0 3px 0 -1px #0b1116,
+    0 10px 20px #00000059,
+    0 36px 64px -22px #000000b3;
+}
+/* 유리 표면의 반사광 — 위에서 비스듬히 비친 빛과 왼쪽 위 하이라이트. 날씨 캔버스 위, 글자 아래에 깔린다 */
+.forecast-surface.glass-pane::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(174deg, var(--pane-gloss) 0%, var(--pane-gloss-soft) 16%, transparent 32%),
+    radial-gradient(60% 40% at 8% 0%, var(--pane-gloss), transparent 70%),
+    linear-gradient(118deg, transparent 62%, var(--pane-gloss-soft) 62.3%, transparent 74%);
+}
+/* 비스듬한 빛줄기는 햇빛으로 읽힌다 — 비·흐림에서는 걷어내고 은은한 하이라이트만 남긴다.
+   판에는 data-weather 가 없으므로 안쪽 캔버스 껍데기를 보고 고른다. */
+.forecast-surface.glass-pane:has(.glass-weather:not([data-weather='sunny']))::after {
+  background:
+    linear-gradient(174deg, var(--pane-gloss-soft) 0%, transparent 26%),
+    radial-gradient(60% 40% at 8% 0%, var(--pane-gloss-soft), transparent 70%);
+}
+
+/* 라이트 배합의 유리창은 옅은 하늘빛. 캔버스(windowWeather)가 물방울 속 굴절색으로
+   --glass 를 읽으므로 바탕과 같은 값을 준다 — 다르면 물방울만 회색으로 뜬다. */
+:root[data-theme='light'] .forecast-surface.glass-pane {
+  --glass: #e3ecf1;
+  border-color: #b0c2ce;
+  border-top-color: #ffffff;
+  border-left-color: #f6fbff;
+  background: linear-gradient(155deg, #f6fafc 0%, #e3ecf1 52%, #d4e1e9 100%);
+  --pane-gloss: #ffffffb3;
+  --pane-gloss-soft: #ffffff24;
+  box-shadow:
+    inset 0 2px 1px #ffffff,
+    inset 2px 0 1px #ffffffb3,
+    inset 0 -3px 2px #617f9640,
+    inset -2px 0 2px #617f9626,
+    0 4px 5px -3px #536f8499,
+    0 12px 22px -10px #435e7652,
+    0 32px 54px -20px #435e7666;
+}
+
+/* 넓고 부드러운 반사 한 겹. 차트 위의 대각선 반사 띠는 라이트에서 덜어낸다. */
+:root[data-theme='light'] .forecast-surface.glass-pane::after {
+  background: radial-gradient(85% 48% at 4% 0%, var(--pane-gloss), var(--pane-gloss-soft) 42%, transparent 78%);
+}
+
+/* 안내는 유리판 안쪽에 놓여 보이도록 낮은 음영만 준다. */
+:root[data-theme='light'] .forecast-surface .risk-line {
+  background: #627c9010;
+  border-color: #738da126;
+  box-shadow: inset 0 1px 3px #536f8414, 0 1px 0 #ffffff80;
+}
+
+/* 가죽이 카드 둘레로 넉넉히 보이게 */
+.right-page.glass-pane {
+  padding: 34px 24px 30px;
+}
+
+/* 카드 지갑 판 — 장지갑 가죽. 코냑 브라운 바탕에 가죽 결(노이즈), 가장자리 박음질, 도톰한 두께.
+   재질이라 라이트·다크 모두 같은 가죽이다 */
+.right-page.glass-pane {
+  border: 1px solid #3b2415;
+  border-radius: 28px;
+  color: #f6e7d3;
+  background:
+    radial-gradient(90% 60% at 20% 0%, #c98a5c55, transparent 70%),
+    linear-gradient(160deg, #9a6340 0%, #7d4c2e 48%, #5e3720 100%);
+  box-shadow:
+    inset 0 2px 0 #d9a47a66,
+    inset 0 -3px 0 #2a170c99,
+    inset 0 0 0 1px #00000026,
+    inset 0 -50px 70px -50px #1c0e0699,
+    0 3px 0 -1px #2e1a0e,
+    0 10px 20px #0000004d,
+    0 34px 60px -22px #2a170ca6;
+}
+/* 가장자리 박음질 */
+.right-page.glass-pane::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  z-index: 0;
+  border: 2px dashed #efcfa88c;
+  border-radius: 20px;
+  pointer-events: none;
+}
+/* 가죽 결 — 노이즈를 곱하기로 얹어 매끈한 판이 아니라 가죽 표면으로 읽히게 한다 */
+.right-page.glass-pane::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  mix-blend-mode: multiply;
+  opacity: .55;
+}
+/* 다크 배합 — 블랙 가죽. 검은 화면에서 코냑 브라운이 혼자 떠 보여 차콜로 누른다.
+   검은 바탕에서는 곱하기 결이 안 보여, 흰 결을 스크린으로 옅게 얹는다. 박음질은 반투명 회색 */
+:root:not([data-theme='light']) .right-page.glass-pane {
+  border-color: #000000;
+  color: #e9e6e3;
+  background:
+    radial-gradient(90% 60% at 20% 0%, #ffffff0f, transparent 70%),
+    linear-gradient(160deg, #2a2624 0%, #1e1b1a 50%, #161312 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffff1f,
+    inset 0 -3px 0 #000000b3,
+    inset 0 0 0 1px #0000004d,
+    inset 0 -50px 70px -50px #000000b3,
+    0 3px 0 -1px #050404,
+    0 12px 24px #000000a6,
+    0 40px 70px -22px #000000e6;
+}
+:root:not([data-theme='light']) .right-page.glass-pane::before { border-color: #ffffff2e; }
+:root:not([data-theme='light']) .right-page.glass-pane::after {
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  mix-blend-mode: screen;
+  opacity: .09;
+}
+:root:not([data-theme='light']) .right-page .wallet-ghost { border-color: #ffffff29; background: #00000059; }
+/* 카드를 꺼낸 빈자리 — 가죽 주머니 안쪽처럼 어둡게 */
+.right-page .wallet-ghost { border-color: #efcfa866; background: #00000033; border-radius: 22px; }
+@media (max-width: 1000px) {
+  .right-page.glass-pane {
+    padding-inline: 18px;
+  }
+}
+
+.glass-pane > :not(.glass-weather) {
+  position: relative;
+  z-index: 1;
+}
+.glass-weather {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+.glass-weather::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--veil-2);
+  background: linear-gradient(125deg, var(--veil-2), transparent 34%, transparent 75%, var(--veil-1));
+}
+.glass-weather canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

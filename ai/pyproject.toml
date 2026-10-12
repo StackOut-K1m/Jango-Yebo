@@ -1,0 +1,79 @@
+[project]
+name = "jango-ai"
+version = "0.1.0"
+description = "Jango-Yebo stateless AI worker (docs/api/20_내부_AI워커.md)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # --- 공통 (1·2·3번 전원) ---
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "httpx>=0.28,<1",              # API 서버 콜백 클라이언트
+    "pydantic>=2.7,<3",
+    "pydantic-settings>=2.7,<3",
+    "anthropic>=1,<2",             # Claude SDK — 기술스택 §8.1. 원시 HTTP 로 호출하지 않는다
+    # --- 2번 OCR·VLM ---
+    "pillow>=11,<13",              # EXIF 회전 보정
+    "opencv-python-headless>=4.10,<5",  # 서버에 GUI 없음 → headless (libGL 의존 회피)
+    "numpy>=1.26,<3",
+    "rapidfuzz>=3.9,<4",           # 품목 정규화 2차(유사도) — 워커는 DB(pg_trgm)에 닿지 않는다
+]
+
+[project.optional-dependencies]
+# OCR_PIPELINE 공급자 — 선정(기술스택 §12) 후 해당 extra 만 설치한다. 기본 설치에 넣지 않는다.
+azure = ["azure-ai-documentintelligence>=1.0,<2"]
+paddle = ["paddleocr>=3.1,<4", "paddlepaddle>=3.0,<4"]
+# 3번 예측 (20.11). **기본 설치에 넣지 않는다** — torch 는 휠이 크고(수백 MB~2GB)
+# 1·2번(NLP·OCR) 개발 환경에는 필요 없다. FORECAST_MODE=off 면 import 하지도 않는다.
+# 배포 이미지에는 **넣는다** (S15P21C105-76). 리눅스는 아래 CPU 전용 인덱스를 쓴다.
+#
+# **chronos-forecasting 은 일부러 넣지 않았다.** 그게 transformers 4.x 를 끌고 오는데,
+# transformers 가 `huggingface-hub <1.0` 을 요구해서 **레포 전체의 huggingface-hub 이
+# 1.30.0 → 0.36.2 로 내려간다.** OCR 의 paddle extra(`paddlex`)도 huggingface-hub 을 쓰므로
+# 남의 의존성을 건드리게 된다. Chronos 비교는 **레포 밖 별도 venv** 에서 돌린다
+# (`experiments/forecast_residual/README.md` 참고).
+forecast = ["torch>=2.4,<3"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "ruff>=0.9,<1",
+    "respx>=0.22,<1",              # httpx 목킹 — 콜백 전송 테스트
+    "openpyxl>=3.1,<4",         # 평가 세트 라벨링 시트 — 워커 런타임에는 쓰지 않는다
+]
+
+[tool.uv]
+package = false
+
+# 리눅스에서만 CPU 전용 torch 를 쓴다 (S15P21C105-76).
+#
+# PyPI 의 리눅스 torch 휠은 CUDA 스택을 함께 끌고 온다 — 락 파일에 `nvidia-*`·`cuda-*`
+# 43개가 전부 `sys_platform == 'linux'` 조건으로 달려 있었다. **배포 서버에 GPU 가 없으니
+# 전부 낭비다** (설계노트 「서버 예산 — 4 vCPU / 15 GB / GPU 없음」).
+#
+# Windows·macOS 는 그대로 PyPI 를 쓴다 — 위 CUDA 의존이 리눅스 전용이라 원래 받지 않으므로
+# 이 설정이 바꾸는 것이 없다. **학습·파인튜닝은 이 락과 무관한 별도 환경에서 돌린다.**
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "pydantic.Field"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/ocr/prompts.py" = ["E501"]
+"app/ocr/llm_normalization.py" = ["E501"]  # 시스템 프롬프트 본문

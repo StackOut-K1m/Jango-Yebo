@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 정산 공백 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-01-4 정산 공백 예보 (P0-08 · API 10.2)
+   시나리오와 역할이 다릅니다. 시나리오는 사장님이 곡선을 움직이는 화면이고,
+   여기는 움직이지 않는 곡선을 한눈에 읽는 화면입니다. 그래서 손잡이가 없고,
+   대신 그래프의 모든 표시가 옆의 글과 하나씩 짝지어 있습니다.
+   조작이 없으니 값은 처음 그릴 때 다 확정됩니다. */
+
+/* ── 곡선 ── */
+.gchart { position:relative; }
+.gchart .ch { display:flex; align-items:baseline; gap:var(--s5); }
+.gchart .ch h2 { margin:0; font-size:15px; }
+.gchart .ch .conf { margin-left:auto; font-size:11px; font-weight:700; color:var(--ink-3);
+                    padding:3px 9px; border-radius:999px; box-shadow:inset 0 0 0 1px var(--hair); white-space:nowrap; }
+/* 글자가 든 그래프라 비율을 지켜 줄입니다. 늘리면 글자가 찌그러집니다 */
+#gv { display:block; width:100%; height:auto; aspect-ratio:880/330; margin-top:var(--s4); }
+.gchart .lg { display:flex; gap:var(--s6); margin-top:var(--s4); font-size:11.5px; color:var(--ink-3); flex-wrap:wrap; }
+.gchart .lg span { display:inline-flex; align-items:center; gap:var(--s2); }
+.gchart .lg i { width:16px; height:0; border-top:2px solid; flex:none; }
+.gchart .lg i.sw { width:14px; height:9px; border:0; border-radius:2px; }
+.gchart .lg i.dot { width:9px; height:9px; border:0; border-radius:50%; background:var(--caution); }
+.gchart .lg .meta { margin-left:auto; font-variant-numeric:tabular-nums; }
+/* 곁줄에서 짚은 항목이 곡선에서 굵어집니다. 표와 그래프를 눈으로 잇는 유일한 장치입니다 */
+.ev.hi circle { r:7; }
+.ev.hi text { font-size:11.5px; }
+.ev.hi line { stroke-width:2; stroke-dasharray:none; }
+
+/* ── 공백 구간 카드 ── */
+.gaps { display:grid; gap:var(--s6); margin-top:var(--s6); }
+.gapc { padding:var(--s6); border-radius:12px; background:var(--ground-2); box-shadow:inset 0 0 0 1px var(--hair); }
+.gapc.gap { background:#fbf1ee; box-shadow:inset 0 0 0 1px #e8cdc5; }
+.gapc .gh { display:flex; align-items:baseline; gap:var(--s4); flex-wrap:wrap; }
+.gapc .gh .gd { font-family:var(--serif); font-size:19px; font-weight:700; letter-spacing:-.01em; }
+.gapc .gh .gn { font-size:12px; font-weight:700; color:var(--ink-3); }
+.gapc .gs { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s5); margin-top:var(--s5); }
+.gapc .gs > div { min-width:0; }
+.gapc .gs .k { display:block; font-size:11px; color:var(--ink-3); }
+.gapc .gs .v { display:block; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px; }
+.gapc .why { font-size:12.5px; line-height:1.7; color:var(--ink-2); margin-top:var(--s5);
+             padding-top:var(--s5); box-shadow:inset 0 1px 0 rgb(20 20 19 / .08); }
+.gapc .why b { font-weight:700; color:var(--ink); }
+
+/* ── 그날 무슨 일 ── */
+.tbl { --cols:82px 104px 104px minmax(0,1fr) 112px 74px; }
+.tbl .tr.inband { background:#fbf1ee; }
+.tbl .tr.inband:hover { background:#f7e8e3; }
+.tbl .skip { padding:var(--s4) 0; font-size:11.5px; color:var(--ink-3); position:relative;
+             font-variant-numeric:tabular-nums; }
+.tbl .skip::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.tbl .tr.flash { animation:gFlash 1200ms ease-out; }
+@keyframes gFlash { 0%,40% { background:#f3e4c8; } 100% { background:transparent; } }
+@media (prefers-reduced-motion: reduce) { .tbl .tr.flash { animation:none; box-shadow:inset 0 0 0 1px var(--caution); } }
+
+/* ── 곁줄 일정 ── */
+.sched { display:grid; margin-top:var(--s4); }
+.sch { display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:var(--s3); align-items:baseline;
+       padding:var(--s4) 0; font-size:12px; text-align:left; border:0; background:transparent;
+       font-family:inherit; color:inherit; cursor:pointer; position:relative; width:100%; }
+.sch + .sch::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.sch:hover, .sch:focus-visible { background:rgb(20 20 19 / .03); }
+.sch .sd { font-size:11.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.sch .sn { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sch .sn small { display:block; font-weight:400; font-size:10.5px; color:var(--ink-3);
+                 overflow:hidden; text-overflow:ellipsis; }
+.sch .sa { font-weight:800; font-variant-numeric:tabular-nums; }
+.sch.inband .sd { color:var(--gap); font-weight:700; }
+.nos { display:grid; gap:var(--s3); margin-top:var(--s4); }
+.nos div { display:flex; align-items:baseline; gap:var(--s3); font-size:12px; }
+.nos .d { font-variant-numeric:tabular-nums; font-weight:700; width:44px; flex:none; }
+.nos .w { color:var(--ink-3); font-size:11.5px; }
+
+/* ── 가장 깊은 날 표 ── 이름과 값이 붙어 "안전선까지2,718,300" 으로 읽히지 않게 갈라 둡니다 */
+.res { display:flex; align-items:baseline; gap:var(--s4); padding:var(--s4) 0; position:relative; }
+.res + .res::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.res .k { font-size:11.5px; color:var(--ink-3); flex:none; }
+.res .b { margin-left:auto; font-size:14px; font-weight:800; font-variant-numeric:tabular-nums; text-align:right; }
+
+/* ── 메울 방법 ── */
+.fixl { display:grid; gap:var(--s5); margin-top:var(--s4); }
+.fx { display:block; padding:var(--s5); border-radius:10px; background:var(--ground-2); text-decoration:none; color:inherit; }
+.fx:hover { background:rgb(20 20 19 / .05); }
+.fx .fh { display:flex; align-items:baseline; gap:var(--s3); }
+.fx .fk { font-size:12.5px; font-weight:700; }
+.fx .fg { margin-left:auto; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; }
+.fx .fs { display:block; font-size:11px; color:var(--ink-3); line-height:1.6; margin-top:3px; }
+.fx .fa { display:block; font-size:11.5px; margin-top:var(--s3); font-variant-numeric:tabular-nums; color:var(--ink-2); }
+.fx .fa b { font-weight:800; }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when" id="when"></p>
+    <h1 class="hero" id="hero">불러오는 중</h1>
+    <p class="lede" id="lede"></p>
+  </div>
+</header>
+
+<div class="work">
+
+  <!-- 왼쪽 · 그래프에 찍힌 것들의 목록 -->
+  <aside class="side">
+    <div class="grp">
+      <h3>나가는 돈</h3>
+      <div class="sched" id="sched"></div>
+    </div>
+
+    <div class="grp">
+      <h3>정산이 없는 날</h3>
+      <div class="nos" id="nos"></div>
+    </div>
+
+  </aside>
+
+  <!-- 가운데 · 곡선과 구간 설명 -->
+  <main class="body">
+    <div class="gchart">
+      <div class="ch">
+        <h2>서른 날 잔액과 공백 구간</h2>
+        <span class="conf" id="conf"></span>
+      </div>
+      <svg id="gv" viewBox="0 0 880 330" aria-hidden="true"></svg>
+      <div class="lg">
+        <span><i style="border-color:var(--ink);border-top-width:2.5px"></i>예상 잔액</span>
+        <span><i class="sw" style="background:var(--ink);opacity:.12"></i>변동 범위</span>
+        <span><i style="border-color:var(--danger)"></i>안전선 <b class="tnum" id="lgLine"></b></span>
+        <span><i class="sw" style="background:var(--gap);opacity:.3"></i>정산 공백 구간</span>
+        <span><i class="dot"></i>날짜가 정해진 지출</span>
+        <span class="meta" id="cmeta"></span>
+      </div>
+    </div>
+
+    <section class="sec" style="margin-top:var(--s8)">
+      <h2>구간마다 무엇이 겹쳤나</h2>
+      <div class="gaps" id="gaps"></div>
+    </section>
+
+    <section class="sec" style="margin-top:var(--s8)">
+      <h2>그날 무슨 일이 있나</h2>
+      <div class="tbl" style="margin-top:var(--s5)">
+        <div class="th"><span>날짜</span><span class="r">들어옴</span><span class="r">나감</span><span>무슨 일</span><span class="r">그날 잔액</span><span>상태</span></div>
+        <div id="byday"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 오른쪽 · 가장 깊은 날과 메울 방법 -->
+  <aside class="detail">
+    <h3>가장 깊은 날</h3>
+    <div id="res" style="margin-top:var(--s4)"></div>
+
+    <div class="grp">
+      <h3>메울 방법</h3>
+      <div class="fixl" id="fix"></div>
+    </div>
+
+    <div class="grp">
+      <a class="btn btn-pri btn-block" href="pc-scenarios.html">시나리오에서 바꿔 보기</a>
+      <p class="dm" style="margin-top:var(--s3)">여기서는 아무것도 바꾸지 않습니다. 지급일을 옮겨 보거나 매출을 달리 가정하는 것은 시나리오 화면에서 합니다.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = pcTop('gap');
+wireSwitch();
+(function () {
+  /* 하늘 색은 가장 깊은 날의 등급을 씁니다. 이 화면의 주제가 그날입니다 */
+  var k = SKYC[lowest.risk] || SKYC['danger'], s = document.getElementById('sky');
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   읽을 값 정리 — days · gaps · FIXED · NO_SETTLE 에서 그대로 옵니다.
+   이 화면을 위해 따로 만든 숫자는 없습니다.
+   ══════════════════════════════════════════════════════════════ */
+var DOWKO = ['일','월','화','수','목','금','토'];
+function dow(date) { return DOWKO[new Date(date).getDay()]; }
+function idxOf(date) { return days.findIndex(function (d) { return d.date === date; }); }
+
+/* 날짜가 정해진 지출. 같은 날 여러 건은 곡선에서 한 점으로 묶습니다 */
+var EVENTS = (function () {
+  var by = {};
+  FIXED.forEach(function (f) {
+    var i = idxOf(f[0]); if (i < 0) return;
+    (by[i] = by[i] || { i:i, date:f[0], items:[], sum:0 });
+    by[i].items.push({ name:f[1], who:f[2], amt:f[3] }); by[i].sum += f[3];
+  });
+  return Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return a.i - b.i; });
+})();
+function inGap(i) { return gaps.some(function (g) { return i >= g.startIdx && i <= g.endIdx; }); }
+
+/* ── 머리글 ── */
+(function () {
+  var g0 = gaps[0];
+  document.getElementById('when').textContent =
+    '정산 공백 예보 · ' + mdKo(days[0].date) + ' 기준 · 앞으로 ' + days.length + '일';
+  var deep = gaps.reduce(function (a, c) { return c.worst.v < a.worst.v ? c : a; }, gaps[0]);
+  document.getElementById('hero').innerHTML = !gaps.length
+    ? '서른 날 모두 안전선 위입니다'
+    : (deep.level === 'gap'
+        ? mdKo(deep.worst.date) + ', 통장이 <b><span class="n">' + won(deep.worst.v) + '원</span></b>이 됩니다'
+        : mdKo(deep.worst.date) + ', 안전선보다 <b><span class="n">' + won(deep.shortfall) + '원</span></b> 모자랍니다');
+  /* 왜 그날인가를 한 줄로. 가장 깊은 구간 하나만 봅니다. 앞서 나간 큰돈도 원인이라 같이 적습니다 */
+  if (!gaps.length) { document.getElementById('lede').textContent = '서른 날 안에 안전선 아래로 내려가는 날이 없습니다. 가장 낮은 날은 ' + mdKo(lowest.date) + ' ' + won(lowest.v) + '원입니다.'; }
+  var evIn = gaps.length ? EVENTS.filter(function (e) { return e.i >= deep.startIdx && e.i <= deep.endIdx; }) : [];
+  var evBefore = gaps.length ? EVENTS.filter(function (e) { return e.i < deep.startIdx && deep.startIdx - e.i <= 3; }) : [];
+  var noIn = gaps.length ? NO_SETTLE.filter(function (d) { var i = idxOf(d); return i >= deep.startIdx && i <= deep.endIdx; }) : [];
+  /* 여러 건이면 마지막 둘을 와/과로 잇습니다 */
+  var joinKo = function (arr) {
+    var names = [];
+    arr.forEach(function (e) { e.items.forEach(function (x) { names.push(x.name); }); });
+    if (!names.length) return '';
+    if (names.length === 1) return names[0];
+    var head = names.slice(0, -1);
+    return head.map(function (h, k) { return k === head.length - 1 ? josa(h, '와/과') : h + ','; }).join(' ') + ' ' + names[names.length - 1];
+  };
+  var sentence = '';
+  if (evBefore.length) {
+    var b = evBefore[evBefore.length - 1];
+    sentence += mdKo(b.date) + ' ' + josa(b.items[0].name, '이/가') + ' ' + won(b.sum) + '원 나간 뒤 ';
+  }
+  if (noIn.length) sentence += '정산이 ' + noIn.length + '일 비어 ';
+  if (evIn.length) sentence += '그 사이 ' + josa(joinKo(evIn), '이/가') + ' 나가면서 ';
+  sentence += mdKo(deep.worst.date) + '에 바닥까지 내려갑니다.';
+  if (gaps.length) document.getElementById('lede').textContent = sentence
+    + ' 공백 구간은 ' + gaps.length + '군데, 모두 합쳐 '
+    + gaps.reduce(function (a, g) { return a + (g.endIdx - g.startIdx + 1); }, 0) + '일입니다.';
+  document.getElementById('lgLine').textContent = won(SAFETY) + '원';
+})();
+
+/* ══ 곡선 ══
+   읽기용이라 기간이 30일로 고정입니다. 표시마다 곁줄의 글과 짝이 있습니다.
+   ── 왼쪽 금액 · 아래 날짜 · 위 지출 마커 · 붉은 공백 띠 ──
+   바닥의 회색 · 노랑 · 빨강 띠는 뺐습니다. 축 아래 색 조각이 세 겹이면 날짜가 안 읽힙니다.
+   정산 없는 날은 곁줄 목록이, 등급은 붉은 띠와 표의 상태 칸이 말합니다. */
+var W = 880, H = 330, PAD = { l:62, r:18, t:64, b:34 };
+(function drawGap() {
+  var n = days.length;
+  var all = days.map(function (d) { return d.v; });
+  var lo = Math.min.apply(null, all.concat([0])), hi = Math.max.apply(null, all.concat([SAFETY]));
+  var pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  var px = function (i) { return PAD.l + (W-PAD.l-PAD.r) * i / (n-1); };
+  var py = function (v) { return PAD.t + (H-PAD.t-PAD.b) * (hi-v) / (hi-lo); };
+  var T = function (x, y, t, o) { o = o || {};
+    return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+(o.a||'start')+'" fill="'+(o.c||'var(--ink-3)')
+      + '" style="font-size:'+(o.s||11)+'px;font-weight:'+(o.w||600)+';font-variant-numeric:tabular-nums">'+t+'</text>'; };
+
+  /* 눈금선과 금액 */
+  var grid = '', step = (hi - lo) > 6000000 ? 2000000 : 1000000;
+  for (var v = Math.ceil(lo/step)*step; v <= hi; v += step) {
+    grid += '<line x1="'+PAD.l+'" y1="'+py(v).toFixed(1)+'" x2="'+(W-PAD.r)+'" y2="'+py(v).toFixed(1)
+         + '" stroke="var(--hair)" stroke-width="1"/>' + T(PAD.l - 8, py(v) + 4, v === 0 ? '0' : man(v), { a:'end' });
+  }
+  /* 날짜. 공백이 시작하고 끝나는 날은 붉게 적습니다 */
+  var keyDays = {};
+  gaps.forEach(function (g) { keyDays[g.startIdx] = 1; keyDays[g.endIdx] = 1; });
+  var xax = [0, 7, 14, 21, n-1].concat(Object.keys(keyDays).map(Number))
+    .filter(function (i, k, a) { return a.indexOf(i) === k; }).sort(function (a, b) { return a - b; })
+    .filter(function (i, k, a) { return k === 0 || i - a[k-1] >= 2; })
+    .map(function (i) {
+      var key = keyDays[i];
+      return T(px(i), H - 26, md(days[i].date), { a: i===0?'start':i===n-1?'end':'middle',
+        c: key ? 'var(--gap)' : 'var(--ink-3)', w: key ? 800 : 600 });
+    }).join('');
+
+
+  /* 공백 구간 띠. 며칠짜리인지와 얼마 모자라는지를 함께 적습니다 */
+  var bandsG = gaps.map(function (g) {
+    var s = g.startIdx, e = g.endIdx;
+    var x0 = s === 0 ? px(0) : (px(s-1)+px(s))/2, x1 = e === n-1 ? px(e) : (px(e)+px(e+1))/2;
+    var col = 'var(--' + (g.level === 'gap' ? 'gap' : g.level) + ')', k = e - s + 1;
+    var lx = (x0 + x1) / 2, anc = 'middle';
+    if (lx < PAD.l + 66) { lx = x0 + 4; anc = 'start'; } else if (lx > W - PAD.r - 66) { lx = x1 - 4; anc = 'end'; }
+    return '<rect x="'+x0.toFixed(1)+'" y="'+PAD.t+'" width="'+(x1-x0).toFixed(1)+'" height="'+(H-PAD.t-PAD.b)+'" fill="'+col+'" fill-opacity=".12"/>'
+      + T(lx, PAD.t + 15, (g.level === 'gap' ? '공백 ' : '부족 ') + k + '일', { a:anc, c:col, w:800 });
+  }).join('');
+
+  /* 곡선 · 변동 범위 */
+  var line = days.map(function (d,i) { return (i?'L':'M')+px(i).toFixed(1)+' '+py(d.v).toFixed(1); }).join(' ');
+  /* 범위 폭은 뒤로 갈수록 넓어집니다. 예보는 점이 아니라 폭입니다 */
+  var half = function (i) { return Math.round(SETTLE_EST * 0.4 * (0.35 + 0.05 * i)); };
+  var up = days.map(function (d,i) { return (i?'L':'M')+px(i).toFixed(1)+' '+py(d.v + half(i)).toFixed(1); }).join(' ');
+  var dn = days.slice().reverse().map(function (d,k) { var i = n-1-k; return 'L'+px(i).toFixed(1)+' '+py(d.v - half(i)).toFixed(1); }).join(' ');
+
+  /* 지출 마커. 라벨이 겹치지 않는 줄을 골라 얹습니다 */
+  var lanes = [];
+  var evs = EVENTS.map(function (e) {
+    var x = px(e.i), band = inGap(e.i);
+    /* 같은 날 여러 건은 이름을 잘라 붙이지 않고 셉니다. '임차료 관…' 은 무엇인지 알 수 없습니다 */
+    var name = e.items.length === 1 ? e.items[0].name : e.items[0].name + ' 외 ' + (e.items.length - 1) + '건';
+    /* 금액은 곁줄 목록과 아래 표에 있습니다. 곡선에는 무엇이 나가는지만 적습니다 — 곡선의 y축이 이미 금액입니다 */
+    var lbl = name;
+    var wLbl = lbl.length * 6.4 + 12;
+    var right = x + 9 + wLbl > W - PAD.r;
+    var x0 = right ? x - 9 - wLbl : x - 9, x1 = right ? x + 9 : x + 9 + wLbl;
+    var lane = 0; while (lanes[lane] !== undefined && lanes[lane] > x0) lane++;
+    lanes[lane] = x1;
+    var y = PAD.t - 14 - lane * 15, col = band ? 'var(--gap)' : 'var(--caution)';
+    return '<g class="ev" data-i="'+e.i+'">'
+      + '<line x1="'+x.toFixed(1)+'" y1="'+y+'" x2="'+x.toFixed(1)+'" y2="'+(H-PAD.b)+'" stroke="'+col+'" stroke-width="1" stroke-dasharray="3 3"/>'
+      + '<circle cx="'+x.toFixed(1)+'" cy="'+y+'" r="5" fill="'+col+'"/>'
+      + T(right ? x - 9 : x + 9, y + 4, lbl, { a: right ? 'end' : 'start', c:col, w:700, s:10.5 })
+      + '</g>';
+  }).join('');
+
+  /* 가장 깊은 날. 안전선까지의 거리를 세로 화살로 그어 부족액을 눈에 보이게 합니다 */
+  var deep = days.reduce(function (a, c) { return c.v < a.v ? c : a; }, days[0]);
+  var di = idxOf(deep.date), dx = px(di), dy = py(deep.v), sy = py(SAFETY);
+  var short = '<line x1="'+dx.toFixed(1)+'" y1="'+sy.toFixed(1)+'" x2="'+dx.toFixed(1)+'" y2="'+dy.toFixed(1)
+      + '" stroke="var(--danger)" stroke-width="1.5"/>'
+    + '<path d="M'+(dx-4).toFixed(1)+' '+(dy-6).toFixed(1)+' L'+dx.toFixed(1)+' '+dy.toFixed(1)+' L'+(dx+4).toFixed(1)+' '+(dy-6).toFixed(1)+'" fill="none" stroke="var(--danger)" stroke-width="1.5"/>'
+    + T(dx + 8, (sy + dy) / 2 + 4, man(SAFETY - deep.v) + ' 모자람', { c:'var(--danger)', w:800 })
+    + '<circle cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="5.5" fill="var(--'+deep.risk+')" stroke="var(--ground)" stroke-width="2"/>'
+    /* 정확한 금액은 머리글과 오른쪽 표에 있습니다. 곡선에서는 어느 날 얼마쯤인지만 */
+    + T(dx, dy + 20, md(deep.date) + ' ' + man(deep.v),
+        { a: dx > W - PAD.r - 90 ? 'end' : dx < PAD.l + 90 ? 'start' : 'middle', c:'var(--'+deep.risk+')', w:800 });
+
+  document.getElementById('gv').innerHTML = grid + xax + bandsG
+    + '<path d="'+up+' '+dn+' Z" fill="var(--ink)" fill-opacity=".07"/>'
+    + '<line x1="'+PAD.l+'" y1="'+py(SAFETY).toFixed(1)+'" x2="'+(W-PAD.r)+'" y2="'+py(SAFETY).toFixed(1)
+      + '" stroke="var(--danger)" stroke-width="1.5" stroke-dasharray="6 4"/>'
+    + T(W - PAD.r, py(SAFETY) - 6, '안전선 ' + man(SAFETY), { a:'end', c:'var(--danger)', w:700 })
+    + (lo < 0 ? '<line x1="'+PAD.l+'" y1="'+py(0).toFixed(1)+'" x2="'+(W-PAD.r)+'" y2="'+py(0).toFixed(1)
+      + '" stroke="var(--ink-3)" stroke-width="1"/>' + T(W - PAD.r, py(0) - 5, '0원', { a:'end' }) : '')
+    + '<path d="'+line+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>'
+    + evs + short;
+
+  var nPat = (typeof PATTERNS !== 'undefined') ? PATTERNS.length : 0;
+  var lowPat = nPat ? PATTERNS.filter(function (p) { return p[5] !== 'HIGH'; }).length : 0;
+  var ratio = nPat ? lowPat / nPat : 0;
+  document.getElementById('conf').textContent = '신뢰도 ' + (ratio > .5 ? '낮음' : ratio > .25 ? '보통' : '높음');
+  document.getElementById('cmeta').textContent =
+    '지출 ' + FIXED.length + '건 · 반복 패턴 ' + nPat + '개 · 정산 일평균 ' + man(SETTLE_EST) + '원';
+})();
+
+/* ══ 곁줄 · 나가는 돈 일정 ══
+   짚으면 곡선의 마커가 굵어지고, 누르면 아래 표의 그날로 갑니다.
+   조작이 아니라 읽기를 돕는 장치입니다. */
+document.getElementById('sched').innerHTML = EVENTS.map(function (e) {
+  var band = inGap(e.i);
+  return '<button type="button" class="sch' + (band ? ' inband' : '') + '" data-i="' + e.i + '">'
+    + '<span class="sd">' + md(e.date) + '<br>' + dow(e.date) + '</span>'
+    + '<span class="sn">' + e.items.map(function (t) { return t.name; }).join(' · ')
+      + '<small>' + e.items.map(function (t) { return t.who; }).join(' · ') + (band ? ' · 공백 구간' : '') + '</small></span>'
+    + '<span class="sa">' + man(e.sum) + '</span></button>';
+}).join('');
+
+document.getElementById('nos').innerHTML = NO_SETTLE.map(function (date) {
+  var i = idxOf(date);
+  return '<div><span class="d">' + md(date) + '</span><span class="w">' + dow(date) + '요일 · '
+    + (dow(date) === '월' ? '가게 휴무' : '주말 · 정산 안 들어옴') + '</span></div>';
+}).join('');
+
+/* ══ 구간마다 무엇이 겹쳤나 ══
+   구간 안에서 들어올 정산과 나갈 지출을 세어 왜 그 깊이가 되는지 적습니다. */
+document.getElementById('gaps').innerHTML = gaps.map(function (g) {
+  var k = g.endIdx - g.startIdx + 1;
+  var inDays = 0, inSum = 0;
+  for (var i = g.startIdx; i <= g.endIdx; i++) {
+    if (NO_SETTLE.indexOf(days[i].date) < 0) { inDays++; inSum += SETTLE_EST; }
+  }
+  var outEv = EVENTS.filter(function (e) { return e.i >= g.startIdx && e.i <= g.endIdx; });
+  var outSum = outEv.reduce(function (a, e) { return a + e.sum; }, 0);
+  var noS = k - inDays;
+  return '<div class="gapc ' + (g.level === 'gap' ? 'gap' : '') + '">'
+    + '<div class="gh"><span class="gd">' + mdKo(days[g.startIdx].date) + ' ~ ' + mdKo(days[g.endIdx].date) + '</span>'
+      + '<span class="st st-' + g.level + '"><span class="mk mk-' + g.level + '"></span>' + KO[g.level] + '</span>'
+      + '<span class="gn">' + k + '일</span></div>'
+    + '<div class="gs">'
+      + '<div><span class="k">가장 낮은 날</span><span class="v">' + won(g.worst.v) + '</span></div>'
+      + '<div><span class="k">안전선까지</span><span class="v">' + man(g.shortfall) + '</span></div>'
+      + '<div><span class="k">들어올 정산</span><span class="v">' + man(inSum) + '</span></div>'
+      + '<div><span class="k">나갈 돈</span><span class="v">' + man(outSum) + '</span></div>'
+    + '</div>'
+    + '<p class="why">'
+      + (noS
+          ? k + '일 가운데 <b>' + noS + '일</b>은 정산이 없습니다 ('
+            + NO_SETTLE.filter(function (d) { var i = idxOf(d); return i >= g.startIdx && i <= g.endIdx; })
+                .map(function (d) { return md(d) + '(' + dow(d) + ')'; }).join(' · ') + '). '
+          : k + '일 모두 정산이 들어오는데도 내려갑니다. ')
+      + '들어올 돈은 <b>' + won(inSum) + '원</b>인데 '
+      + (outEv.length ? '나갈 돈이 <b>' + won(outSum) + '원</b>입니다 ('
+          + outEv.map(function (e) { return md(e.date) + ' ' + e.items.map(function (t) { return t.name; }).join('·') + ' ' + man(e.sum); }).join(', ') + ').'
+        : '날짜가 정해진 지출은 없습니다. 재료 매입과 잡비가 계속 빠져나갑니다.')
+      + (g.recover ? ' <b>' + mdKo(g.recover) + '</b>에 안전선 위로 올라옵니다.' : ' 서른 날 안에는 안전선 위로 올라오지 않습니다.')
+    + '</p></div>';
+}).join('') || '<p class="empty">서른 날 안에 안전선 아래로 내려가는 날이 없습니다.</p>';
+
+/* ══ 그날 무슨 일이 있나 ══
+   공백 구간 · 그 앞뒤 하루 · 돈이 나가는 날만 폅니다. 나머지는 몇 일인지만 적습니다.
+   금액은 dayFlow 에서 옵니다 — 캘린더 · 홈이 그날을 내는 방식과 같습니다. */
+(function () {
+  var want = {};
+  gaps.forEach(function (g) {
+    for (var i = Math.max(0, g.startIdx - 1); i <= Math.min(days.length - 1, g.endIdx + 1); i++) want[i] = 1;
+  });
+  EVENTS.forEach(function (e) { want[e.i] = 1; });
+  want[0] = 1;
+  var list = Object.keys(want).map(Number).sort(function (a, b) { return a - b; });
+
+  var html = '', prev = -1;
+  list.forEach(function (i) {
+    if (prev >= 0 && i - prev > 1) {
+      var skipped = i - prev - 1;
+      var lowSkip = days.slice(prev + 1, i).reduce(function (a, c) { return c.v < a.v ? c : a; }, days[prev + 1]);
+      html += '<div class="skip">'
+        + (skipped === 1 ? md(days[prev+1].date) + ' · 하루' : md(days[prev+1].date) + ' ~ ' + md(days[i-1].date) + ' · ' + skipped + '일')
+        + ' 안전선 위' + (skipped === 1 ? ' · ' + won(lowSkip.v) + '원' : ' · 가장 낮은 날 ' + md(lowSkip.date) + ' ' + won(lowSkip.v) + '원')
+        + '</div>';
+    }
+    var d = days[i], f = dayFlow(i);
+    var inSum = 0, outSum = 0, what = [];
+    f.steps.forEach(function (s) {
+      if (s.v > 0) inSum += s.v; else outSum += -s.v;
+      if (s.v < 0 && s.k !== '재료 매입과 잡비' && s.k !== '들어오지 않은 정산 몫') what.push(s.k + ' ' + man(-s.v));
+    });
+    if (NO_SETTLE.indexOf(d.date) >= 0) what.unshift('정산 없음');
+    html += '<div class="tr' + (inGap(i) ? ' inband' : '') + '" id="day' + i + '" style="cursor:default">'
+      + '<span class="dt">' + md(d.date) + ' ' + dow(d.date) + '</span>'
+      + '<span class="r" style="color:var(--ink-3);font-variant-numeric:tabular-nums">' + (inSum ? '+' + won(inSum) : '0') + '</span>'
+      + '<span class="r" style="font-variant-numeric:tabular-nums">' + (outSum ? '−' + won(outSum) : '0') + '</span>'
+      + '<span class="ell" style="font-size:12px;color:var(--ink-2)">' + (what.join(' · ') || '재료 매입과 잡비만') + '</span>'
+      + '<span class="r amt">' + won(d.v) + '</span>'
+      + '<span><span class="st st-' + d.risk + '"><span class="mk mk-' + d.risk + '"></span>' + KO[d.risk] + '</span></span>'
+      + '</div>';
+    prev = i;
+  });
+  document.getElementById('byday').innerHTML = html;
+})();
+
+/* ══ 가장 깊은 날 · 메울 방법 ══ */
+(function () {
+  var deep = days.reduce(function (a, c) { return c.v < a.v ? c : a; }, days[0]);
+  var di = idxOf(deep.date);
+  var g = gaps.filter(function (x) { return di >= x.startIdx && di <= x.endIdx; })[0];
+  document.getElementById('res').innerHTML =
+      '<div class="res"><span class="k">날짜</span><span class="b">' + mdKo(deep.date) + ' ' + dow(deep.date) + '</span></div>'
+    + '<div class="res"><span class="k">그날 잔액</span><span class="b">' + won(deep.v) + '</span></div>'
+    + '<div class="res"><span class="k">안전선까지</span><span class="b">' + won(SAFETY - deep.v) + '</span></div>'
+    + '<div class="res"><span class="k">며칠 뒤</span><span class="b">' + di + '일 뒤</span></div>'
+    + (g && g.recover ? '<div class="res"><span class="k">회복</span><span class="b">' + mdKo(g.recover) + '</span></div>' : '');
+
+  var lv = levers(di);
+  document.getElementById('fix').innerHTML = lv.length ? lv.map(function (o) {
+    return '<a class="fx" href="' + o.href + '">'
+      + '<span class="fh"><span class="fk">' + o.k + '</span><span class="fg">+' + man(o.gain) + '</span></span>'
+      + '<span class="fs">' + o.s + '</span>'
+      + '<span class="fa">그날 잔액 <b>' + won(o.after) + '원</b> · '
+        + (o.enough ? '안전선 위로 올라옵니다' : '아직 ' + man(SAFETY - o.after) + '원 모자랍니다') + '</span></a>';
+  }).join('') : '<p class="dm">지금 잔액으로 버틸 수 있습니다.</p>';
+})();
+
+/* ── 곁줄 ↔ 곡선 ↔ 표 잇기 ──
+   짚으면 곡선에서 굵어지고, 누르면 표의 그날로 내려갑니다. */
+(function () {
+  var hi = function (i, on) {
+    var g = document.querySelector('.ev[data-i="' + i + '"]');
+    if (g) g.classList.toggle('hi', on);
+  };
+  document.getElementById('sched').addEventListener('pointerover', function (e) {
+    var b = e.target.closest('.sch'); if (b) hi(b.dataset.i, true);
+  });
+  document.getElementById('sched').addEventListener('pointerout', function (e) {
+    var b = e.target.closest('.sch'); if (b) hi(b.dataset.i, false);
+  });
+  document.getElementById('sched').addEventListener('focusin', function (e) {
+    var b = e.target.closest('.sch'); if (b) hi(b.dataset.i, true);
+  });
+  document.getElementById('sched').addEventListener('focusout', function (e) {
+    var b = e.target.closest('.sch'); if (b) hi(b.dataset.i, false);
+  });
+  document.getElementById('sched').addEventListener('click', function (e) {
+    var b = e.target.closest('.sch'); if (!b) return;
+    var row = document.getElementById('day' + b.dataset.i); if (!row) return;
+    row.scrollIntoView({ block:'center', behavior:'smooth' });
+    document.querySelectorAll('.tbl .tr.flash').forEach(function (x) { x.classList.remove('flash'); });
+    /* 다시 붙여야 애니메이션이 재시작합니다 */
+    void row.offsetWidth; row.classList.add('flash');
+    setTimeout(function () { row.classList.remove('flash'); }, 1400);
+  });
+})();
+mountFeatures('pc-gap');
+</script>
+</body>
+</html>

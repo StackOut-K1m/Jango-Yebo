@@ -1,0 +1,87 @@
+/* 하늘 — 위험 등급이 곧 배경색이다.
+ *
+ * 등급별 3단 그라디언트는 목업 sky.js 의 SKYC 를 옮긴 것이다.
+ * 색은 분위기만 전하고, 뜻은 상태명과 아이콘이 말한다(화면구성도 6.1).
+ */
+
+.sky {
+  position: relative;
+  padding: var(--s7) var(--s9) var(--s10);
+  color: #fff;
+  overflow: hidden;
+  transition: background 1100ms cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(
+    168deg,
+    var(--k0) 0%,
+    var(--k1) 52%,
+    var(--k2) 100%
+  );
+}
+
+.sky[data-risk='SAFE'] {
+  --k0: #0c2c55;
+  --k1: #2a6ba5;
+  --k2: #8dbfe2;
+}
+
+.sky[data-risk='CAUTION'] {
+  --k0: #3a2a4c;
+  --k1: #8a5f3d;
+  --k2: #d8ab72;
+}
+
+.sky[data-risk='DANGER'] {
+  --k0: #46201b;
+  --k1: #a3462a;
+  --k2: #d98d5f;
+}
+
+.sky[data-risk='GAP'] {
+  --k0: #250e0b;
+  --k1: #7a1f18;
+  --k2: #b3452c;
+}
+
+/* 구름. 값이 아니라 분위기만 담당하므로 화면 밖으로 나가도 값은 틀리지 않는다. */
+.sky::before {
+  content: '';
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 150%;
+  background:
+    radial-gradient(48% 34% at 22% 28%, rgb(255 255 255 / 0.14), transparent 70%),
+    radial-gradient(38% 26% at 76% 18%, rgb(255 255 255 / 0.1), transparent 72%),
+    radial-gradient(52% 30% at 55% 62%, rgb(255 255 255 / 0.07), transparent 74%);
+  animation: drift 26s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(-3%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, -4%, 0) scale(1.12);
+  }
+}
+
+/* 하늘 위 내용은 구름보다 앞에 온다 */
+.sky > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* 나머지 화면은 하늘을 얇게 쓰고 답 한 줄만 얹는다 */
+.sky--thin {
+  padding: var(--s6) var(--s9) var(--s7);
+}
+
+@media (max-width: 760px) {
+  .sky {
+    padding: var(--s6) var(--s6) var(--s9);
+  }
+
+  .sky--thin {
+    padding: var(--s5) var(--s6) var(--s6);
+  }
+}

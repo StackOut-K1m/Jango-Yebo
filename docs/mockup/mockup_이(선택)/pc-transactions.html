@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 거래내역 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-04-1 거래내역 · 분류 (PC)
+   왼쪽에서 걸러내고, 가운데 표에서 고르고, 오른쪽에서 고칩니다.
+   실제로 걸러지고 실제로 고쳐집니다. 고치면 집계와 확인 필요 수가 같이 움직입니다. */
+.tbl { --cols:62px minmax(0,1fr) 150px 132px 92px; }
+.hitrow { font-size:11.5px; color:var(--ink-3); margin-bottom:var(--s4); }
+.hitrow b { color:var(--ink); font-weight:800; font-variant-numeric:tabular-nums; }
+.conf { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--ink-3); }
+.conf i { width:26px; height:3px; border-radius:2px; background:var(--hair); overflow:hidden; display:inline-block; }
+.conf i b { display:block; height:100%; background:var(--ink-3); }
+.conf.low i b { background:var(--caution); }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">최근 7일 · 8월 25일부터 8월 31일까지</p>
+    <h1 class="hero">거래 <span class="n">15</span>건 가운데 <b><span class="n" id="needN">0</span>건</b>만 확인하면 됩니다</h1>
+    <p class="lede">규칙과 거래처 사전이 먼저 분류하고, 처음 보는 것만 AI 가 봅니다. 확신이 낮으면 확정하지 않고 물어봅니다.</p>
+  </div>
+</header>
+
+<div class="work">
+
+  <!-- 왼쪽 · 걸러내기 -->
+  <aside class="side">
+    <div class="grp">
+      <h3>찾기</h3>
+      <input class="search" id="q" type="search" placeholder="거래처 또는 적요" aria-label="거래처 또는 적요로 찾기">
+    </div>
+
+    <div class="grp">
+      <h3>돈의 방향</h3>
+      <div class="pills" id="dirPills">
+        <button class="pill" data-d="all" aria-pressed="true">전체</button>
+        <button class="pill" data-d="in">들어온 돈</button>
+        <button class="pill" data-d="out">나간 돈</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <h3>분류</h3>
+      <div class="checks" id="catChecks"></div>
+    </div>
+
+    <div class="grp">
+      <h3>상태</h3>
+      <div class="checks">
+        <button class="check" id="needOnly" aria-pressed="false"><i aria-hidden="true"></i>확인이 필요한 것만</button>
+        <button class="check" id="noProof" aria-pressed="false"><i aria-hidden="true"></i>증빙이 없는 것만</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <button class="btn btn-sub btn-block" id="reset">걸러낸 것 지우기</button>
+    </div>
+  </aside>
+
+  <!-- 가운데 · 표 -->
+  <main class="body">
+    <p class="hitrow" id="hitrow"></p>
+    <div class="tbl">
+      <div class="th">
+        <span><button data-s="date" data-dir="desc">날짜</button></span>
+        <span>거래처</span>
+        <span>분류</span>
+        <span class="r"><button data-s="amt">금액</button></span>
+        <span class="r">증빙</span>
+      </div>
+      <div id="txBody"></div>
+    </div>
+    <div class="count" id="count"></div>
+  </main>
+
+  <!-- 오른쪽 · 고른 거래 -->
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+/* 이 화면은 지금 고른 가게 것을 그립니다. 원본 목록을 가게 것으로 가립니다. */
+var TX = txForShop(), FIXED = fixedForShop();
+document.getElementById('top').outerHTML = pcTop('tx');
+wireSwitch();
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* ── 상태 ── */
+var ROWS = TX.map(function (t, i) {
+  return { id:i, date:t[0], who:t[1], memo:t[2], dir:t[3], amt:t[4],
+           cat:t[5], how:t[6], conf:t[7], fixed:t[8], proof:i % 3 !== 1 };
+});
+var CATS = ['정산','재료비','임차료','공과금','급여','대출상환','기타지출'];
+var HOW  = { RULE:'규칙', DICT:'거래처 사전', AI:'AI', USER:'내가 확정' };
+var F = { q:'', dir:'all', cats:[], need:false, noProof:false };
+var sort = { by:'date', dir:'desc' };
+var sel = null;
+
+function needs(r) { return !r.fixed && r.conf < 0.8; }
+
+function filtered() {
+  return ROWS.filter(function (r) {
+    if (F.dir !== 'all' && r.dir !== F.dir) return false;
+    if (F.cats.length && F.cats.indexOf(r.cat) < 0) return false;
+    if (F.need && !needs(r)) return false;
+    if (F.noProof && (r.proof || r.dir === 'in')) return false;
+    if (F.q) {
+      var q = F.q.toLowerCase();
+      if ((r.who + ' ' + r.memo).toLowerCase().indexOf(q) < 0) return false;
+    }
+    return true;
+  }).sort(function (a, b) {
+    var v = sort.by === 'amt' ? a.amt - b.amt : a.date.localeCompare(b.date);
+    return sort.dir === 'asc' ? v : -v;
+  });
+}
+
+/* ── 왼쪽 · 분류 체크박스는 실제 건수를 함께 보여 줍니다 ── */
+function drawChecks() {
+  document.getElementById('catChecks').innerHTML = CATS.map(function (c) {
+    var n = ROWS.filter(function (r) { return r.cat === c; }).length;
+    if (!n) return '';
+    return '<button class="check" data-c="' + c + '" aria-pressed="' + (F.cats.indexOf(c) >= 0) + '">'
+      + '<i aria-hidden="true"></i>' + c + '<span class="n">' + n + '</span></button>';
+  }).join('');
+}
+
+/* ── 가운데 · 표 ── */
+function drawTable() {
+  var rs = filtered();
+  var body = document.getElementById('txBody');
+
+  body.innerHTML = rs.length ? rs.map(function (r) {
+    var low = needs(r);
+    return '<div class="tr' + (sel === r.id ? ' on' : '') + '" data-id="' + r.id + '" role="button" tabindex="0">'
+      + '<span class="dt">' + r.date + '</span>'
+      + '<span><span class="nm ell">' + r.who + '</span><span class="mt ell">' + r.memo + '</span></span>'
+      + '<span><span class="bd' + (r.how === 'AI' ? ' bd-ai' : '') + '">' + r.cat + '</span>'
+        + (low ? ' <span class="bd bd-low">확인</span>' : '') + '</span>'
+      + '<span class="r amt' + (r.dir === 'in' ? ' in' : '') + '">'
+        + (r.dir === 'in' ? '+' : '−') + won(r.amt) + '</span>'
+      + '<span class="r"><span class="bd">' + (r.dir === 'in' ? '해당 없음' : r.proof ? '있음' : '없음') + '</span></span>'
+      + '</div>';
+  }).join('') : '<p class="empty">걸러낸 조건에 맞는 거래가 없습니다. 왼쪽에서 조건을 줄여 보세요.</p>';
+
+  var inS = rs.filter(function (r) { return r.dir === 'in'; }).reduce(function (a,r) { return a+r.amt; }, 0);
+  var outS = rs.filter(function (r) { return r.dir === 'out'; }).reduce(function (a,r) { return a+r.amt; }, 0);
+  document.getElementById('count').innerHTML =
+      '<span>보이는 거래 <b>' + rs.length + '</b>건</span>'
+    + '<span>들어온 돈 <b>' + won(inS) + '</b>원</span>'
+    + '<span>나간 돈 <b>' + won(outS) + '</b>원</span>'
+    + '<span>차액 <b>' + (inS-outS >= 0 ? '+' : '−') + won(Math.abs(inS-outS)) + '</b>원</span>';
+
+  var all = ROWS.length, need = ROWS.filter(needs).length;
+  document.getElementById('needN').textContent = need;
+  document.getElementById('hitrow').innerHTML = rs.length === all
+    ? '전체 <b>' + all + '</b>건을 보고 있습니다.'
+    : '<b>' + rs.length + '</b>건이 조건에 맞습니다. 전체는 ' + all + '건입니다.';
+}
+
+/* ── 오른쪽 · 고른 거래를 실제로 고칩니다 ── */
+function drawDetail() {
+  var el = document.getElementById('detail');
+  if (sel === null) {
+    el.innerHTML = '<h3>고른 거래</h3><p class="dm" style="margin-top:var(--s4)">'
+      + '표에서 줄을 누르면 여기에서 분류를 고치고 거래처 별칭을 붙일 수 있습니다.</p>';
+    return;
+  }
+  var r = ROWS[sel];
+  var low = needs(r);
+  var same = ROWS.filter(function (o) { return o.who === r.who; }).length;
+
+  el.innerHTML = '<h3>고른 거래</h3>'
+    + '<p class="dv" style="margin-top:var(--s4);color:' + (r.dir === 'in' ? 'var(--safe)' : 'var(--ink)') + '">'
+      + (r.dir === 'in' ? '+' : '−') + won(r.amt) + '<span style="font-size:12px;color:var(--ink-3)">원</span></p>'
+    + '<p class="dn">' + r.who + '</p>'
+    + '<p class="dm">' + r.memo + '</p>'
+    + '<dl style="margin-top:var(--s6)">'
+      + '<div class="kv"><dt>날짜</dt><dd>2026. ' + r.date.replace('-','. ') + '</dd></div>'
+      + '<div class="kv"><dt>통장 표기</dt><dd>' + r.who + '</dd></div>'
+      + '<div class="kv"><dt>분류 방법</dt><dd>' + HOW[r.how] + '</dd></div>'
+      + '<div class="kv"><dt>신뢰도</dt><dd><span class="conf' + (low ? ' low' : '') + '">'
+        + '<i><b style="width:' + Math.round(r.conf*100) + '%"></b></i>' + Math.round(r.conf*100) + '%</span></dd></div>'
+      + '<div class="kv"><dt>증빙</dt><dd>' + (r.dir === 'in' ? '해당 없음' : r.proof ? '붙어 있습니다' : '아직 없습니다') + '</dd></div>'
+    + '</dl>'
+    + (low ? '<p class="reason">처음 보는 거래처이거나 비슷한 사례가 적습니다. 확정하지 않고 물어봅니다. '
+        + '한 번 고쳐 주시면 다음부터 규칙으로 처리합니다.</p>' : '')
+    + '<div class="grp">'
+      + '<h3>분류 고치기</h3>'
+      + '<select id="catSel" aria-label="분류 고치기">'
+        + CATS.map(function (c) { return '<option' + (c === r.cat ? ' selected' : '') + '>' + c + '</option>'; }).join('')
+      + '</select>'
+      + (same > 1 ? '<button class="btn btn-sub btn-block" id="applyAll" style="margin-top:var(--s3)">'
+          + r.who + ' 거래 ' + same + '건에 모두 적용</button>' : '')
+      + (r.dir === 'out' && !r.proof
+          ? '<a class="btn btn-pri btn-block" href="pc-evidences.html" style="margin-top:var(--s3)">증빙 붙이기</a>' : '')
+    + '</div>';
+
+  document.getElementById('catSel').addEventListener('change', function () {
+    r.cat = this.value; r.how = 'USER'; r.conf = 1; r.fixed = true;
+    redraw();
+  });
+  var aa = document.getElementById('applyAll');
+  if (aa) aa.addEventListener('click', function () {
+    var c = document.getElementById('catSel').value;
+    ROWS.forEach(function (o) {
+      if (o.who === r.who) { o.cat = c; o.how = 'USER'; o.conf = 1; o.fixed = true; }
+    });
+    redraw();
+  });
+}
+
+function redraw() { drawChecks(); drawTable(); drawDetail(); }
+
+/* ── 손잡이 붙이기 ── */
+document.getElementById('q').addEventListener('input', function () { F.q = this.value.trim(); drawTable(); });
+
+document.getElementById('dirPills').addEventListener('click', function (e) {
+  var b = e.target.closest('.pill'); if (!b) return;
+  F.dir = b.dataset.d;
+  this.querySelectorAll('.pill').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  drawTable();
+});
+
+document.getElementById('catChecks').addEventListener('click', function (e) {
+  var b = e.target.closest('.check'); if (!b) return;
+  var c = b.dataset.c, i = F.cats.indexOf(c);
+  if (i < 0) F.cats.push(c); else F.cats.splice(i, 1);
+  b.setAttribute('aria-pressed', String(i < 0));
+  drawTable();
+});
+
+[['needOnly','need'],['noProof','noProof']].forEach(function (p) {
+  document.getElementById(p[0]).addEventListener('click', function () {
+    F[p[1]] = !F[p[1]];
+    this.setAttribute('aria-pressed', String(F[p[1]]));
+    drawTable();
+  });
+});
+
+document.querySelectorAll('.th button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    if (sort.by === b.dataset.s) sort.dir = sort.dir === 'asc' ? 'desc' : 'asc';
+    else { sort.by = b.dataset.s; sort.dir = 'desc'; }
+    document.querySelectorAll('.th button').forEach(function (o) { o.removeAttribute('data-dir'); });
+    b.dataset.dir = sort.dir;
+    drawTable();
+  });
+});
+
+document.getElementById('txBody').addEventListener('click', function (e) {
+  var t = e.target.closest('.tr'); if (!t) return;
+  sel = +t.dataset.id; drawTable(); drawDetail();
+});
+document.getElementById('txBody').addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var t = e.target.closest('.tr'); if (!t) return;
+  e.preventDefault(); sel = +t.dataset.id; drawTable(); drawDetail();
+});
+
+document.getElementById('reset').addEventListener('click', function () {
+  F = { q:'', dir:'all', cats:[], need:false, noProof:false };
+  document.getElementById('q').value = '';
+  document.querySelectorAll('#dirPills .pill').forEach(function (o, i) {
+    o.setAttribute('aria-pressed', String(i === 0));
+  });
+  document.getElementById('needOnly').setAttribute('aria-pressed','false');
+  document.getElementById('noProof').setAttribute('aria-pressed','false');
+  redraw();
+});
+
+redraw();
+mountFeatures('pc-transactions');
+</script>
+</body>
+</html>

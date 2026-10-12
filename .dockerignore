@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.expo
+**/.venv
+backend/build
+backend/.gradle
+ai/artifacts
+.git
+.codex-*
+outputs
+infra/secrets
+*.log

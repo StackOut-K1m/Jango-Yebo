@@ -1,0 +1,249 @@
+/* ══════════════════════════════════════════════════════════════
+   잔고예보 v4 · PC 전용 층
+   sky.css 다음에, PC 화면에서만 불러옵니다. 모바일은 이 파일을 안 씁니다.
+
+   ── 왜 파일을 나눴나 ──
+   공용층을 모바일 화면에서 뽑았더니 PC 가 "모바일을 늘린 것"이 됐습니다.
+   교집합만 남기면 언제나 좁은 쪽이 기준이 됩니다.
+   그래서 PC 는 여기서 따로 짭니다. 내용은 같고 형태는 다릅니다.
+   근거: 화면구성도 1.1 "같은 화면이라도 기기별 기본 형태가 다르다"
+
+   ── PC 배치 규칙 ──
+   넓은 축이 정보를 실어야 합니다. 못 실으면 폭을 제한합니다.
+   그래서 PC 화면은 한 칸 세로 쌓기를 쓰지 않습니다.
+     · 왼쪽 곁줄 = 조작 (걸러내기 · 손잡이)
+     · 가운데   = 저절로 채워지는 것 (표 · 그림 · 달력)
+     · 오른쪽   = 고른 것의 자세한 내용
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 일하는 배치 ──
+   조작 · 내용 · 상세. 세 칸이 각자 일을 합니다. */
+.work {
+  display:grid; align-items:start; gap:0;
+  grid-template-columns:236px minmax(0,1fr) 316px;
+  min-height:calc(100vh - 210px);
+}
+.work.no-side { grid-template-columns:minmax(0,1fr) 316px; }
+.work.no-detail { grid-template-columns:236px minmax(0,1fr); }
+.work > * { min-width:0; }
+
+.side { padding:var(--s7) var(--s7) var(--s9) var(--s9); box-shadow:inset -1px 0 0 var(--hair); }
+.body { padding:var(--s7) var(--s7) var(--s9); }
+.detail { padding:var(--s7) var(--s9) var(--s9) var(--s7); box-shadow:inset 1px 0 0 var(--hair);
+          position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto; }
+
+.side h3, .detail h3 { font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--ink-3); }
+.side h3 + *, .detail h3 + * { margin-top:var(--s4); }
+.side .grp + .grp { margin-top:var(--s8); }
+
+/* ── 걸러내기 ── */
+.search {
+  width:100%; height:34px; padding:0 var(--s4); border-radius:8px;
+  background:var(--ground-2); border:0; font-size:13px;
+}
+.search::placeholder { color:var(--ink-3); }
+.search:focus { outline:2px solid var(--ink); outline-offset:0; background:#fff; }
+
+.pills { display:flex; flex-wrap:wrap; gap:var(--s2); }
+.pill {
+  font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:99px;
+  color:var(--ink-3); box-shadow:inset 0 0 0 1px var(--hair);
+  transition:background 140ms, color 140ms, box-shadow 140ms;
+}
+.pill:hover { background:var(--ground-2); color:var(--ink-2); }
+.pill[aria-pressed="true"] { background:var(--ink); color:var(--ground); box-shadow:none; }
+
+.checks { display:flex; flex-direction:column; gap:var(--s1); }
+.check {
+  display:flex; align-items:center; gap:var(--s3); padding:5px 6px; border-radius:6px;
+  font-size:12.5px; text-align:left; width:100%; color:var(--ink-2);
+  transition:background 140ms;
+}
+.check:hover { background:var(--ground-2); }
+.check i {
+  width:14px; height:14px; flex:none; border-radius:4px;
+  box-shadow:inset 0 0 0 1.5px var(--hair); position:relative;
+}
+.check[aria-pressed="true"] { color:var(--ink); font-weight:600; }
+.check[aria-pressed="true"] i { background:var(--ink); box-shadow:none; }
+.check[aria-pressed="true"] i::after {
+  content:""; position:absolute; left:4px; top:1.5px; width:5px; height:8px;
+  border:2px solid var(--ground); border-top:0; border-left:0; transform:rotate(40deg);
+}
+.check .n { margin-left:auto; font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+
+/* ── 손잡이 (시나리오) ── */
+.knob + .knob { margin-top:var(--s7); }
+.knob .kt { display:flex; align-items:baseline; gap:var(--s3); }
+.knob .kt .n { font-size:12.5px; font-weight:700; }
+.knob .kt .v { margin-left:auto; font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+.knob .kd { font-size:11px; color:var(--ink-3); margin-top:3px; line-height:1.5; }
+.knob input[type=range] {
+  -webkit-appearance:none; appearance:none; width:100%; height:30px; margin:0;
+  background:transparent; cursor:pointer;
+}
+.knob input[type=range]::-webkit-slider-runnable-track {
+  height:4px; border-radius:2px; background:var(--ground-2);
+}
+.knob input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none; width:16px; height:16px; margin-top:-6px;
+  border-radius:50%; background:var(--ink);
+}
+.knob .ends { display:flex; justify-content:space-between; font-size:10.5px; color:var(--ink-3); }
+.toggle {
+  display:flex; align-items:center; gap:var(--s3); width:100%; padding:var(--s3) 0;
+  font-size:12.5px; font-weight:600; text-align:left;
+}
+.toggle .sw {
+  width:32px; height:18px; flex:none; border-radius:99px; background:var(--hair);
+  position:relative; transition:background 180ms;
+}
+.toggle .sw::after {
+  content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%;
+  background:#fff; transition:transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.toggle[aria-pressed="true"] .sw { background:var(--ink); }
+.toggle[aria-pressed="true"] .sw::after { transform:translateX(14px); }
+
+/* ── 표 ──
+   PC 는 표가 주인공입니다. 넓은 축을 표가 채웁니다. */
+.body .tbl { margin-top:0; }
+.tbl .th button {
+  font:inherit; color:inherit; display:inline-flex; align-items:center; gap:3px;
+  font-size:11px; font-weight:800; letter-spacing:.06em;
+}
+.tbl .th button::after { content:""; width:0; height:0; }
+.tbl .th button[data-dir="asc"]::after {
+  border-left:3px solid transparent; border-right:3px solid transparent; border-bottom:4px solid currentColor;
+}
+.tbl .th button[data-dir="desc"]::after {
+  border-left:3px solid transparent; border-right:3px solid transparent; border-top:4px solid currentColor;
+}
+.tbl .tr { cursor:pointer; }
+.tbl .tr.on { background:var(--ground-2); }
+.tbl .tr.on::before, .tbl .tr.on + .tr::before { opacity:0; }
+
+.count { display:flex; align-items:baseline; gap:var(--s5); flex-wrap:wrap;
+         padding-top:var(--s5); margin-top:var(--s3); border-top:2px solid var(--ink);
+         font-size:12px; color:var(--ink-2); }
+.count b { font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+.empty { padding:var(--s9) 0; font-size:13px; color:var(--ink-3); }
+
+/* ── 상세 칸 ── */
+.detail .dv { font-size:20px; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.detail .dn { font-size:14px; font-weight:700; margin-top:var(--s2); }
+.detail .dm { font-size:11.5px; color:var(--ink-3); margin-top:2px; line-height:1.55; }
+.detail .kv { display:flex; gap:var(--s4); padding:var(--s3) 0; font-size:11.5px; position:relative; }
+.detail .kv + .kv::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.detail .kv dt { color:var(--ink-3); flex:none; width:66px; }
+.detail .kv dd { color:var(--ink-2); font-variant-numeric:tabular-nums; }
+.detail .grp { margin-top:var(--s7); padding-top:var(--s6); box-shadow:inset 0 1px 0 var(--hair); }
+.detail select {
+  width:100%; height:32px; padding:0 var(--s3); border-radius:8px; font-size:12.5px;
+  background:var(--ground-2); border:0;
+}
+.detail .reason {
+  font-size:11.5px; color:var(--ink-2); line-height:1.6; margin-top:var(--s3);
+  padding:var(--s3) var(--s4); border-radius:8px; background:var(--ground-2);
+}
+
+/* ── 좌우 분할 (증빙 검토) ── */
+.split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s7); align-items:start; }
+
+/* ── 그림 칸 ── */
+.chart { position:relative; margin-top:var(--s5); }
+.chart svg { display:block; width:100%; height:260px; }
+.chart .lg { display:flex; gap:var(--s6); margin-top:var(--s4); font-size:11.5px; color:var(--ink-3); flex-wrap:wrap; }
+.chart .lg span { display:inline-flex; align-items:center; gap:var(--s2); }
+.chart .lg i { width:16px; height:0; border-top:2px solid; flex:none; }
+.axis { display:flex; justify-content:space-between; margin-top:var(--s2);
+        font-size:10.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+
+/* ── 달력 + 일자 패널 (PC) ── */
+.work .cal { margin-top:0; }
+.work .cal .cell { min-height:96px; }
+.work .cal .cell.on { background:var(--ink); }
+.work .cal .cell.on .d, .work .cal .cell.on .b, .work .cal .cell.on .ev { color:var(--ground); }
+
+/* ── 값 묶음은 PC 에서 늘어나지 않습니다 ──
+   flex:1 로 늘리면 넓은 화면에서 글자가 왼쪽에 몰리고 오른쪽이 빕니다. */
+.figs { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:var(--s7); }
+.figs.five { grid-template-columns:repeat(5, minmax(0,1fr)); }
+.fig { min-width:0; flex:none; }
+
+/* ── 줄 목록도 PC 에서는 칸을 나눕니다 ──
+   이름과 금액만 두면 1360px 가운데가 빕니다. */
+.rows.cols .r { display:grid; grid-template-columns:minmax(0,1fr) 132px 120px 128px; gap:var(--s5); }
+.rows.cols .r > .r-mid { font-size:12px; color:var(--ink-2); }
+.rows.cols .r > .r-amt { text-align:right; font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+
+/* 본문 폭을 제한하는 자리 (편지 등). 넓은 축에 실을 게 없으면 곁줄을 둡니다. */
+.reading { display:grid; grid-template-columns:minmax(0,62ch) minmax(0,1fr); gap:var(--s10); align-items:start; }
+
+/* ══════════════════════════════════════════════════════════════
+   좁아질 때 무엇이 먼저 줄어드나
+
+   전에는 1279px 한 지점에서 세 칸이 한꺼번에 세로로 무너졌습니다.
+   1440 에서 160px 만 줄어도 화면이 완전히 다른 모양이 되니
+   창을 살짝 좁혔을 뿐인데 딴 화면처럼 보입니다.
+
+   순서를 둡니다. 무엇이 먼저 양보하는지는 그것이 무슨 일을 하는지로 정합니다.
+
+     1) 본문(1fr)      맨 먼저. 표와 목록이라 좁아지면 행이 늘어날 뿐입니다
+     2) 곁줄(316)      다음. 상세는 보조라 좁아져도 읽힙니다
+     3) 곁줄을 아래로   그 다음. 폭을 더 줄이면 상세가 안 읽히므로 본문 밑으로 내립니다
+     4) 필터(236)      맨 마지막. 이건 길찾기라 없어지면 화면을 쓸 수 없습니다
+
+   1024px 까지 필터가 남아 있는 까닭: 노트북 창을 반으로 나눠 쓰는 사람이
+   그 폭에서 일합니다. 거기서 필터가 사라지면 화면이 다른 물건이 됩니다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 2) 곁줄이 폭을 먼저 양보합니다 */
+@media (max-width:1359px) {
+  .work { grid-template-columns:236px minmax(0,1fr) 272px; }
+  .work.no-side { grid-template-columns:minmax(0,1fr) 272px; }
+  .side { padding:var(--s7) var(--s6) var(--s9) var(--s7); }
+  .detail { padding:var(--s7) var(--s6); }
+}
+
+/* 3) 곁줄을 본문 아래로 내립니다. 필터는 그대로 남습니다 */
+@media (max-width:1179px) {
+  .work { grid-template-columns:236px minmax(0,1fr); }
+  .work.no-side { grid-template-columns:minmax(0,1fr); }
+  .side { grid-column:1; grid-row:1 / span 2; }
+  .body { grid-column:2; grid-row:1; }
+  .detail { grid-column:2; grid-row:2;
+            position:static; max-height:none; overflow:visible;
+            box-shadow:inset 0 1px 0 var(--hair); padding:var(--s7) var(--s6); }
+  .work.no-side .side { grid-column:auto; grid-row:auto; }
+  .work.no-side .body, .work.no-side .detail { grid-column:auto; grid-row:auto; }
+  .reading, .split { grid-template-columns:minmax(0,1fr); }
+  .figs, .figs.five { grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+
+/* 4) 마지막에 필터를 내립니다. 여기서 세로 한 칸이 됩니다 */
+@media (max-width:1023px) {
+  .work, .work.no-side, .work.no-detail { grid-template-columns:minmax(0,1fr); }
+  .side, .body, .detail { grid-column:auto; grid-row:auto; }
+  .side { box-shadow:inset 0 -1px 0 var(--hair); padding:var(--s6) var(--s6) var(--s7); }
+  .body { padding:var(--s6); }
+  .detail { padding:var(--s6); }
+  .figs, .figs.five { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .rows.cols .r { grid-template-columns:minmax(0,1fr) auto; }
+  .rows.cols .r > .r-mid { display:none; }
+}
+
+
+/* 손잡이의 상한을 사장이 정하는 칸.
+   눈금 끝 라벨 자리를 입력으로 바꿉니다. 따로 줄을 만들면 손잡이 하나가
+   두 줄을 먹어 곁줄이 길어집니다. */
+.knob .cap { display:inline-flex; align-items:baseline; gap:3px; font-size:10.5px; color:var(--ink-3); }
+.knob .cap input {
+  width:44px; height:20px; border:0; border-radius:5px; background:var(--ground-2);
+  font-size:11px; font-weight:700; text-align:right; padding:0 4px;
+  font-variant-numeric:tabular-nums; color:var(--ink);
+  -moz-appearance:textfield;
+}
+.knob .cap input::-webkit-outer-spin-button,
+.knob .cap input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.knob .cap input:focus { outline:2px solid var(--ink); background:#fff; }

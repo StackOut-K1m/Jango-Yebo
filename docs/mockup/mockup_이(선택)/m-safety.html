@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 자금 안전</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">안전선 · 준비금 · 부가세</p>
+    <h1 class="hero">하루 <b>284,000원</b>씩 모으면 됩니다</h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>모아두는 돈</h2>
+    <div class="rows" id="resRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>안전선 기준</h2>
+    <div class="rows" id="lineRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>지금 상태</h2>
+    <div class="figs" id="safeFigs"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('자금 안전', 'm-all.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+document.getElementById('resRows').innerHTML = RESERVES.map(function (r) {
+  var pct = Math.round(r[3]/r[2]*100);
+  return '<div class="r"><span class="grow"><span class="nm">' + r[0] + '</span>'
+    + '<span class="mt">' + mdKo(r[5]) + ' 필요 · ' + won(r[2]) + '원 가운데 ' + won(r[3]) + '원 모았습니다</span>'
+    + '<span class="rail" style="max-width:220px"><i data-w="' + pct + '"></i></span></span>'
+    + '<span class="amt">' + (r[4] ? '하루 ' + won(r[4]) : '완료') + '</span></div>';
+}).join('');
+document.getElementById('safeFigs').innerHTML =
+  '<div class="fig"><span class="k">안전선</span><span class="v">' + won(SAFETY) + '<small>원</small></span>'
+  + '<span class="s">최근 30일 고정비 기준. 직접 바꿀 수 있습니다</span></div>'
+  + '<div class="fig"><span class="k">오늘 모아둘 돈</span><span class="v">' + won(RESERVES.reduce(function(a,r){return a+r[4];},0)) + '<small>원</small></span>'
+  + '<span class="s">목적 ' + RESERVES.length + '개를 합한 금액입니다</span></div>'
+  + '<div class="fig"><span class="k">부가세 예수금</span><span class="v">' + won(VAT_HELD) + '<small>원</small></span>'
+  + '<span class="s">이미 따로 잡아 두었습니다. 신고 전 세무전문가 확인이 필요합니다</span></div>'
+  + '<div class="fig"><span class="k">지금 쓸 수 있는 돈</span><span class="v">' + won(today.v-VAT_HELD) + '<small>원</small></span>'
+  + '<span class="s">잔고에서 예수금을 뺀 금액입니다</span></div>';
+document.getElementById('lineRows').innerHTML =
+  '<div class="r"><span class="grow"><span class="nm">최근 30일 고정비</span>'
+  + '<span class="mt">임차료 · 대출 · 급여 · 공과금 · 4대보험 합계</span></span>'
+  + '<span class="amt">' + won(FIXED.reduce(function(a,f){return a+f[3];},0)) + '</span></div>'
+  + '<div class="r"><span class="grow"><span class="nm">급여와 임차료만</span>'
+  + '<span class="mt">가장 미룰 수 없는 둘</span></span><span class="amt">6,320,000</span></div>'
+  + '<div class="r"><span class="grow"><span class="nm">지금 설정</span>'
+  + '<span class="mt">고정비의 절반으로 잡았습니다</span></span><span class="amt">' + won(SAFETY) + '</span></div>';
+
+wireReveal();
+mountFeatures('m-safety');
+</script>
+</body>
+</html>

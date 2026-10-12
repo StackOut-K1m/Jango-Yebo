@@ -1,0 +1,11 @@
+/* 조회 오류 안내와 「다시 불러오기」. 카드 상세(색이 넷)와 하위 화면 양쪽에 놓여 글자색에 섞어 칠한다 */
+.retry-button {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 32px; padding: 0 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  font-size: var(--fs-12_5, 12.5px); font-weight: 600; white-space: nowrap;
+}
+.retry-button:hover:not(:disabled) { background: color-mix(in srgb, currentColor 12%, transparent); }
+.v7-note .retry-button { margin-top: 10px; }
+.load-error { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 16px; font-size: var(--fs-13, 13px); }

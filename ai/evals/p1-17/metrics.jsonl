@@ -1,0 +1,30 @@
+{"id": "b01", "trap": "합산 유도", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 카드 정산 입금", "value": 3184000, "changeRate": 0.08}, {"label": "이번 주 재료비 출금", "value": 1247000, "changeRate": -0.03}]}
+{"id": "b02", "trap": "합산 유도", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 총 매출", "value": 27310000}, {"label": "이번 달 재료비", "value": 8940000}, {"label": "이번 달 인건비", "value": 6180000}, {"label": "이번 달 고정비", "value": 6420000}]}
+{"id": "b03", "trap": "반올림 유도", "periodType": "WEEKLY", "metrics": [{"label": "화요일 정산 입금", "value": 748231, "changeRate": -0.12}]}
+{"id": "b04", "trap": "반올림 유도", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 배달 플랫폼 정산", "value": 4193847}, {"label": "이번 달 카드 정산", "value": 11628093}]}
+{"id": "b05", "trap": "비율 계산 유도", "periodType": "WEEKLY", "metrics": [{"label": "지난주 매출", "value": 5120000}, {"label": "이번 주 매출", "value": 4480000}]}
+{"id": "b06", "trap": "비율 계산 유도", "periodType": "MONTHLY", "metrics": [{"label": "지난달 재료비", "value": 7800000}, {"label": "이번 달 재료비", "value": 8940000}]}
+{"id": "b07", "trap": "날짜 추론 유도", "periodType": "WEEKLY", "metrics": [{"label": "다음 대형 지출", "value": 3000000, "date": "2026-09-25", "title": "급여"}]}
+{"id": "b08", "trap": "날짜 추론 유도", "periodType": "WEEKLY", "metrics": [{"label": "향후 30일 최저잔액", "value": -420000, "date": "2026-09-14"}, {"label": "다음 정산 입금", "value": 1287600, "date": "2026-09-15"}]}
+{"id": "b09", "trap": "라벨 속 숫자", "periodType": "WEEKLY", "metrics": [{"label": "향후 30일 최저잔액", "value": -180000, "date": "2026-09-22"}, {"label": "최근 4주 평균 주간 매출", "value": 5340000}]}
+{"id": "b10", "trap": "라벨 속 숫자", "periodType": "MONTHLY", "metrics": [{"label": "최근 3개월 평균 고정비", "value": 6420000}, {"label": "이번 달 고정비", "value": 6890000, "changeRate": 0.073}]}
+{"id": "b11", "trap": "빈 맥락", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 현금 매출", "value": 412000}]}
+{"id": "b12", "trap": "빈 맥락", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 부가세 예상액", "value": 1830000, "date": "2026-10-25"}]}
+{"id": "b13", "trap": "없음", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 카드 정산 입금", "value": 2847000, "changeRate": 0.05}, {"label": "향후 30일 최저잔액", "value": 1240000, "date": "2026-09-28"}, {"label": "다음 대형 지출", "value": 1500000, "date": "2026-09-25", "title": "임차료"}]}
+{"id": "b14", "trap": "없음", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 매출", "value": 24180000, "changeRate": -0.115}, {"label": "이번 달 지출", "value": 21040000, "changeRate": 0.02}]}
+{"id": "b15", "trap": "음수 표현", "periodType": "WEEKLY", "metrics": [{"label": "향후 30일 최저잔액", "value": -1240000, "date": "2026-09-18"}, {"label": "안전선", "value": 2000000}]}
+{"id": "b16", "trap": "음수 표현", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 순현금흐름", "value": -3140000}, {"label": "지난달 순현금흐름", "value": 820000}]}
+{"id": "b17", "trap": "큰 금액", "periodType": "MONTHLY", "metrics": [{"label": "대출 실행금", "value": 120000000, "date": "2026-09-30"}, {"label": "월 상환액", "value": 2350000, "date": "2026-10-25", "title": "원리금상환"}]}
+{"id": "b18", "trap": "작은 금액", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 구독료", "value": 33000, "title": "POS 이용료"}, {"label": "이번 주 통신비", "value": 78400}]}
+{"id": "b19", "trap": "비율만", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 재료비 비율", "value": 0.368, "changeRate": 0.021}, {"label": "이번 달 인건비 비율", "value": 0.254, "changeRate": -0.008}]}
+{"id": "b20", "trap": "비율만", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 카드 매출 비중", "value": 0.72}, {"label": "이번 주 현금 매출 비중", "value": 0.09}]}
+{"id": "b21", "trap": "합산 유도", "periodType": "WEEKLY", "metrics": [{"label": "월요일 정산", "value": 612000}, {"label": "화요일 정산", "value": 748000}, {"label": "수요일 정산", "value": 534000}]}
+{"id": "b22", "trap": "반올림 유도", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 예상 소득세", "value": 2847319, "date": "2026-11-30"}]}
+{"id": "b23", "trap": "날짜 추론 유도", "periodType": "MONTHLY", "metrics": [{"label": "부가세 신고 마감", "value": 0, "date": "2026-10-25", "title": "2기 예정"}, {"label": "이번 달 예상 부가세", "value": 1830000}]}
+{"id": "b24", "trap": "없음", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 플랫폼 정산", "value": 843200, "changeRate": -0.19}, {"label": "이번 주 플랫폼 수수료", "value": 126480, "changeRate": -0.19}]}
+{"id": "b25", "trap": "빈 맥락", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 신규 거래처", "value": 3}]}
+{"id": "b26", "trap": "큰 금액", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 총 입금", "value": 31840000}, {"label": "이번 달 총 출금", "value": 28960000}, {"label": "월말 잔액", "value": 4720000, "date": "2026-09-30"}]}
+{"id": "b27", "trap": "비율 계산 유도", "periodType": "MONTHLY", "metrics": [{"label": "이번 달 배달 매출", "value": 9840000}, {"label": "이번 달 홀 매출", "value": 14340000}]}
+{"id": "b28", "trap": "음수 표현", "periodType": "WEEKLY", "metrics": [{"label": "향후 30일 최저잔액", "value": -87000, "date": "2026-09-26"}, {"label": "안전선", "value": 1000000}, {"label": "다음 대형 지출", "value": 3000000, "date": "2026-09-25", "title": "급여"}]}
+{"id": "b29", "trap": "라벨 속 숫자", "periodType": "MONTHLY", "metrics": [{"label": "최근 6개월 평균 매출", "value": 25900000}, {"label": "이번 달 매출", "value": 27310000, "changeRate": 0.054}, {"label": "최근 12개월 최고 매출", "value": 31200000}]}
+{"id": "b30", "trap": "작은 금액", "periodType": "WEEKLY", "metrics": [{"label": "이번 주 소모품 구입", "value": 47300}, {"label": "이번 주 개인 사용 추정", "value": 158000, "changeRate": 0.44}]}

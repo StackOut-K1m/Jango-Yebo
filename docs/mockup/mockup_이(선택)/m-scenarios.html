@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 시나리오</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+
+</head>
+<body class="m">
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when">무엇을 바꾸면 달라지는가</p>
+    <h1 class="hero"><span id="scnHead">불러오는 중</span></h1>
+
+  </div>
+</header>
+
+<main class="ground">
+  <section class="sec">
+    <h2>가정을 골라 보세요</h2>
+    <div class="btn-row" id="scnPick"></div>
+  </section>
+
+  <section class="sec">
+    <h2>무엇이 달라지나</h2>
+    <div class="figs" id="scnFigs"></div>
+  </section>
+
+  <section class="sec">
+    <h2>안전선 아래인 날</h2>
+    <div class="rows" id="scnRows"></div>
+  </section>
+</main>
+<div id="tabs"></div>
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mTop('시나리오', 'm-home.html');
+document.getElementById('tabs').outerHTML = mTabs('');
+(function () {
+  var k = SKYC['safe'], s = document.getElementById('sky');
+  s.dataset.w = 'safe';
+  s.style.setProperty('--k0',k[0]); s.style.setProperty('--k1',k[1]); s.style.setProperty('--k2',k[2]);
+})();
+
+/* 시나리오 — 원본 예보를 바꾸지 않고 복제해 비교합니다 (P0-09) */
+var picked = 0;
+function apply(n) {
+  var s = SCENARIOS[n];
+  var shift = s[3], drop = s[4], extra = s[5];
+  var alt = days.map(function (d, i) {
+    var v = d.v;
+    if (drop) v -= (d.v > 0 ? d.v : 0) * 0 + drop/100 * 1420000 * Math.min(i,30)/30 * 3;
+    if (extra && i >= 4) v -= extra;
+    if (shift > 0) v -= 980000 * (i > 0 && i < 4 ? 1 : 0);
+    if (shift < 0) v += 1040000 * (i > 0 ? 1 : 0);
+    return { date:d.date, v:Math.round(v), risk:riskOf(Math.round(v)) };
+  });
+  var altBad = alt.filter(function (d) { return d.risk !== 'safe'; });
+  var altLow = alt.reduce(function (a,c) { return c.v<a.v?c:a; }, alt[0]);
+
+  document.getElementById('scnHead').innerHTML =
+    '<b>' + s[0] + '</b> 안전선 아래인 날이 ' + badDays.length + '일에서 <b>' + altBad.length + '일</b>로 '
+    + (altBad.length < badDays.length ? '줄어듭니다' : altBad.length > badDays.length ? '늘어납니다' : '그대로입니다');
+
+  document.getElementById('scnFigs').innerHTML =
+    '<div class="fig"><span class="k">바꾼 것</span><span class="v" style="font-size:16px">' + s[1] + '</span>'
+    + '<span class="s">원본 예보는 그대로 남습니다</span></div>'
+    + '<div class="fig"><span class="k">안전선 아래인 날</span><span class="v">' + badDays.length + ' → ' + altBad.length + '<small>일</small></span>'
+    + '<span class="s">' + (altBad.length<badDays.length?(badDays.length-altBad.length)+'일 줄어듭니다':altBad.length>badDays.length?(altBad.length-badDays.length)+'일 늘어납니다':'변화 없습니다') + '</span></div>'
+    + '<div class="fig"><span class="k">가장 깊은 날</span><span class="v">' + won(altLow.v) + '<small>원</small></span>'
+    + '<span class="s">원본은 ' + won(lowest.v) + '원 (' + mdKo(lowest.date) + ')</span></div>'
+    + '<div class="fig"><span class="k">첫 부족일</span><span class="v">' + (altBad[0] ? md(altBad[0].date) : '없음') + '</span>'
+    + '<span class="s">원본은 ' + md(firstBad.date) + '입니다</span></div>';
+
+  document.getElementById('scnRows').innerHTML = alt.filter(function (d) { return d.risk !== 'safe'; })
+    .map(function (d) {
+      var o = days[alt.indexOf(d)];
+      return '<div class="r"><span class="grow"><span class="nm">' + mdKo(d.date) + '</span>'
+        + '<span class="mt">원본 ' + won(o.v) + '원 → 바꾼 뒤 ' + won(d.v) + '원</span></span>'
+        + '<span class="st st-' + d.risk + '"><span class="mk mk-' + d.risk + '"></span>' + KO[d.risk] + '</span></div>';
+    }).join('') || '<p class="note">이 시나리오에서는 안전선 아래로 내려가는 날이 없습니다.</p>';
+
+  document.querySelectorAll('#scnPick button').forEach(function (b, i) {
+    b.setAttribute('aria-pressed', String(i === n));
+  });
+}
+document.getElementById('scnPick').innerHTML = SCENARIOS.map(function (s, i) {
+  return '<button class="btn ' + (i===0?'btn-pri':'btn-sub') + '" data-i="' + i + '">' + s[0] + '</button>';
+}).join('');
+document.getElementById('scnPick').addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#scnPick button').forEach(function (o) {
+    o.className = 'btn ' + (o === b ? 'btn-pri' : 'btn-sub');
+  });
+  apply(+b.dataset.i);
+});
+apply(0);
+
+wireReveal();
+mountFeatures('m-scenarios');
+</script>
+</body>
+</html>

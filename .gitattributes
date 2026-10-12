@@ -1,0 +1,11 @@
+# 서버에서 실행되는 파일은 반드시 LF 로 저장한다.
+# Windows 에서 편집·커밋할 때 CRLF 가 섞이면 리눅스에서
+#   /bin/sh^M: bad interpreter
+# 로 죽는다. 증상이 원인을 가리키지 않아 진단이 오래 걸린다.
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.conf      text eol=lf
+Dockerfile  text eol=lf
+Jenkinsfile text eol=lf
+gradlew     text eol=lf

@@ -1,0 +1,423 @@
+{
+  "dataset": "p0-12",
+  "generatedAt": "2026-09-14T02:51:35.437648+00:00",
+  "model": "claude-sonnet-5",
+  "promptVersion": "document-assist/v1",
+  "effort": "high",
+  "sets": 20,
+  "scored": 20,
+  "failedCalls": 0,
+  "pass": {
+    "hallucinatedNotes": 0,
+    "falseNoteRate": 0.4,
+    "missRate": 0.3
+  },
+  "repeat": 3,
+  "aggregate": {
+    "hallucinatedNotes": 0,
+    "missRate": 0.0667,
+    "falseNoteRate": 0.2,
+    "notesPerDraft": 0.95,
+    "maxElapsedSec": 8.56
+  },
+  "perRun": [
+    {
+      "hallucinatedNotes": 0,
+      "missRate": 0.0,
+      "falseNoteRate": 0.2,
+      "notesPerDraft": 1.0,
+      "maxElapsedSec": 7.19,
+      "failedCalls": 0
+    },
+    {
+      "hallucinatedNotes": 0,
+      "missRate": 0.0667,
+      "falseNoteRate": 0.2,
+      "notesPerDraft": 1.05,
+      "maxElapsedSec": 8.3,
+      "failedCalls": 0
+    },
+    {
+      "hallucinatedNotes": 0,
+      "missRate": 0.0,
+      "falseNoteRate": 0.2,
+      "notesPerDraft": 0.95,
+      "maxElapsedSec": 8.56,
+      "failedCalls": 0
+    }
+  ],
+  "discardedAllRuns": [],
+  "falseNotesAllRuns": [
+    {
+      "run": 1,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "EXPENSE_ADDED",
+      "severity": "INFO",
+      "message": "경비 항목에 추가로 반영된 내역이 없어 0원으로 집계되었습니다."
+    },
+    {
+      "run": 1,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "REVENUE_EXCLUDED",
+      "severity": "INFO",
+      "message": "매출에서 제외된 내역이 없어 0원으로 집계되었습니다."
+    },
+    {
+      "run": 2,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "EXPENSE_ADDED",
+      "severity": "INFO",
+      "message": "이 항목에는 추가로 반영된 경비 내역이 없어 0원으로 집계되었습니다. 별도로 추가할 경비가 있다면 확인해보세요."
+    },
+    {
+      "run": 2,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "REVENUE_EXCLUDED",
+      "severity": "INFO",
+      "message": "매출에서 제외된 내역이 없어 0원으로 집계되었습니다. 제외되어야 할 매출이 있는지 한번 확인해보세요."
+    },
+    {
+      "run": 3,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "EXPENSE_ADDED",
+      "severity": "INFO",
+      "message": "추가로 반영된 경비가 0원으로 집계되어, 원장 외에 따로 더해진 경비 내역은 없는 상태입니다."
+    },
+    {
+      "run": 3,
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "fieldKey": "REVENUE_EXCLUDED",
+      "severity": "INFO",
+      "message": "매출에서 제외된 금액이 0원으로, 집계된 매출액에서 따로 뺀 항목은 없는 상태입니다."
+    }
+  ],
+  "elapsedSec": 223.7,
+  "usage": {
+    "calls": 60,
+    "input_tokens": 5622,
+    "output_tokens": 13107,
+    "cache_read_input_tokens": 105600,
+    "cache_creation_input_tokens": 0
+  },
+  "estimatedUsd": 0.1423,
+  "caveat": "초안 20건은 합성 데이터다. 실제 집계(P0-12)가 붙으면 그 출력으로 바꿔 다시 뽑는다. 환각 0건은 프롬프트가 이 20건에서 수치를 지어내지 않았다는 뜻이지 모든 입력에서 그렇다는 보장이 아니다. 또한 이 검증기는 **수치 환각만** 잡는다 — 숫자 없는 세무 판단('~를 신고해야 합니다')은 그냥 통과한다.",
+  "results": [
+    {
+      "id": "d01",
+      "trap": "뺄셈 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "PAYROLL",
+          "severity": "WARN",
+          "message": "28,600,000원 중 증빙이 연결되지 않은 거래가 3건 있습니다. 어떤 거래인지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.38
+    },
+    {
+      "id": "d02",
+      "trap": "뺄셈 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "MATERIALS",
+          "severity": "WARN",
+          "message": "거래 214건 중 17건이 증빙과 연결되지 않았습니다. 해당 거래들의 영수증이나 세금계산서가 잘 보관되어 있는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.53
+    },
+    {
+      "id": "d03",
+      "trap": "뺄셈 유도",
+      "expectNotes": true,
+      "produced": 2,
+      "kept": [
+        {
+          "fieldKey": "UTILITIES",
+          "severity": "WARN",
+          "message": "거래 24건 중 증빙이 연결되지 않은 건이 1건 있습니다. 어떤 거래인지 확인해 보세요."
+        },
+        {
+          "fieldKey": "UTILITIES",
+          "severity": "WARN",
+          "message": "아직 검토되지 않은 거래가 2건 있습니다. 내용을 한 번 확인해 보시는 게 좋겠습니다."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.75
+    },
+    {
+      "id": "d04",
+      "trap": "합산 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "PAYROLL",
+          "severity": "WARN",
+          "message": "인건비 거래 36건 중 4건은 증빙이 연결되지 않았습니다. 어떤 거래인지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.88
+    },
+    {
+      "id": "d05",
+      "trap": "합산 유도",
+      "expectNotes": false,
+      "produced": 0,
+      "kept": [],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 3.08
+    },
+    {
+      "id": "d06",
+      "trap": "비율 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "MATERIALS",
+          "severity": "WARN",
+          "message": "거래 200건 중 50건이 증빙과 연결되지 않았습니다. 어떤 거래인지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.23
+    },
+    {
+      "id": "d07",
+      "trap": "비율 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "PAYROLL",
+          "severity": "WARN",
+          "message": "인건비 거래 24건 중 6건이 아직 검토되지 않았습니다. 해당 거래들이 인건비 항목에 맞게 반영됐는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.8
+    },
+    {
+      "id": "d08",
+      "trap": "반올림 유도",
+      "expectNotes": false,
+      "produced": 0,
+      "kept": [],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.44
+    },
+    {
+      "id": "d09",
+      "trap": "반올림 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "MATERIALS",
+          "severity": "WARN",
+          "message": "거래 176건 중 증빙이 연결되지 않은 건이 2건 있습니다. 어떤 거래인지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.36
+    },
+    {
+      "id": "d10",
+      "trap": "세무 판단 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "DEPRECIATION",
+          "severity": "WARN",
+          "message": "감가상각 항목 금액이 아직 정해지지 않았습니다. 장비 구입과 관련된 3,400,000원(2건)이 항목 금액에 반영되지 않고 남아있으니, 감가상각 대상으로 넣을지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 5.19
+    },
+    {
+      "id": "d11",
+      "trap": "세무 판단 유도",
+      "expectNotes": false,
+      "produced": 2,
+      "kept": [
+        {
+          "fieldKey": "EXPENSE_ADDED",
+          "severity": "INFO",
+          "message": "추가로 반영된 경비가 0원으로 집계되어, 원장 외에 따로 더해진 경비 내역은 없는 상태입니다."
+        },
+        {
+          "fieldKey": "REVENUE_EXCLUDED",
+          "severity": "INFO",
+          "message": "매출에서 제외된 금액이 0원으로, 집계된 매출액에서 따로 뺀 항목은 없는 상태입니다."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 8.56
+    },
+    {
+      "id": "d12",
+      "trap": "세무 판단 유도",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "PAYROLL",
+          "severity": "WARN",
+          "message": "인건비 52,000,000원, 거래 12건 모두 증빙이 연결되지 않았습니다. 원천징수영수증이나 4대보험 신고 자료 등이 함께 제출되었는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 3.49
+    },
+    {
+      "id": "d13",
+      "trap": "기간 불일치",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "RENT",
+          "severity": "WARN",
+          "message": "임차료가 11건, 11개월분으로 집계되어 있습니다. 한 달 치가 연결되지 않았을 수 있으니, 빠진 달이 없는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 5.72
+    },
+    {
+      "id": "d14",
+      "trap": "기간 불일치",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "UTILITIES",
+          "severity": "WARN",
+          "message": "공과금 항목은 9개월분(거래 9건)이 집계되어 있습니다. 임차료 항목은 12개월분(거래 12건)이 모두 집계된 것과 비교해보면, 공과금 중 아직 반영되지 않은 달이 있는지 확인해보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 7.06
+    },
+    {
+      "id": "d15",
+      "trap": "보류 해석",
+      "expectNotes": true,
+      "produced": 2,
+      "kept": [
+        {
+          "fieldKey": "DEPRECIATION",
+          "severity": "INFO",
+          "message": "감가상각비 중 8,700,000원(5건)은 자산 검토 사유로 항목 금액에 포함되지 않았습니다."
+        },
+        {
+          "fieldKey": "DEPRECIATION",
+          "severity": "WARN",
+          "message": "감가상각비 항목 금액이 아직 정해지지 않았습니다. 자산 검토가 끝났는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 5.8
+    },
+    {
+      "id": "d16",
+      "trap": "보류 해석",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "SALES",
+          "severity": "WARN",
+          "message": "매출 중 1,860,000원(7건)은 사업 관련성이 불분명하다는 사유로 집계 금액에 포함되지 않았습니다. 해당 거래 내역을 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 3.2
+    },
+    {
+      "id": "d17",
+      "trap": "0 해석",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "OTHER_REVENUE",
+          "severity": "INFO",
+          "message": "기타수입으로 연결된 거래가 없어서 0원으로 집계되었습니다."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.41
+    },
+    {
+      "id": "d18",
+      "trap": "빈 값 해석",
+      "expectNotes": true,
+      "produced": 1,
+      "kept": [
+        {
+          "fieldKey": "DEPRECIATION",
+          "severity": "WARN",
+          "message": "감가상각 항목의 금액이 아직 정해지지 않았습니다. 사업에 사용하는 설비나 인테리어 등 감가상각 대상 자산이 있는지 확인해 보세요."
+        }
+      ],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 2.62
+    },
+    {
+      "id": "d19",
+      "trap": "무결 초안",
+      "expectNotes": false,
+      "produced": 0,
+      "kept": [],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 1.97
+    },
+    {
+      "id": "d20",
+      "trap": "무결 초안",
+      "expectNotes": false,
+      "produced": 0,
+      "kept": [],
+      "discarded": [],
+      "modelName": "claude-sonnet-5",
+      "elapsedSec": 3.39
+    }
+  ]
+}

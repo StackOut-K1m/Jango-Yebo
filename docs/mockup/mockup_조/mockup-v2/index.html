@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="잔고예보 2안 — 금융 현금흐름 예측 UI" />
+  <title>잔고예보 2안 · 데스크톱</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body data-page="desktop">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="주 메뉴">
+      <a class="brand" href="#today" data-route="today"><span class="brand-mark">〽</span><span>잔고예보</span></a>
+      <div class="business-switch"><span class="weather-dot caution"></span><span><b>온기식당 성수점</b><small>종합 상태 · 주의</small></span><button aria-label="사업장 변경">⌄</button></div>
+      <nav>
+        <p>자금 예보</p>
+        <a href="#today" data-route="today" class="active"><i>◉</i>자금 예보</a>
+        <a href="#forecast" data-route="forecast"><i>⌁</i>30일 예보</a>
+        <a href="#scenario" data-route="scenario"><i>⤨</i>시나리오</a>
+        <p>업무</p>
+        <a href="#transactions" data-route="transactions"><i>≡</i>거래·예정</a>
+        <a href="#evidence" data-route="evidence"><i>▱</i>증빙·신고</a>
+        <a href="#calendar" data-route="calendar"><i>□</i>캘린더</a>
+        <a href="#insight" data-route="insight"><i>✦</i>브리핑</a>
+        <a href="#finance" data-route="finance"><i>₩</i>대출·지원</a>
+        <a href="#settings" data-route="settings"><i>⚙</i>운영 기준</a>
+      </nav>
+      <div class="sync"><span></span><div><b>모든 계좌 정상</b><small>09:00 동기화</small></div><button data-action="sync">↻</button></div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><span class="eyebrow" id="sectionEyebrow">수요일 · 8월 26일</span><h1 id="sectionTitle">오늘의 자금 예보</h1></div>
+        <div class="top-actions"><button class="ghost" data-action="open-search">⌕ 검색</button><button class="icon-btn" data-action="alerts">알림 <b>3</b></button><button class="primary" data-action="plan">＋ 예정 거래</button></div>
+      </header>
+
+      <section class="view active" data-view="today">
+        <div class="forecast-hero" id="current">
+          <div class="hero-summary">
+            <div class="condition"><span class="condition-icon status-label watch">관심</span><div><span>현재 자금 상태</span><strong>8일 안에 주의</strong><small>9월 3일 안전잔고 하회가 예상됩니다</small></div></div>
+            <div class="balance"><span>지금 잔고</span><strong>4,182,400<em>원</em></strong><div class="available"><span>지금 써도 되는 돈</span><b>1,842,400원</b><button data-action="formula">계산 기준</button></div></div>
+            <div class="reserve-line" aria-label="잔고 구성"><span style="--w:44%">가용 184만</span><span style="--w:27%">부가세 114만</span><span style="--w:29%">준비금 120만</span></div>
+            <div class="threshold"><span>안전잔고 230만원</span><b>현재 45만 7,600원 부족</b></div>
+          </div>
+          <div class="hero-alert" id="risk">
+            <span class="risk-label">D-8 · 자금주의보</span>
+            <h2>9월 3일, 안전잔고 아래로 내려갑니다</h2>
+            <p>추석 연휴로 배달 정산이 이틀 늦어지고 급여가 먼저 출금됩니다.</p>
+            <dl><div><dt>최저 잔고</dt><dd>1,487,600원</dd></div><div><dt>지속</dt><dd>2일</dd></div><div><dt>회복</dt><dd>9월 5일</dd></div></dl>
+            <button class="light-btn" data-route="forecast">원인과 대응 보기 →</button>
+          </div>
+        </div>
+
+        <div class="hourly-strip" aria-label="7일 자금 예보">
+          <button class="day active"><span>오늘</span><i class="status-label safe">여유</i><b>418만</b><small>안전선 +188만</small></button>
+          <button class="day"><span>목 27</span><i class="status-label safe">여유</i><b>403만</b><small>안전선 +173만</small></button>
+          <button class="day"><span>금 28</span><i class="status-label safe">여유</i><b>391만</b><small>안전선 +161만</small></button>
+          <button class="day"><span>토 29</span><i class="status-label safe">여유</i><b>374만</b><small>안전선 +144만</small></button>
+          <button class="day"><span>일 30</span><i class="status-label safe">여유</i><b>365만</b><small>안전선 +135만</small></button>
+          <button class="day caution"><span>월 31</span><i class="status-label watch">관심</i><b>272만</b><small>안전선 +42만</small></button>
+          <button class="day risk"><span>화 1</span><i class="status-label risk">주의</i><b>209만</b><small>안전선 −21만</small></button>
+        </div>
+
+        <div class="flow-section" id="cause">
+          <div class="section-heading"><div><span class="eyebrow">TODAY FLOW</span><h2>오늘의 흐름</h2></div><span>확정 거래 기준</span></div>
+          <div class="flow-row"><span class="flow-time">10:30</span><span class="flow-symbol income">↓</span><div><b>카드 매출 정산</b><small>신한 110-***-2048 · 예상 범위 82만~96만원</small></div><strong class="income-text">+850,000원</strong><span class="confidence">확정 92%</span></div>
+          <div class="flow-row"><span class="flow-time">14:00</span><span class="flow-symbol expense">↑</span><div><b>매장 음악 구독료</b><small>반복 규칙 · 매월 26일</small></div><strong>−30,000원</strong><span class="confidence">자동 확인</span></div>
+          <div class="flow-row reserve"><span class="flow-time">마감 전</span><span class="flow-symbol">◇</span><div><b>급여 준비금으로 모아두기</b><small>목표 300만원 · 현재 120만원 · 6영업일 남음</small></div><strong>300,000원</strong><button data-route="settings">조정</button></div>
+        </div>
+
+        <div class="brief-band" id="response">
+          <span class="ai-mark">AI</span><div><span class="eyebrow">오늘의 브리핑</span><h2>정산은 줄고, 급여 출금은 가까워졌어요</h2><p>지난주보다 정산금이 12% 적습니다. 9월 5일까지 50만원 이상 지출을 미루면 안전선을 지킬 확률이 81%로 올라갑니다.</p></div><button data-route="insight">근거 4건 보기</button>
+        </div>
+
+        <div class="task-rail" id="tasks">
+          <div class="section-heading"><div><span class="eyebrow">NEEDS ATTENTION</span><h2>예보 정확도를 높일 일</h2></div><b>13건</b></div>
+          <button data-route="transactions"><span>01</span><div><b>거래 분류 확인</b><small>낮은 신뢰도 8건 · 예보 반영 전 확인</small></div><strong>8 →</strong></button>
+          <button data-route="transactions"><span>02</span><div><b>반복 후보 승인</b><small>배달 정산과 임대료 후보 2건</small></div><strong>2 →</strong></button>
+          <button data-route="evidence"><span>03</span><div><b>영수증 연결</b><small>거래와 연결되지 않은 증빙 3건</small></div><strong>3 →</strong></button>
+        </div>
+      </section>
+
+      <section class="view" data-view="forecast">
+        <div class="page-intro"><div><span class="eyebrow">CASH FLOW FORECAST · P0-07·08 / P1-04~08</span><h2>30일 자금 예보</h2><p>예상 잔고와 안전선을 같은 축에서 보고, 변동 원인을 날짜별로 확인합니다.</p></div><div class="segment"><button>7일</button><button>14일</button><button class="active">30일</button></div></div>
+        <div class="chart-panel"><div class="chart-head"><div><span>30일 후 예상 잔고</span><strong>3,760,000원</strong></div><div class="legend"><span><i class="line-blue"></i>예상 잔고</span><span><i class="line-dash"></i>안전잔고</span></div></div><div class="chart" aria-label="예상 잔고 차트"><span class="y y1">500만</span><span class="y y2">300만</span><span class="y y3">100만</span><div class="safety-line">안전잔고 230만</div><svg viewBox="0 0 900 250" preserveAspectRatio="none"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e8ee8" stop-opacity=".28"/><stop offset="1" stop-color="#3e8ee8" stop-opacity="0"/></linearGradient></defs><path class="area" d="M0 50 L110 65 L220 78 L320 120 L410 205 L470 220 L545 105 L650 92 L760 132 L900 115 L900 250 L0 250Z"/><path class="curve" d="M0 50 L110 65 L220 78 L320 120 L410 205 L470 220 L545 105 L650 92 L760 132 L900 115"/><circle cx="410" cy="205" r="6"/><circle cx="470" cy="220" r="6"/></svg><div class="gap-zone">9/3–9/4<br><b>자금주의보</b></div><div class="x-axis"><span>오늘</span><span>9/3</span><span>9/10</span><span>9/17</span><span>9/25</span></div></div></div>
+        <div class="timeline"><div class="timeline-title"><span>예보에 반영된 주요 사건</span><button data-action="add-event">＋ 사건 추가</button></div><div class="event"><time>8/31</time><i class="out"></i><div><b>임대료 출금</b><small>−930,000원 · 확정</small></div><span>반복 규칙</span></div><div class="event risk"><time>9/3</time><i class="out"></i><div><b>급여 출금</b><small>−3,000,000원 · 안전선 하회 시작</small></div><span>확정</span></div><div class="event"><time>9/5</time><i class="in"></i><div><b>배달 정산 입금</b><small>+2,450,000원 · 추석 연휴로 2일 보정</small></div><span>P1-04</span></div><div class="event"><time>9/14</time><i class="out"></i><div><b>밀가루 단가 상승 반영</b><small>재료비 +7.4% · 농산물유통정보 8/25</small></div><span>P1-06</span></div></div>
+        <div class="accuracy-band"><div><span>예보 신뢰도</span><strong>87%</strong><small>최근 3개월 12회 대조</small></div><div><span>평균 금액 오차</span><strong>±6.8%</strong><small>지난달보다 1.2%p 개선</small></div><div><span>계절성</span><strong>적용 중</strong><small>금요일 매출 +14%</small></div><button data-action="accuracy">예측과 실제 비교 →</button></div>
+      </section>
+
+      <section class="view" data-view="scenario">
+        <div class="page-intro"><div><span class="eyebrow">WHAT-IF · P0-09·13</span><h2>자금 조건 바꿔보기</h2><p>실제 거래는 바꾸지 않고, 여러 조건을 겹쳐 결과만 비교합니다.</p></div><button class="primary" data-action="save-scenario">시나리오 저장</button></div>
+        <div class="scenario-layout"><div class="scenario-controls"><label><span>정산 입금이 늦어진다면</span><output id="delayValue">2일</output><input id="delay" type="range" min="0" max="10" value="2" /></label><label><span>예상 정산금이 줄어든다면</span><output id="cutValue">−10%</output><input id="cut" type="range" min="0" max="40" value="10" /></label><label><span>추가 지출</span><div class="input-row"><input id="extra" value="500,000" inputmode="numeric" /><span>원</span><input type="date" value="2026-09-01" /></div></label><button class="text-btn" data-action="add-condition">＋ 추가 입금 또는 지출일 변경</button></div><div class="scenario-result"><span class="risk-label">시뮬레이션 결과</span><h3>최저 잔고가 62만원 더 낮아집니다</h3><div class="compare"><div><span>기본 예보</span><strong>1,487,600원</strong><small>9/3 · 2일 지속</small></div><div class="arrow">→</div><div><span>이 시나리오</span><strong id="scenarioBalance">867,600원</strong><small>9/2 · 4일 지속</small></div></div><div class="recommend"><b>대응 제안</b><p>추가 지출을 9월 6일 이후로 옮기면 공백 기간을 1일로 줄일 수 있습니다.</p></div><button class="light-btn" data-action="apply-plan">예정 거래로 등록</button></div></div>
+        <div class="saved-scenarios"><h3>저장한 시나리오</h3><button><span>정산 2일 지연 + 재료비 50만원</span><b>최저 86만원</b><small>방금 수정</small></button><button><span>매출 20% 감소</span><b>최저 112만원</b><small>8월 24일</small></button><button><span>급여일 3일 변경</span><b class="safe-text">안전선 유지</b><small>8월 22일</small></button></div>
+      </section>
+
+      <section class="view" data-view="transactions">
+        <div class="page-intro"><div><span class="eyebrow">TRANSACTION ENGINE · P0-01~06 / P1-01·05</span><h2>거래와 예정 흐름</h2><p>수집 → 자동 분류 → 반복 탐지 → 사용자 확인을 한 화면에서 처리합니다.</p></div><div><button class="ghost" data-action="csv">CSV 가져오기</button><button class="primary" data-action="plan">＋ 예정 거래</button></div></div>
+        <div class="filter-line"><div class="tabs"><button class="active" data-tab="all">전체 128</button><button data-tab="review">확인 필요 8</button><button data-tab="recurring">반복 후보 2</button><button data-tab="planned">예정 11</button></div><label>⌕ <input placeholder="적요·거래처 검색" /></label></div>
+        <div class="transaction-table" role="table"><div class="tr head" role="row"><span>일시</span><span>거래·근거</span><span>분류</span><span>금액</span><span>상태</span></div><button class="tr" data-action="transaction-detail"><span>8/26 08:42</span><span><b>배달의민족 정산</b><small>기존 확정 14회 · 매주 수요일</small></span><span>매출 정산</span><strong class="income-text">+850,000원</strong><em class="status-good">자동 96%</em></button><button class="tr review" data-action="transaction-detail"><span>8/25 19:18</span><span><b>우아한상회</b><small>LLM: 식자재 거래처로 추정</small></span><span>재료비?</span><strong>−184,500원</strong><em class="status-warn">확인 필요</em></button><button class="tr" data-action="transaction-detail"><span>8/25 14:02</span><span><b>성수전기</b><small>거래처 사전 · 영수증 연결됨</small></span><span>공과금</span><strong>−93,200원</strong><em class="status-good">확정</em></button><button class="tr planned" data-action="transaction-detail"><span>9/03 예정</span><span><b>9월 급여</b><small>반복 규칙 · 금액 직접 수정</small></span><span>급여</span><strong>−3,000,000원</strong><em>예정</em></button></div>
+        <div class="recurring-band"><div><span class="eyebrow">새 반복 후보</span><h3>우아한상회 · 평균 7일 간격</h3><p>최근 5회, 17만~21만원 범위로 출금되었습니다. 다음 출금은 9월 1일로 예상됩니다.</p></div><div><button class="ghost" data-action="edit-rule">날짜·금액 수정</button><button class="primary" data-action="confirm-rule">반복으로 승인</button></div></div>
+      </section>
+
+      <section class="view" data-view="evidence">
+        <div class="page-intro"><div><span class="eyebrow">EVIDENCE & TAX · P0-10~12 / P1-02·03</span><h2>증빙에서 신고자료까지</h2><p>증빙 인식, 거래 연결, 품목 집계, 정산 대사를 한 업무 흐름으로 묶었습니다.</p></div><button class="primary" data-action="upload">＋ 증빙 올리기</button></div>
+        <div class="process-tabs"><button class="active" data-pane="receipts">증빙 24</button><button data-pane="items">품목 가계부</button><button data-pane="settlement">정산 대사</button><button data-pane="export">신고자료</button></div>
+        <div class="evidence-workspace pane active" data-pane-view="receipts"><div class="receipt-list"><button class="selected" data-receipt="0"><span class="receipt-icon">▧</span><div><b>우아한상회 영수증</b><small>8/25 · 184,500원</small></div><em>매칭 92%</em></button><button data-receipt="1"><span class="receipt-icon">▧</span><div><b>성수전기 청구서</b><small>8/25 · 93,200원</small></div><em>연결됨</em></button><button data-receipt="2"><span class="receipt-icon">▧</span><div><b>한빛유통 세금계산서</b><small>8/22 · 412,000원</small></div><em class="status-warn">확인 필요</em></button></div><div class="receipt-detail"><div class="document-preview"><span>영수증 원본</span><b>우아한상회</b><i></i><i></i><i></i><strong>184,500원</strong></div><div class="ocr-fields"><div class="ai-result-label"><span>AI</span><b>인식 결과</b><small>원본에서 추출한 내용을 확인해 주세요</small></div><label>공급자<input value="우아한상회" /></label><label>거래일<input value="2026-08-25" /></label><label>공급가액<input value="167,727원" /></label><label>부가세<input value="16,773원" /></label><div class="match"><span>추천 거래</span><b>8/25 우아한상회 −184,500원</b><small>금액·날짜·상호 일치</small></div><button class="primary" data-action="match">거래에 연결</button></div></div></div>
+        <div class="pane" data-pane-view="items"><div class="metric-line"><div><span>이번 달 품목 지출</span><strong>2,842,700원</strong></div><div><span>전월 대비</span><strong class="risk-text">+8.4%</strong></div><div><span>단가 상승 품목</span><strong>3개</strong></div></div><div class="simple-table"><div><b>품목</b><b>이번 달</b><b>평균 단가</b><b>변화</b></div><div><span>밀가루 20kg</span><span>642,000원</span><span>32,100원</span><strong class="risk-text">+7.4%</strong></div><div><span>식용유 18L</span><span>418,000원</span><span>83,600원</span><strong>+1.8%</strong></div><div><span>포장 용기</span><span>327,000원</span><span>109원</span><strong class="safe-text">−3.2%</strong></div></div></div>
+        <div class="pane" data-pane-view="settlement"><div class="settlement-equation"><div><span>플랫폼 매출</span><strong>3,240,000</strong></div><i>−</i><div><span>취소·환불</span><strong>128,000</strong></div><i>−</i><div><span>수수료</span><strong>534,800</strong></div><i>=</i><div><span>예상 입금</span><strong>2,577,200</strong></div><i>vs</i><div class="mismatch"><span>실제 입금</span><strong>2,534,200</strong><small>43,000원 차이</small></div></div><div class="reconcile-note"><b>차이 원인 후보</b><p>광고비 43,000원이 정산서에 추가 차감됐습니다. 증빙을 연결한 뒤 확정해 주세요.</p><button class="primary" data-action="reconcile">대사 확정</button></div></div>
+        <div class="pane" data-pane-view="export"><div class="export-steps"><div class="done"><span>1</span><b>기간·형식</b><small>2026년 7–8월 · XLSX + 증빙 ZIP</small></div><div class="done"><span>2</span><b>자료 점검</b><small>증빙 연결률 87% · 미확인 3건</small></div><div><span>3</span><b>파일 만들기</b><small>예상 1분</small></div></div><div class="export-action"><h3>세무대리인 전달용 자료</h3><p>거래 분류, 품목 집계, 정산 대사 결과와 원본 증빙을 묶습니다.</p><label><input type="checkbox" checked /> 거래·카테고리 집계</label><label><input type="checkbox" checked /> 정산 대사 결과</label><label><input type="checkbox" checked /> 증빙 원본 ZIP</label><button class="primary" data-action="export">자료 만들기</button></div></div>
+      </section>
+
+      <section class="view" data-view="calendar">
+        <div class="page-intro calendar-intro"><div><span class="eyebrow">CASH FLOW CALENDAR · P1-18</span><h2>9월 월간 자금 전망</h2><p>날짜의 색 농도는 가용 잔고 수준, 선은 입출금 흐름을 나타냅니다.</p></div><div class="month-switch"><button aria-label="이전 달">←</button><strong>2026. 09</strong><button aria-label="다음 달">→</button></div></div>
+        <div class="calendar-outlook"><div><span>이번 달 전망</span><strong>대체로 안정, 3–4일 주의</strong><small>안전한 날 23일 · 살펴볼 날 5일 · 위험 2일</small></div><div class="outlook-wave" aria-label="9월 잔고 흐름"><svg viewBox="0 0 520 80" preserveAspectRatio="none"><path d="M0 18 C70 20 95 35 145 32 S205 67 245 68 S295 26 350 28 S430 42 520 30"/><line x1="0" y1="53" x2="520" y2="53"/></svg><span>안전잔고</span></div><div class="calendar-legend"><span><i class="weather-safe"></i>여유</span><span><i class="weather-watch"></i>관심</span><span><i class="weather-risk"></i>주의</span></div></div>
+        <div class="calendar-layout weather-calendar"><div class="calendar-main"><div class="calendar-week"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendarGrid"></div></div><aside class="day-detail"><div class="day-condition"><span class="condition-symbol status-label risk">주의</span><div><span>9월 3일 목요일</span><h3>안전잔고 하회</h3><p>안전잔고보다 812,400원 낮아요</p></div></div><div class="day-balance"><span>하루 마감 예상</span><strong>1,487,600원</strong><small>전날보다 3,000,000원 감소</small></div><div class="day-events"><div><time>09:00</time><span class="event-mark out"></span><p><b>9월 급여</b><small>확정 출금</small></p><strong>−300만원</strong></div><div><time>예정 변경</time><span class="event-mark delayed"></span><p><b>배달 정산</b><small>추석 연휴로 9/5 이동</small></p><strong>+245만원</strong></div></div><div class="weather-advice"><span>대응 예보</span><p>50만원 지출을 9월 6일로 옮기면 주의 기간이 하루 줄어듭니다.</p></div><button class="primary" data-route="scenario">이 날짜로 시뮬레이션 →</button></aside></div>
+      </section>
+
+      <section class="view" data-view="insight"><div class="page-intro"><div><span class="eyebrow">BUSINESS INSIGHT · P1-17·19</span><h2>주간·월간 브리핑</h2><p>계산 근거가 있는 매출·지출·최저 잔고 요약을 제공합니다.</p></div><div class="segment"><button class="active">주간</button><button>월간</button></div></div><article class="report-lead"><span class="ai-mark">AI</span><div><span>8월 4주차 브리핑</span><h3>매출보다 정산 시점이 이번 주 위험을 만들고 있어요</h3><p>매출은 전주 대비 3.1% 늘었지만 정산일이 휴일 뒤로 밀렸습니다. 9월 3일 급여 전까지 가용 지출을 50만원 이하로 유지하는 편이 안전합니다.</p><div><button data-action="evidence-source">근거 4건</button><button data-route="scenario">대응 시뮬레이션</button></div></div></article><div class="insight-lines"><div><span>이번 달 수입</span><strong>18,420,000원</strong><small>전월 대비 +3.1%</small></div><div><span>이번 달 지출</span><strong>15,877,000원</strong><small class="risk-text">재료비 +8.4%</small></div><div><span>영업 현금흐름</span><strong class="safe-text">+2,543,000원</strong><small>전월보다 42만원 증가</small></div></div><div class="brief-next"><div><span class="eyebrow">NEXT ACTION</span><h3>자금 공백에 금융 대응이 필요한가요?</h3><p>대출 상환 일정, 참고 상품과 지원제도는 별도 화면에서 확인할 수 있습니다.</p></div><button class="primary" data-route="finance">대출·지원 확인 →</button></div></section>
+
+      <section class="view" data-view="finance">
+        <div class="page-intro"><div><span class="eyebrow">FINANCE & SUPPORT · P1-13~16</span><h2>대출·지원</h2><p>보유 대출은 예보에 반영하고, 신규 상품과 지원제도는 비교·안내까지만 제공합니다.</p></div><span class="reference-notice">대출 실행·지원금 신청은 외부 기관에서 직접 진행</span></div>
+        <div class="finance-scope"><div><b>서비스 안에서 하는 것</b><span>대출 현황 조회 · 상환 일정 예보 반영 · 상품 비교 · 공고 조건 분석 · 문서 작성</span></div><div><b>외부에서 하는 것</b><span>대출 신청·계약 · 지원사업 최종 자격 확인·접수 · 공식 서류 발급</span></div></div>
+        <section class="loan-overview"><div><span class="eyebrow">P1-13 · 보유 대출</span><h3>신한 소상공인 운영자금</h3><p>연동된 대출의 상환일을 잔고 예보에 자동 반영합니다.</p></div><dl><div><dt>남은 원금</dt><dd>12,400,000원</dd></div><div><dt>금리</dt><dd>연 4.2%</dd></div><div><dt>다음 상환</dt><dd>9월 15일 · 420,000원</dd></div></dl><button class="ghost" data-action="loan">전체 상환 일정</button></section>
+        <div class="credit-outlook"><div><span class="eyebrow">P1-14 · 신용 기반 상품 비교</span><h3>현재 KCB 742점 · 예상 등급 유지</h3><p>자금흐름과 신용 구간으로 3개 상품을 필터링했습니다. 실제 한도와 금리는 금융사 심사에서 결정됩니다.</p></div><div><span>참고 한도</span><strong>1,000만~3,000만원</strong><button class="primary" data-action="credit">비교 결과 보기</button></div></div>
+        <div class="finance-list"><div class="section-heading"><div><span class="eyebrow">P1-15·16 · SUPPORT</span><h2>지원제도와 신청 준비</h2></div><span>조건 분석 → 원문 확인 → 외부 신청</span></div><button data-action="support"><span>공고 분석</span><div><b>성동구 소상공인 경영안정자금 · D-12</b><small>업종·지역·매출 조건 4/5 일치 · 최종 자격은 원문 확인</small></div><strong>분석 및 원문 링크 →</strong></button><button data-action="docs"><span>서류 준비</span><div><b>사업계획서 초안 62% 작성</b><small>서비스 안에서 AI 편집 · 공식 서류는 발급처 링크 제공</small></div><strong>계속 작성 →</strong></button></div>
+      </section>
+
+      <section class="view" data-view="settings"><div class="page-intro"><div><span class="eyebrow">OPERATING RULES · P1-08·09·11·12</span><h2>예보의 운영 기준</h2><p>안전선, 준비금, 부가세, 사업장·계좌를 직접 관리합니다.</p></div><button class="primary" data-action="save-settings">변경 저장</button></div><div class="settings-groups"><section><h3>안전잔고</h3><p>고정비 1개월과 사용자 여유 금액을 합산합니다.</p><label>현재 기준 <input value="2,300,000" /> 원</label><div class="formula">고정비 1,850,000 + 여유금 450,000 = <b>2,300,000원</b></div></section><section><h3>가상 준비금</h3><p>실제 이체 없이 서비스 안에서만 따로 표시합니다.</p><div class="reserve-setting"><span>9월 급여<small>9/3 · 목표 300만원</small></span><b>120만원 / 40%</b><button>편집</button></div><div class="reserve-setting"><span>부가세<small>2026년 2기 · 거래 기반 추정값 · 최종 신고는 세무대리인 확인</small></span><b>114만원 / 67%</b><button>편집</button></div></section><section><h3>다사업장·계좌</h3><p>사업장별 데이터는 분리하고 이동은 시뮬레이션만 합니다.</p><div class="business-row"><span class="weather-dot caution"></span><span>성수점<small>신한 2 · 토스 1</small></span><b>가용 184만원</b></div><div class="business-row"><span class="weather-dot safe"></span><span>연남점<small>국민 1</small></span><b>가용 512만원</b></div><button class="ghost" data-action="transfer">매장 간 자금 이동 시뮬레이션</button></section><section><h3>예보 보정</h3><label class="toggle"><span>영업일·공휴일 보정<small>원래 예정일과 보정 근거 표시</small></span><input type="checkbox" checked /></label><label class="toggle"><span>원자재 가격 지표<small>출처·수집일·변동률 표시</small></span><input type="checkbox" checked /></label><label class="toggle"><span>계절성·성수기<small>요일·월·성수기 계수 반영</small></span><input type="checkbox" checked /></label></section></div></section>
+    </main>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+  <dialog id="appDialog"><button class="dialog-close" data-action="close-dialog">×</button><span class="eyebrow" id="dialogEyebrow">QUICK ACTION</span><h2 id="dialogTitle">작업</h2><div id="dialogBody"></div><div class="dialog-actions"><button class="ghost" data-action="close-dialog">닫기</button><button class="primary" data-action="complete-dialog">확인</button></div></dialog>
+  <script src="./app.js"></script>
+</body>
+</html>

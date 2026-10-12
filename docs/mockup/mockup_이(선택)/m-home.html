@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 오늘 (모바일)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<style>
+/* SC-02-1 오늘 요약 · 모바일 홈 (화면구성도 5.2)
+   내용은 그 절을 따르고, 배치는 하늘과 땅입니다.
+   현장에서 3초 안에 "오늘 돈 상태"와 "지금 할 일"이 나와야 합니다. */
+
+body { padding-bottom:76px; }   /* 하단 탭 자리 */
+
+.sky { padding:var(--s6) var(--s6) var(--s9); }
+.answer { margin-top:var(--s7); padding-bottom:var(--s8); max-width:none; }
+.bal .v { font-size:clamp(40px, 13vw, 60px); }
+.bal .u { font-size:18px; }
+.lede { font-size:14.5px; max-width:none; margin-top:var(--s5); }
+.when { font-size:13px; }
+.weather .word { font-size:21px; }
+.weather .glyph { width:27px; height:27px; }
+
+/* 모바일에서는 곡선을 답 아래 띠로 깔고 어둠을 한 겹 덮습니다 */
+.curve { inset:auto 0 58px 0; height:132px; }
+.scrim { display:block; position:absolute; inset:auto 0 58px 0; height:170px; z-index:2;
+         pointer-events:none;
+         background:linear-gradient(to top, rgb(8 14 26 / .46) 0%, rgb(8 14 26 / .18) 56%, transparent 100%); }
+
+.alertbar { padding:var(--s4) var(--s6); gap:var(--s3); }
+.alertbar .txt { font-size:12px; line-height:1.45; }
+.alertbar .go { padding:8px 11px; font-size:11.5px; }
+
+/* 예보 띠 — 모바일에서 가장 자연스럽습니다. 손가락으로 넘깁니다. */
+.strip-wrap { padding-top:var(--s6); }
+.strip-hd { padding:0 var(--s6) var(--s3); }
+.strip-hd h2 { font-size:12px; }
+.strip-hd .hint { display:none; }
+.strip { padding:0 var(--s6) var(--s5); }
+.day { width:48px; }
+
+.ground { padding:var(--s7) var(--s6) var(--s9); }
+.sec + .sec { margin-top:var(--s9); }
+.sec .head { font-size:19px; }
+.figs { gap:var(--s7); }
+.fig { min-width:132px; }
+.fig .v { font-size:19px; }
+
+/* 오늘 오갈 돈 · 확인할 일 — 상자 없이 선으로 */
+.r { padding:var(--s4) 0; gap:var(--s4); }
+.r .nm { font-size:13.5px; }
+.r .amt { font-size:13.5px; }
+.bd { font-size:10px; font-weight:700; padding:2px 5px; border-radius:4px;
+      background:var(--ground-2); color:var(--ink-3); white-space:nowrap; }
+.bd-est { background:#e7edf6; color:#1b3d63; }
+.r .go { margin-left:auto; font-size:11.5px; font-weight:700; color:var(--ink-3); }
+
+/* 하단 탭과 촬영 버튼은 sky.css 로 옮겼습니다 */
+</style>
+</head>
+<body class="m">
+
+<header class="sky">
+  <div class="top" id="top"></div>
+
+  <div class="answer">
+    <p class="when" id="when"></p>
+    <div class="weather">
+      <span class="glyph" id="glyph" aria-hidden="true"></span>
+      <span class="word" id="word"></span>
+      <span class="state" id="state"></span>
+    </div>
+    <div class="bal"><span class="v tnum" id="bigv">0</span><span class="u">원</span></div>
+    <p class="lede" id="lede"></p>
+  </div>
+
+  <div class="alertbar">
+    <span class="pulse" aria-hidden="true"><i></i><i></i></span>
+    <span class="txt" id="alertTxt"></span>
+    <a class="go" href="m-scenarios.html">대응</a>
+  </div>
+
+  <div class="curve"><svg id="curve" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+  <div class="scrim" aria-hidden="true"></div>
+</header>
+
+<section class="strip-wrap">
+  <div class="strip-hd">
+    <h2>앞으로 서른 날</h2>
+    <span class="segs" role="group" aria-label="예보 기간">
+      <button data-n="7">7일</button><button data-n="14">14일</button>
+      <button data-n="30" aria-pressed="true">30일</button>
+    </span>
+  </div>
+  <div class="strip" id="strip"></div>
+</section>
+
+<main class="ground">
+  <section class="sec">
+    <h2>오늘 오갈 돈</h2>
+    <div class="rows" id="todayRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>확인할 일</h2>
+    <p class="head" id="todoHead"></p>
+    <div class="rows" id="todoRows"></div>
+  </section>
+
+  <section class="sec">
+    <h2>오늘의 셈</h2>
+    <div class="figs" id="figs"></div>
+  </section>
+
+  <div class="brief">
+    <span class="q">“<span id="briefHl"></span>”</span>
+    <a class="go" href="m-brief.html">읽기</a>
+  </div>
+  <p class="note" id="note"></p>
+</main>
+
+<div id="tabs"></div>
+
+<div class="pin" id="pin"></div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = mHomeTop();
+wireSwitch();
+document.getElementById('tabs').outerHTML = mTabs('home');
+document.getElementById('alertTxt').innerHTML = alertText();
+document.getElementById('briefHl').textContent = BRIEF_HL;
+document.getElementById('note').textContent = BASIS + ' · ' + WARN;
+
+/* 오늘 오갈 돈 — 확실성 뱃지를 함께 (화면구성도 6.2) */
+var CERT = { CONFIRMED:['확정',''], RANGE:['범위',''], PREDICTED:['예보','bd-est'] };
+document.getElementById('todayRows').innerHTML = TODAY_ITEMS.map(function (t) {
+  var c = CERT[t[4]];
+  return '<div class="r">'
+    + '<span class="grow"><span class="nm">' + t[0] + ' <span class="bd ' + c[1] + '">' + c[0] + '</span></span>'
+    + '<span class="mt">' + t[1] + '</span></span>'
+    + '<span class="amt' + (t[2]==='in'?' in':'') + '">' + (t[2]==='in'?'+':'−') + won(t[3]) + '</span></div>';
+}).join('');
+
+/* 확인할 일 */
+var n = TODO.reduce(function (a,t) { return a + (+t[0].match(/\d+/)[0]); }, 0);
+document.getElementById('todoHead').innerHTML =
+  '<b>' + n + '건</b>을 확인하면 예보가 더 맞습니다.';
+document.getElementById('todoRows').innerHTML = TODO.map(function (t) {
+  return '<div class="r"><span class="grow"><span class="nm">' + t[0] + '</span>'
+    + '<span class="mt">' + t[1] + '</span></span><span class="go">확인 ›</span></div>';
+}).join('');
+
+document.getElementById('figs').innerHTML =
+  '<div class="fig"><span class="k">지금 쓸 수 있는 돈</span>'
+  + '<span class="v">' + won(today.v-VAT_HELD) + '<small>원</small></span>'
+  + '<span class="s">부가세 예수금 ' + man(VAT_HELD) + '원 제외</span></div>'
+  + '<div class="fig"><span class="k">오늘 모아둘 돈</span>'
+  + '<span class="v">' + won(RESERVE.today) + '<small>원</small></span>'
+  + '<span class="s">9월 급여 ' + RESERVE.pct + '% 확보 · 남은 영업일 ' + RESERVE.days + '일</span>'
+  + '<span class="rail"><i data-w="' + RESERVE.pct + '"></i></span></div>'
+  + '<div class="fig"><span class="k">안전선</span>'
+  + '<span class="v">' + man(SAFETY) + '<small>원</small></span>'
+  + '<span class="s">최근 30일 고정비 기준</span></div>'
+  + '<div class="fig"><span class="k">예보 정확도</span>'
+  + '<span class="v">' + ACCURACY.pct + '<small>%</small></span>'
+  + '<span class="s">입금일 평균 ' + ACCURACY.dayGap + '일 차이</span>'
+  + '<span class="rail"><i data-w="' + ACCURACY.pct + '"></i></span></div>';
+
+drawCurve(390, 132);
+buildStrip();
+wireStrip();
+wireReveal();
+paintSky(today);
+mountFeatures('m-home');
+</script>
+</body>
+</html>

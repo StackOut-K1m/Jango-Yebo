@@ -1,0 +1,364 @@
+/* 거래 목록·CSV 업로드. 카드 대신 선으로 나눈다. */
+
+.tx-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5) var(--s6);
+  padding-bottom: var(--s6);
+  border-bottom: 1px solid var(--hair);
+}
+
+.tx-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.tx-filters span {
+  font-size: var(--f1);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.tx-filters input,
+.tx-filters select {
+  font: inherit;
+  font-size: var(--f4);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+  padding: var(--s2) 0;
+}
+
+.tx-filters input:focus,
+.tx-filters select:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+/* 이름표가 칸 위에 서는 옆 label 과 달리 체크상자와 한 줄이다. 높이를 입력칸과 같은
+   44px 로 두고 줄 끝에 세워 가운데를 맞춘다 — padding 으로 밀면 입력칸 높이가 바뀔 때마다
+   어긋난다(밀어 둔 값으로는 5.5px 처져 있었다). */
+.tx-check {
+  flex-direction: row !important;
+  align-items: center;
+  align-self: flex-end;
+  min-height: 44px;
+  gap: var(--s3) !important;
+}
+
+/* 표 안 체크상자는 인라인이라 글자 기준선 위에 앉는다 — 셀 가운데보다 3.4px 높았다. */
+.tx-select input[type='checkbox'] {
+  vertical-align: middle;
+}
+
+/* 넓은 표는 페이지가 아니라 표가 스스로 가로 스크롤한다 */
+.tx-table-wrap {
+  overflow-x: auto;
+}
+
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--f4);
+}
+
+.tx-table th,
+.tx-table td {
+  text-align: left;
+  padding: var(--s4) var(--s5) var(--s4) 0;
+  border-bottom: 1px solid var(--hair);
+  vertical-align: top;
+}
+
+.tx-table th {
+  font-size: var(--f1);
+  font-weight: 700;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* 금액은 항상 오른쪽 정렬 + tabular-nums 로 자릿수가 흔들리지 않게 한다 */
+.tx-table .tx-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tx-table td[data-direction='WITHDRAWAL'] {
+  color: var(--danger);
+}
+
+/* 확인 필요 목록의 선택 열. 내용이 체크박스 하나뿐이라 폭을 최소로 잡고 가운데 둔다 —
+   기본값으로 두면 적요 열이 밀린다. */
+.tx-table .tx-select {
+  width: 1%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 손가락·마우스로 집기 쉬운 크기. 표 기본 글꼴에 맞춰 두면 너무 작다. */
+.tx-table .tx-select input {
+  width: 1.05rem;
+  height: 1.05rem;
+  cursor: pointer;
+}
+
+/* 분류가 없어 확정할 수 없는 행. 색만으로 구분하지 않도록 title 이 사유를 함께 준다
+   (도메인 규칙 6). */
+.tx-table .tx-select input:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.tx-status {
+  display: inline-block;
+  font-size: var(--f1);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tx-status[data-status='CONFIRMED'] {
+  color: var(--safe);
+}
+
+.tx-status[data-status='SUGGESTED'] {
+  color: var(--caution);
+}
+
+.tx-status[data-status='UNCLASSIFIED'] {
+  color: var(--ink-3);
+}
+
+.tx-category {
+  display: block;
+  margin-top: var(--s2);
+  font: inherit;
+  font-size: var(--f3);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+  padding: var(--s1) 0;
+  max-width: 12rem;
+}
+
+.tx-category:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+.tx-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s6);
+  padding-top: var(--s6);
+  font-size: var(--f3);
+  color: var(--ink-3);
+}
+
+.tx-pager button {
+  font: inherit;
+  font-size: var(--f3);
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--hair);
+  border-radius: var(--pill-r);
+  padding: 0 var(--s7);
+  cursor: pointer;
+}
+
+.tx-pager button:disabled {
+  color: var(--ink-3);
+  border-color: var(--hair);
+  cursor: default;
+}
+
+.tx-upload {
+  display: flex;
+  flex-wrap: wrap;
+  /* 위를 맞춘다. 아래를 맞추면 칸 높이가 서로 달라(고르기 칸 vs 끌어다 놓는 상자)
+     「계좌」와 「파일」 이름표가 어긋난다 — 먼저 읽는 것은 이름표다. */
+  align-items: flex-start;
+  gap: var(--s5) var(--s6);
+}
+/* 올리기 버튼만 아래를 맞춘다. 위로 붙이면 칸이 아니라 머리말 옆에 선 것으로 읽힌다 */
+.tx-upload > button { align-self: flex-end; }
+
+.tx-upload label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+/* 끌어다 놓는 자리. 테두리를 점선으로 둬서 「여기에 놓을 수 있다」를 끌기 전에도 말한다.
+   이름표(「파일」)는 이 상자 밖, 위에 있다 — 안에 넣으면 상자의 안쪽 여백만큼 내려가
+   옆 「계좌」와 높이가 어긋난다. */
+.tx-drop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3);
+  border: 1px dashed var(--hair);
+  border-radius: 10px;
+  transition: border-color .15s, background .15s;
+}
+.tx-drop.is-over {
+  border-color: var(--ink);
+  border-style: solid;
+  background: var(--veil-1, rgba(0, 0, 0, .03));
+}
+.tx-drop__hint {
+  font-style: normal;
+  font-size: var(--f1);
+  color: var(--ink-3);
+  word-break: break-all;
+}
+
+.tx-upload span {
+  font-size: var(--f1);
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.tx-upload input,
+.tx-upload select {
+  font: inherit;
+  font-size: var(--f4);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+  padding: var(--s2) 0;
+}
+
+.tx-upload .auth-submit {
+  width: auto;
+  margin: 0;
+  min-height: var(--ctl);
+  padding: 0 var(--s7);
+}
+
+.tx-spec {
+  margin-top: var(--s6);
+  font-size: var(--f3);
+}
+
+.tx-spec summary {
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.tx-spec .tx-table {
+  margin-top: var(--s5);
+  font-size: var(--f3);
+}
+
+.tx-spec__note {
+  margin-top: var(--s4);
+  color: var(--ink-3);
+  line-height: var(--lh);
+}
+
+.tx-error {
+  margin-top: var(--s5);
+  font-size: var(--f3);
+  color: var(--danger);
+  line-height: var(--lh);
+}
+
+.tx-result {
+  margin-top: var(--s6);
+  font-size: var(--f4);
+  line-height: var(--lh);
+}
+
+.tx-result__reject {
+  margin-top: var(--s5);
+  color: var(--danger);
+}
+
+/* AI 분류 실행. 버튼 하나뿐이라 CSV 업로드처럼 폼 격자를 두지 않는다.
+ * `.auth-submit` 은 이 화면의 기본 실행 버튼이고 업로드 버튼도 같은 것을 쓴다 —
+ * 나란히 놓았을 때 높이·모서리가 어긋나지 않게 여백만 맞춘다. */
+.tx-classify .auth-submit {
+  width: auto;
+  margin: 0;
+  min-height: var(--ctl);
+  padding: 0 var(--s7);
+}
+
+.tx-classify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  align-items: flex-start;
+}
+
+.tx-classify-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  font-size: var(--f2);
+  color: var(--ink-3);
+}
+
+/* `progress` 는 브라우저마다 기본 모양이 달라 전부 지우고 다시 그린다.
+ * `value` 가 없으면 불확정 막대가 되고, 그때는 채움이 0 이라 바탕만 보인다. */
+.tx-classify-bar {
+  appearance: none;
+  width: 200px;
+  height: 4px;
+  border: 0;
+  border-radius: var(--pill-r);
+  background: var(--hair);
+}
+
+.tx-classify-bar::-webkit-progress-bar {
+  border-radius: var(--pill-r);
+  background: var(--hair);
+}
+
+.tx-classify-bar::-webkit-progress-value {
+  border-radius: var(--pill-r);
+  background: var(--ink);
+}
+
+.tx-classify-bar::-moz-progress-bar {
+  border-radius: var(--pill-r);
+  background: var(--ink);
+}
+
+/* 색만으로 상태를 구분하지 않는다(도메인 규칙 6) — 문장이 무슨 일인지 그대로 말한다. */
+.tx-classify-stall {
+  margin: 0;
+  font-size: var(--f3);
+  color: var(--caution);
+}
+
+/* 「확인 필요만」 아래에 붙는 일괄 확정. 필터 줄과 목록 사이라 여백을 양쪽으로 둔다. */
+.tx-bulk {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  margin: var(--s5) 0;
+}
+
+.tx-bulk .auth-submit {
+  width: auto;
+  margin: 0;
+  min-height: var(--ctl);
+  padding: 0 var(--s7);
+}
+
+.tx-bulk p {
+  margin: 0;
+  font-size: var(--f2);
+  color: var(--ink-3);
+}

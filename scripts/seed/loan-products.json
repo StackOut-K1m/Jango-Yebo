@@ -1,0 +1,143 @@
+{
+  "_": [
+    "LOAN_02 createLoanProduct 로 등록할 대출 상품 목록. node scripts/seed-loans.mjs 가 읽는다.",
+    "",
+    "금융망 제약 (워크북 LOAN_02):",
+    "  accountName        20자 이하",
+    "  accountDescription 255자 이하",
+    "  loanPeriod         2 ~ 365 (일)   ← 다년 대출이 없다",
+    "  minLoanBalance     1,000 이상 (원)",
+    "  maxLoanBalance     300,000,000 이하",
+    "  interestRate       0.1 ~ 20 (%)",
+    "  상환방법           0001 원리금균등상환 — 이름이 그럴 뿐 실제는 단리 일할이고",
+    "                     (원금+이자)/기간(일) 을 매일 자동이체한다. 화면에는 「매일 자동이체」로 쓴다.",
+    "",
+    "grade 는 LOAN_01 의 ratingName 이다. 스크립트가 실행 시점에 ratingUniqueNo 로 바꾼다.",
+    "LOAN_03 의 ratingName 은 '최소 가입 가능 등급' 이라 A 상품은 A 만, E 상품은 전원이 본다.",
+    "",
+    "상품 삭제 API 가 없다. 한 번 등록하면 앱 전체에 영원히 남고, 이름을 바꿔 다시 돌리면",
+    "지워지지 않고 늘어난다. 화면에서 감추는 수단은 LOAN_PRODUCT.recommendable 뿐이다."
+  ],
+  "products": [
+    {
+      "grade": "A",
+      "bankCode": "004",
+      "accountName": "우량 소상공인 대출",
+      "loanPeriod": 365,
+      "minLoanBalance": 10000000,
+      "maxLoanBalance": 200000000,
+      "interestRate": 4.2,
+      "accountDescription": "자산 1억 이상 우량 사업자 대상 최저금리 운전자금. 연 4.2% 고정."
+    },
+    {
+      "grade": "A",
+      "bankCode": "088",
+      "accountName": "프리미엄 운전자금",
+      "loanPeriod": 180,
+      "minLoanBalance": 5000000,
+      "maxLoanBalance": 100000000,
+      "interestRate": 3.9,
+      "accountDescription": "6개월 단기 고액 운전자금. 최우량 등급 전용 우대금리 연 3.9%."
+    },
+    {
+      "grade": "B",
+      "bankCode": "003",
+      "accountName": "소상공인 성장대출",
+      "loanPeriod": 365,
+      "minLoanBalance": 5000000,
+      "maxLoanBalance": 100000000,
+      "interestRate": 5.8,
+      "accountDescription": "1년 만기 사업 확장 자금. 자산 8천만원 이상 사업자 대상 연 5.8%."
+    },
+    {
+      "grade": "B",
+      "bankCode": "090",
+      "accountName": "정산 브릿지 대출",
+      "loanPeriod": 60,
+      "minLoanBalance": 1000000,
+      "maxLoanBalance": 30000000,
+      "interestRate": 6.5,
+      "accountDescription": "카드 정산 지연으로 생기는 단기 공백 전용. 60일 만기 연 6.5%."
+    },
+    {
+      "grade": "C",
+      "bankCode": "020",
+      "accountName": "소상공인 일반대출",
+      "loanPeriod": 365,
+      "minLoanBalance": 3000000,
+      "maxLoanBalance": 50000000,
+      "interestRate": 8.4,
+      "accountDescription": "가장 널리 쓰이는 1년 만기 표준 신용대출. 연 8.4%."
+    },
+    {
+      "grade": "C",
+      "bankCode": "034",
+      "accountName": "단기 운전자금",
+      "loanPeriod": 90,
+      "minLoanBalance": 1000000,
+      "maxLoanBalance": 20000000,
+      "interestRate": 9.2,
+      "accountDescription": "3개월 만기 소액 운전자금. 상환 부담이 짧게 끝난다. 연 9.2%."
+    },
+    {
+      "grade": "C",
+      "bankCode": "081",
+      "accountName": "사업자 한도대출",
+      "loanPeriod": 180,
+      "minLoanBalance": 2000000,
+      "maxLoanBalance": 30000000,
+      "interestRate": 8.9,
+      "accountDescription": "6개월 만기 사업자 한도성 자금. 연 8.9%."
+    },
+    {
+      "grade": "D",
+      "bankCode": "011",
+      "accountName": "서민 신용대출",
+      "loanPeriod": 180,
+      "minLoanBalance": 1000000,
+      "maxLoanBalance": 20000000,
+      "interestRate": 12.5,
+      "accountDescription": "자산 3천만원 이상 사업자 대상 6개월 만기 생계형 자금. 연 12.5%."
+    },
+    {
+      "grade": "D",
+      "bankCode": "045",
+      "accountName": "소액 급전대출",
+      "loanPeriod": 30,
+      "minLoanBalance": 500000,
+      "maxLoanBalance": 5000000,
+      "interestRate": 14,
+      "accountDescription": "30일 만기 소액 급전. 금리가 높아 단기 공백에만 권한다. 연 14.0%."
+    },
+    {
+      "grade": "E",
+      "bankCode": "999",
+      "accountName": "소상공인 비상자금",
+      "loanPeriod": 180,
+      "minLoanBalance": 1000000,
+      "maxLoanBalance": 10000000,
+      "interestRate": 16.8,
+      "accountDescription": "등급 제한 없이 신청 가능한 6개월 만기 비상 운전자금. 연 16.8%."
+    },
+    {
+      "grade": "E",
+      "bankCode": "999",
+      "accountName": "비상 소액대출",
+      "loanPeriod": 90,
+      "minLoanBalance": 100000,
+      "maxLoanBalance": 3000000,
+      "interestRate": 17.5,
+      "accountDescription": "10만원부터 신청할 수 있는 3개월 만기 소액 자금. 연 17.5%."
+    },
+    {
+      "grade": "E",
+      "bankCode": "037",
+      "accountName": "초단기 소액대출",
+      "loanPeriod": 14,
+      "minLoanBalance": 100000,
+      "maxLoanBalance": 1000000,
+      "interestRate": 19.5,
+      "accountDescription": "14일 만기 초단기 자금. 법정 상한에 가까운 연 19.5%."
+    }
+  ]
+}

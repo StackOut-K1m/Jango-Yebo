@@ -1,0 +1,596 @@
+/* ══════════════════════════════════════════════════════════════
+   잔고예보 v4 · 공용 스타일 "하늘과 땅"
+
+   이름이 일기예보에서 왔으므로 형태도 거기서 가져옵니다.
+   일기예보 화면에는 네모 박스가 없습니다.
+     · 상태는 카드 뱃지가 아니라 화면 전체의 하늘색입니다
+     · 숫자는 상자에 담기지 않고 하늘에 떠 있습니다
+     · 예보는 격자가 아니라 옆으로 흐르는 띠입니다
+     · 나머지 수치는 상자가 아니라 선과 여백으로 나뉩니다
+
+   내용은 project/docs/화면구성도.md 를 따르고, 배치는 따르지 않습니다.
+
+   ── 지켜야 하는 것 ──
+   자리와 값은 애니메이션에 매달지 않습니다. 움직임은 그 위에 얹힙니다.
+   requestAnimationFrame 은 화면 밖에서 오지 않아, 값이 틀린 채로 남습니다.
+   ══════════════════════════════════════════════════════════════ */
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root {
+  --s1:4px; --s2:6px; --s3:8px; --s4:10px; --s5:12px; --s6:16px; --s7:20px; --s8:28px; --s9:40px; --s10:56px;
+
+  /* 땅 · DESIGN-claude.md 의 크림. 하늘 아래는 따뜻하게 둡니다. */
+  --ground:#faf9f5; --ground-2:#f2ece1; --hair:#e3dbcf;
+  --ink:#141413; --ink-2:#46443f; --ink-3:#7d786e;
+
+  /* 상태 · dataviz 검사 통과 조합 (초록 · 노랑 · 빨강 2단계)
+     주황과 빨강은 색으로 갈리지 않아서 4색을 못 씁니다. 근거는 base.css 주석에. */
+  --safe:#137a4d; --caution:#caa521; --danger:#b3332b; --gap:#8a1c19;
+  --coral:#cc785c;   /* 워드마크 한 글자에만. 상태 뱃지가 놓이지 않는 자리입니다. */
+
+  --serif:"Gowun Batang", serif;
+  --sans:Pretendard, system-ui, sans-serif;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:var(--ground); color:var(--ink); font-family:var(--sans);
+  overflow-x:hidden; word-break:keep-all;   /* 한국어는 어절 단위로 끊습니다 */
+}
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+.tnum { font-variant-numeric:tabular-nums; }
+.sp { margin-left:auto; }
+
+/* ════════════ 하늘 ════════════ */
+.sky {
+  position:relative; padding:var(--s7) var(--s9) var(--s10);
+  color:#fff; overflow:hidden;
+  transition:background 1100ms cubic-bezier(.4,0,.2,1);
+  background:linear-gradient(168deg, var(--k0,#0c2c55) 0%, var(--k1,#2a6ba5) 52%, var(--k2,#8dbfe2) 100%);
+}
+.sky::before {
+  content:""; position:absolute; inset:-30% -10% auto -10%; height:150%;
+  background:
+    radial-gradient(48% 34% at 22% 28%, rgb(255 255 255 / .14), transparent 70%),
+    radial-gradient(38% 26% at 76% 18%, rgb(255 255 255 / .10), transparent 72%),
+    radial-gradient(52% 30% at 55% 62%, rgb(255 255 255 / .07), transparent 74%);
+  animation:drift 26s ease-in-out infinite alternate; pointer-events:none;
+}
+@keyframes drift { from { transform:translate3d(-3%,0,0) scale(1); } to { transform:translate3d(4%,-4%,0) scale(1.12); } }
+/* 날씨 결(비 · 폭풍 줄무늬)은 뺐습니다. 상태는 색 · 모양 · 말로 말하고, 하늘은 색만 바꿉니다. */
+
+/* ---- 상단 줄 ---- */
+.top { display:flex; align-items:center; gap:var(--s5); position:relative; z-index:5; flex-wrap:wrap; }
+.wm { display:flex; align-items:center; gap:var(--s2); flex:none; white-space:nowrap;
+      font-size:15px; font-weight:700; letter-spacing:-.02em; }
+.wm i { width:8px; height:8px; background:var(--coral); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }
+.top nav { display:flex; gap:2px; margin-left:var(--s6); flex-wrap:wrap; min-width:0; }
+.top nav a { font-size:12.5px; font-weight:600; padding:6px 9px; border-radius:7px;
+             color:rgb(255 255 255 / .72); transition:background 140ms, color 140ms; }
+.top nav a:hover { background:rgb(255 255 255 / .14); color:#fff; }
+.top nav a[aria-current] { background:rgb(255 255 255 / .2); color:#fff; }
+.chip { display:inline-flex; align-items:center; gap:var(--s2); flex:none; white-space:nowrap;
+        font-size:12px; font-weight:600; padding:6px 10px; border-radius:99px;
+        background:rgb(255 255 255 / .14); color:rgb(255 255 255 / .9); }
+.chip b { font-weight:800; }
+
+/* ---- 하늘의 답 ---- */
+/* 하늘이 화면 한 장을 다 먹고 있었습니다. 큰 숫자 · 여백 · 곡선 자리를 함께 줄입니다. */
+.answer { position:relative; z-index:3; margin-top:var(--s6); max-width:620px; padding-bottom:var(--s6); }
+.when { font-family:var(--serif); font-size:15px; letter-spacing:.02em; color:rgb(255 255 255 / .78);
+        opacity:0; animation:rise 700ms 120ms cubic-bezier(.2,.8,.2,1) forwards; }
+.weather { display:flex; align-items:center; gap:var(--s4); margin-top:var(--s5); flex-wrap:wrap;
+           opacity:0; animation:rise 700ms 220ms cubic-bezier(.2,.8,.2,1) forwards; }
+.weather .glyph { width:auto; height:auto; flex:none; display:inline-flex; align-items:center; }
+.weather .glyph .mk { width:16px; height:16px; }
+.weather .word { font-size:26px; font-weight:800; letter-spacing:-.03em; }
+.weather .state { font-size:12.5px; font-weight:700; padding:4px 9px; border-radius:99px;
+                  background:rgb(255 255 255 / .17); letter-spacing:.02em; }
+.bal { display:flex; align-items:baseline; gap:var(--s3); margin-top:var(--s3); width:max-content; max-width:100%;
+       opacity:0; animation:rise 800ms 300ms cubic-bezier(.2,.8,.2,1) forwards; }
+.bal .v { font-size:clamp(46px, 6vw, 84px); font-weight:800; letter-spacing:-.05em; line-height:.92;
+          font-variant-numeric:tabular-nums; text-shadow:0 2px 24px rgb(0 0 0 / .18); }
+.bal .u { font-size:22px; font-weight:700; opacity:.72; }
+.lede { margin-top:var(--s5); font-family:var(--serif); font-size:16px; line-height:1.7;
+        color:rgb(255 255 255 / .92); max-width:46ch; text-shadow:0 1px 12px rgb(8 14 26 / .5);
+        opacity:0; animation:rise 800ms 400ms cubic-bezier(.2,.8,.2,1) forwards; }
+.lede b { font-weight:700; color:#fff; }
+@keyframes rise { from { opacity:0; transform:translate3d(0,18px,0); } to { opacity:1; transform:none; } }
+
+/* ---- 하늘에 그려지는 곡선 ---- */
+/* 곡선은 답 문장 옆 오른쪽 기둥을 채웁니다. 전에는 바닥에 깔려 하늘이 세로로 길었습니다.
+   위는 상단 줄 아래, 아래는 경보띠 위까지입니다. 높이는 답 문장이 정합니다. */
+.curve { position:absolute; inset:92px 40px 78px 46%; height:auto; z-index:1; pointer-events:none; }
+/* 고른 날 표식. 위치는 JS 가 값으로 놓고, 옮겨 가는 움직임만 여기서 줍니다. */
+.curve .mark { transition:transform 160ms cubic-bezier(.2,.8,.2,1); }
+.curve .mark line { stroke:#fff; stroke-opacity:.55; stroke-width:1; stroke-dasharray:3 3; }
+.curve .mark circle { fill:#fff; stroke:rgb(0 0 0 / .25); stroke-width:1.5; }
+.curve .mark text { fill:#fff; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums;
+                    paint-order:stroke; stroke:rgb(8 14 26 / .55); stroke-width:3px; }
+.curve svg { display:block; width:100%; height:100%; }
+.curve .draw { stroke-dasharray:1800; stroke-dashoffset:1800;
+               animation:draw 1900ms 450ms cubic-bezier(.3,.7,.2,1) forwards; }
+@keyframes draw { to { stroke-dashoffset:0; } }
+.curve .fade { opacity:0; animation:fadein 900ms 1500ms linear forwards; }
+@keyframes fadein { to { opacity:1; } }
+.scrim { display:none; }
+
+/* ---- 특보 띠 · 하늘 맨 아래를 가로지릅니다 ---- */
+.alertbar {
+  position:absolute; left:0; right:0; bottom:0; z-index:4;
+  padding:var(--s5) var(--s9); display:flex; align-items:center; gap:var(--s5);
+  background:rgb(0 0 0 / .26); backdrop-filter:blur(3px);
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / .14);
+  opacity:0; animation:rise 700ms 900ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+.alertbar .pulse { width:11px; height:11px; flex:none; position:relative; }
+.alertbar .pulse i { position:absolute; inset:0; border-radius:50%; background:#fff; }
+.alertbar .pulse i:first-child { animation:pulse 2000ms ease-out infinite; }
+@keyframes pulse { 0% { transform:scale(1); opacity:.7; } 70%,100% { transform:scale(3.4); opacity:0; } }
+.alertbar .txt { font-size:14.5px; font-weight:600; letter-spacing:-.01em; }
+.alertbar .txt b { font-weight:800; }
+.alertbar .go { margin-left:auto; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:99px;
+                background:#fff; color:var(--ink); white-space:nowrap;
+                transition:transform 160ms cubic-bezier(.2,.8,.2,1), box-shadow 160ms; }
+.alertbar .go:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgb(0 0 0 / .22); }
+
+/* ════════════ 예보 띠 ════════════ */
+.strip-wrap { position:relative; z-index:4; background:var(--ground); padding-top:var(--s7); }
+.strip-hd { display:flex; align-items:baseline; gap:var(--s5); padding:0 var(--s9) var(--s4); flex-wrap:wrap; }
+.strip-hd h2 { font-size:13px; font-weight:800; letter-spacing:.08em; color:var(--ink-3); }
+.strip-hd .hint { font-size:11.5px; color:var(--ink-3); }
+.strip-hd .segs { margin-left:auto; display:flex; gap:2px; }
+.strip-hd .segs button { font-size:11.5px; font-weight:700; color:var(--ink-3); padding:5px 10px;
+                         border-radius:99px; transition:background 140ms, color 140ms; }
+.strip-hd .segs button[aria-pressed="true"] { background:var(--ink); color:var(--ground); }
+
+.strip { display:flex; scroll-behavior:smooth; gap:var(--s2); padding:0 var(--s9) var(--s6);
+         overflow-x:auto; scroll-snap-type:x proximity; cursor:grab; scrollbar-width:none; }
+.strip::-webkit-scrollbar { display:none; }
+.strip.drag { cursor:grabbing; scroll-snap-type:none; }
+
+/* 하루 = 막대 하나 */
+.day { flex:none; width:54px; scroll-snap-align:center;
+       display:flex; flex-direction:column; align-items:center; gap:var(--s2);
+       padding:var(--s3) 0 var(--s2); border-radius:12px;
+       opacity:0; transform:translateY(14px); }
+.day.in { opacity:1; transform:none;
+          transition:opacity 460ms cubic-bezier(.2,.8,.2,1), transform 460ms cubic-bezier(.2,.8,.2,1), background 110ms; }
+.day:hover { background:var(--ground-2); }
+.day[aria-pressed="true"] { background:var(--ink); }
+.day[aria-pressed="true"] .dow, .day[aria-pressed="true"] .dt, .day[aria-pressed="true"] .val { color:var(--ground); }
+.day .dow { font-size:10.5px; font-weight:700; color:var(--ink-3); letter-spacing:.04em; }
+.day .dow.sun { color:var(--danger); }
+.day .dt { font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+.day .bars { height:74px; width:22px; display:flex; align-items:flex-end; position:relative; }
+.day .bar { width:100%; border-radius:4px 4px 2px 2px; align-self:flex-end;
+            transform-origin:bottom; transform:scaleY(0);
+            transition:transform 620ms cubic-bezier(.2,.9,.2,1), filter 180ms; }
+.day.in .bar { transform:scaleY(1); }
+.day:hover .bar { filter:brightness(1.12); }
+/* 0 선 아래로 내려간 날은 축 밑으로 그립니다. 최소 높이로 뭉개면 "아주 적음"과 구분이 안 됩니다. */
+.day .bar.neg { align-self:flex-start; border-radius:2px 2px 4px 4px; transform-origin:top; }
+.day .zero { position:absolute; left:-5px; right:-5px; height:1px; background:var(--ink-3); opacity:.5; }
+.day .line { position:absolute; left:-4px; right:-4px; height:1.5px; background:var(--danger); opacity:.42; }
+.day .val { font-size:10.5px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink-2); }
+.day.bad .bar { animation:throb 2600ms ease-in-out infinite 2200ms; }
+@keyframes throb { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.28); } }
+
+/* 상태 표시 · 색 + 모양 + 말 세 채널 */
+.mk { width:7px; height:7px; flex:none; display:inline-block; }
+.mk-safe { background:var(--safe); border-radius:50%; }
+.mk-caution { background:var(--caution); clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }
+.mk-danger { background:var(--danger); clip-path:polygon(50% 0,100% 100%,0 100%); }
+.mk-gap { background:var(--gap);
+  clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 92%,50% 70%,21% 92%,32% 57%,2% 35%,39% 35%); }
+
+/* ════════════ 땅 ════════════ */
+.ground { padding:var(--s8) var(--s9) var(--s10); }
+.sec + .sec { margin-top:var(--s10); }
+.sec > h2 { font-size:13px; font-weight:800; letter-spacing:.08em; color:var(--ink-3); }
+.sec .head { font-family:var(--serif); font-size:26px; font-weight:700; letter-spacing:-.02em;
+             margin-top:var(--s4); line-height:1.45; }
+.sec .head b { font-weight:700; box-shadow:inset 0 -8px 0 rgb(202 165 33 / .28); }
+
+/* 값 묶음 · 상자 없이 굵은 선 하나로 */
+.figs { margin-top:var(--s7); padding-top:var(--s7); border-top:2px solid var(--ink);
+        display:flex; flex-wrap:wrap; gap:var(--s9) var(--s9); }
+.fig { min-width:148px; flex:1; opacity:0; transform:translateY(16px); }
+.fig.in { opacity:1; transform:none;
+          transition:opacity 620ms cubic-bezier(.2,.8,.2,1), transform 620ms cubic-bezier(.2,.8,.2,1); }
+.fig .k { font-size:11.5px; font-weight:700; color:var(--ink-3); letter-spacing:.03em; }
+.fig .v { font-size:22px; font-weight:800; letter-spacing:-.03em; margin-top:var(--s2);
+          display:block; font-variant-numeric:tabular-nums; }
+.fig .v small { font-size:12px; font-weight:700; color:var(--ink-3); margin-left:2px; }
+.fig .s { font-size:11.5px; color:var(--ink-2); margin-top:var(--s2); display:block; line-height:1.55; }
+/* 진행 막대 — display:block 이 빠지면 span 이 inline 이라 height 가 무시되고,
+   자식 i 가 height:100% 로 줄상자 전체를 검게 칠합니다. .fig 밖에서도 쓰므로 범위를 풀었습니다. */
+.rail { display:block; height:3px; background:var(--hair); border-radius:2px;
+        margin-top:var(--s3); overflow:hidden; }
+.rail i { display:block; height:3px; background:var(--ink); width:0;
+          transition:width 1200ms cubic-bezier(.2,.8,.2,1); }
+.fig a { font-size:11.5px; font-weight:700; border-bottom:1.5px solid currentColor; padding-bottom:1px; }
+
+/* 원인 묶음 */
+.causes { margin-top:var(--s7); display:flex; flex-wrap:wrap; gap:var(--s9); }
+.cz { min-width:170px; opacity:0; transform:translateY(16px); }
+.cz.in { opacity:1; transform:none;
+         transition:opacity 620ms cubic-bezier(.2,.8,.2,1), transform 620ms cubic-bezier(.2,.8,.2,1); }
+.cz .k { font-size:11.5px; font-weight:700; color:var(--ink-3); letter-spacing:.03em; }
+.cz .v { font-size:26px; font-weight:800; letter-spacing:-.03em; margin-top:var(--s2);
+         font-variant-numeric:tabular-nums; display:block; }
+.cz .s { font-size:12px; color:var(--ink-2); margin-top:2px; display:block; line-height:1.55; }
+
+/* 줄 목록 · 선으로만 나눕니다 */
+.rows { margin-top:var(--s6); }
+.r { display:flex; align-items:center; gap:var(--s5); padding:var(--s5) 0; position:relative; }
+.r + .r::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.r .nm { font-size:14px; font-weight:600; display:block; }
+.r .mt { font-size:11.5px; color:var(--ink-3); margin-top:2px; display:block; }
+.r .amt { font-size:14px; font-weight:800; margin-left:auto; white-space:nowrap;
+          font-variant-numeric:tabular-nums; }
+.r .amt.in { color:var(--ink); }   /* 금액에는 색을 쓰지 않습니다. 방향은 부호가, 초록은 SAFE 등급이 씁니다 */
+.grow { flex:1; min-width:0; }
+.grow .nm, .grow .mt { overflow-wrap:anywhere; } /* 긴 한글 낱말(간편장부소득금액계산서)은 띄어쓰기가 없어 꺾이지 않고 칸을 넘습니다. 넘칠 때만 끊습니다 */
+
+/* 편지 한 줄 */
+.brief { margin-top:var(--s10); padding-top:var(--s7); border-top:1px solid var(--hair);
+         display:flex; align-items:center; gap:var(--s5); flex-wrap:wrap; }
+.brief .q { font-family:var(--serif); font-size:19px; letter-spacing:-.01em; }
+.brief .go { margin-left:auto; font-size:12.5px; font-weight:700; border-bottom:1.5px solid currentColor; }
+.note { margin-top:var(--s7); font-size:11.5px; color:var(--ink-3); line-height:1.65; max-width:72ch; }
+
+/* 누르면 뜨는 읽음창 */
+.pin { position:fixed; z-index:50; transform:translate(-50%,-118%);
+       background:var(--ink); color:var(--ground); border-radius:9px; padding:7px 11px;
+       font-size:11.5px; font-weight:600; white-space:nowrap; pointer-events:none;
+       opacity:0; transition:opacity 140ms linear; font-variant-numeric:tabular-nums; }
+.pin.on { opacity:1; }
+
+/* ════════════ 좁은 화면 ════════════ */
+/* 좁아질수록: 곡선은 오른쪽 자리를 지키되 문장 폭을 줄여 자리를 냅니다.
+   전에는 1180 아래에서 곡선을 바닥에 깔았는데, 하늘이 520 으로 낮아진 뒤로는
+   바닥 곡선이 문장 위로 올라와 겹쳤습니다(옛 720px 하늘용 규칙). */
+@media (max-width:1180px) {
+  .answer { max-width:500px; }
+  .curve { inset:92px 24px 78px 50%; }
+}
+/* 한 칸 배치가 되는 폭에서는 곡선을 문장 아래로 내려 흐름에 넣습니다.
+   absolute 로 두면 겹치고, 흐름에 넣으면 하늘이 그만큼 자라 겹칠 수 없습니다. */
+@media (max-width:1023px) {
+  .curve { position:relative; inset:auto; height:220px; margin-top:var(--s6); }
+  .scrim { display:block; position:absolute; inset:auto 0 66px 0; height:250px; z-index:2;
+           pointer-events:none;
+           background:linear-gradient(to top, rgb(8 14 26 / .42) 0%, rgb(8 14 26 / .18) 50%, transparent 100%); }
+}
+@media (max-width:760px) {
+  .sky { padding:var(--s6) var(--s6) var(--s9); }
+  .answer { margin-top:var(--s7); padding-bottom:var(--s9); }
+  .alertbar { padding:var(--s4) var(--s6); gap:var(--s4); }
+  .alertbar .txt { font-size:12.5px; }
+  .alertbar .go { padding:7px 11px; font-size:11.5px; }
+  .strip-hd, .strip { padding-left:var(--s6); padding-right:var(--s6); }
+  .ground { padding:var(--s7) var(--s6) var(--s10); }
+  .sec .head { font-size:21px; }
+  .figs { gap:var(--s7) var(--s7); }
+  .brief .q { font-size:16px; }
+  .top nav { display:none; }   /* 모바일은 하단 탭으로 갑니다 */
+}
+
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation:none !important; transition:none !important; }
+  .day, .cz, .fig { opacity:1 !important; transform:none !important; }
+  .day .bar { transform:scaleY(1) !important; }
+  .when, .weather, .bal, .lede, .alertbar { opacity:1 !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   아래는 예보 화면 말고 나머지 화면이 쓰는 조각들입니다.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 얇은 하늘 ──
+   예보 화면만 하늘을 크게 씁니다. 나머지는 얇게 쓰고 답 한 줄만 얹습니다. */
+.sky.slim { padding:var(--s7) var(--s9) var(--s8); }
+.sky.slim .answer { margin-top:var(--s7); padding-bottom:0; max-width:820px; }
+.hero {
+  font-family:var(--serif); font-size:clamp(26px, 3.4vw, 40px); font-weight:700;
+  letter-spacing:-.025em; line-height:1.35; margin-top:var(--s4);
+  opacity:0; animation:rise 700ms 200ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+.hero b { font-weight:700; box-shadow:inset 0 -10px 0 rgb(255 255 255 / .2); }
+.hero .n { font-variant-numeric:tabular-nums; }
+.sky.slim .lede { margin-top:var(--s5); font-size:15px; max-width:56ch; }
+.wm { color:inherit; }
+
+/* ── 표를 상자 없이 ──
+   격자로 칸을 맞추고 선은 구조를 나눌 때만 긋습니다.
+   머리글과 줄이 같은 --cols 를 쓰기 때문에 글자가 길어져도 칸이 안 밀립니다. */
+.tbl { --cols:1fr; margin-top:var(--s6); }
+.tbl .th, .tbl .tr {
+  display:grid; grid-template-columns:var(--cols); align-items:center; gap:var(--s5);
+  width:100%; box-sizing:border-box; text-align:left;
+}
+.tbl .th {
+  padding-bottom:var(--s3); font-size:11px; font-weight:800; letter-spacing:.06em;
+  color:var(--ink-3); border-bottom:2px solid var(--ink);
+}
+.tbl .tr { padding:var(--s5) 0; position:relative; }
+.tbl .tr + .tr::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.tbl .tr:hover { background:rgb(20 20 19 / .022); }
+.tbl .tr > * { min-width:0; }
+.tbl .r { text-align:right; font-variant-numeric:tabular-nums; }
+.tbl .ell { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tbl .nm { font-size:13.5px; font-weight:600; display:block; }
+.tbl .mt { font-size:11.5px; color:var(--ink-3); margin-top:1px; display:block; }
+.tbl .amt { font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+.tbl .amt.in { color:var(--ink); }
+.tbl .dt { font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+
+/* 확실성 · 신뢰도 뱃지 (화면구성도 6.2) */
+.bd { display:inline-flex; align-items:center; height:18px; padding:0 5px; border-radius:4px;
+      font-size:10.5px; font-weight:700; background:var(--ground-2); color:var(--ink-3);
+      white-space:nowrap; }
+.bd-est { background:#e7edf6; color:#1b3d63; }
+.bd-ai  { background:#f1ecf7; color:#5b4380; }
+.bd-low { background:var(--caution); color:#fff; }
+
+/* ── 상태 알림 줄 (색 + 모양 + 말) ── */
+.st { display:inline-flex; align-items:center; gap:var(--s2); height:20px; padding:0 var(--s2);
+      border-radius:5px; font-size:11px; font-weight:800; white-space:nowrap; }
+.st-safe { background:#e7f0e9; color:#0d5c3a; }
+.st-caution { background:#f8f1dc; color:#7a6210; }
+.st-danger { background:#f8e7e2; color:#93261f; }
+.st-gap { background:#f2dcd6; color:#7a1815; }
+
+/* ── 단추 ── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--s2);
+       height:36px; padding:0 var(--s6); border-radius:99px;
+       font-size:12.5px; font-weight:700; white-space:nowrap;
+       transition:transform 160ms cubic-bezier(.2,.8,.2,1), background 160ms; }
+.btn-pri { background:var(--ink); color:var(--ground); }
+.btn-pri:hover { transform:translateY(-2px); }
+.btn-sub { box-shadow:inset 0 0 0 1.5px var(--hair); color:var(--ink-2); }
+.btn-sub:hover { background:var(--ground-2); color:var(--ink); }
+.btn-row { display:flex; gap:var(--s3); flex-wrap:wrap; margin-top:var(--s6); }
+
+/* ── 달력 ──
+   칸은 상자가 아니라 격자입니다. 선을 두르지 않고 여백과 바닥 띠로 나눕니다. */
+.cal { margin-top:var(--s6); }
+/* minmax(0,1fr) 입니다. 그냥 1fr 은 최소값이 auto(내용 최소 폭)라
+   「−185만 임차료」처럼 긴 내용이 트랙을 밀어냅니다.
+   그러면 격자가 상자보다 38px 넓어지고 overflow:visible 이라
+   토요일 열이 오른쪽 곁줄 위로 삐져나옵니다. */
+.cal .dow { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:var(--s2); }
+.cal .dow span { font-size:10.5px; font-weight:800; color:var(--ink-3); letter-spacing:.06em;
+                 text-align:center; padding-bottom:var(--s3); }
+.cal .dow span.sun { color:var(--danger); }
+.cal .grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:var(--s2); }
+.cal .cell {
+  min-height:86px; padding:var(--s3) var(--s3) var(--s4); border-radius:10px;
+  display:flex; flex-direction:column; gap:2px; text-align:left; position:relative;
+  transition:background 150ms;
+}
+.cal .cell:hover { background:var(--ground-2); }
+.cal .cell.out { opacity:.3; pointer-events:none; }
+.cal .cell .d { font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; }
+.cal .cell .b { font-size:10.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.cal .cell .ev { font-size:10px; font-weight:700; margin-top:auto; overflow:hidden;
+                 text-overflow:ellipsis; white-space:nowrap; }
+/* 위험은 칸 바닥의 띠로. 칸 전체를 칠하면 달력이 색표가 됩니다. */
+.cal .cell .band { position:absolute; left:var(--s3); right:var(--s3); bottom:5px; height:3px; border-radius:2px; }
+.cal .cell.today .d::after { content:"오늘"; margin-left:4px; font-size:9px; font-weight:800;
+                             color:var(--coral); vertical-align:1px; }
+
+/* ── 모바일 하단 탭 ── */
+body.m { padding-bottom:76px; }
+.tabs {
+  position:fixed; left:0; right:0; bottom:0; z-index:30; height:64px;
+  display:grid; grid-template-columns:repeat(5,1fr); align-items:center;
+  background:rgb(250 249 245 / .94); backdrop-filter:blur(10px);
+  box-shadow:0 -1px 0 var(--hair);
+}
+.tabs a { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+          height:100%; min-height:48px; font-size:10.5px; font-weight:700; color:var(--ink-3);
+          position:relative; }
+.tabs a[aria-current] { color:var(--ink); }
+.tabs a .ic { width:19px; height:19px; }
+.tabs a .n { position:absolute; top:8px; left:calc(50% + 6px); min-width:15px; height:15px; padding:0 4px;
+             border-radius:99px; background:var(--danger); color:#fff; font-size:9.5px;
+             display:inline-flex; align-items:center; justify-content:center; }
+.shoot { justify-self:center; width:52px; height:52px; border-radius:50%;
+         background:var(--ink); color:var(--ground);
+         display:flex; align-items:center; justify-content:center;
+         margin-top:-18px; box-shadow:0 6px 18px rgb(20 20 19 / .28);
+         transition:transform 180ms cubic-bezier(.2,.8,.2,1); }
+.shoot:active { transform:scale(.93); }
+
+/* ── 카드 스택 (모바일 확인 센터) ──
+   카드가 아니라 종이 한 장씩입니다. 처리하면 넘어갑니다. */
+.stack { margin-top:var(--s6); position:relative; }
+.sheet { padding:var(--s6) 0; position:relative; }
+.sheet + .sheet::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.sheet .ask { font-family:var(--serif); font-size:19px; font-weight:700; line-height:1.45; }
+.sheet .ask b { box-shadow:inset 0 -8px 0 rgb(202 165 33 / .3); }
+.sheet .why { font-size:12px; color:var(--ink-3); margin-top:var(--s3); line-height:1.6; }
+.sheet .meta { font-size:12px; color:var(--ink-2); margin-top:var(--s3); font-variant-numeric:tabular-nums; }
+.sheet.done { opacity:.34; }
+.sheet.done .ask { text-decoration:line-through; }
+
+/* ── 촬영 화면 ── */
+.lens { position:relative; margin-top:var(--s6); border-radius:14px; overflow:hidden;
+        background:linear-gradient(160deg,#2b2f36,#14161a); aspect-ratio:3/4; }
+.lens .paper { position:absolute; inset:14% 12%; background:#f4efe4; border-radius:4px;
+               padding:14px 12px; transform:rotate(-1.4deg); box-shadow:0 8px 26px rgb(0 0 0 / .4); }
+.lens .paper i { display:block; height:4px; border-radius:2px; background:#cdc4b2; margin-bottom:7px; }
+.lens .paper i:nth-child(1){width:62%} .lens .paper i:nth-child(2){width:88%}
+.lens .paper i:nth-child(3){width:74%} .lens .paper i:nth-child(4){width:92%}
+.lens .paper i:nth-child(5){width:48%; height:7px; margin-top:14px; background:#8f8676}
+.lens .frame { position:absolute; inset:9%; border:2px solid rgb(255 255 255 / .7); border-radius:8px; }
+.lens .frame::before, .lens .frame::after {
+  content:""; position:absolute; left:-2px; right:-2px; height:2px; background:#fff;
+  animation:scanline 2600ms ease-in-out infinite;
+}
+.lens .frame::before { top:0; } .lens .frame::after { bottom:0; animation-delay:1300ms; }
+@keyframes scanline { 0%,100% { opacity:.25; } 50% { opacity:1; } }
+.lens .cap { position:absolute; left:0; right:0; bottom:0; padding:var(--s5) var(--s6);
+             color:#fff; font-size:12px; background:linear-gradient(to top, rgb(0 0 0 / .6), transparent); }
+
+/* ── 좁은 화면 ── */
+@media (max-width:760px) {
+  .sky.slim { padding:var(--s6) var(--s6) var(--s7); }
+  .sky.slim .answer { margin-top:var(--s5); }
+  .hero { font-size:23px; }
+  .sky.slim .lede { font-size:13.5px; }
+  .cal .cell { min-height:62px; padding:var(--s2); }
+  .cal .cell .ev { display:none; }
+  .tbl { --cols:1fr !important; }
+  .tbl .th { display:none; }
+  .tbl .tr { display:flex; align-items:center; gap:var(--s4); }
+  .tbl .r { text-align:right; margin-left:auto; }
+}
+
+/* ════════════ OV-02 사업장 스위처 ════════════
+   가게가 여러 곳이면 화면마다 "어느 가게인가"가 분명해야 합니다.
+   껍데기에 있으므로 하늘 위에 놓입니다. 하늘색이 바뀌어도 읽혀야 해서
+   글자는 흰색 계열로 고정하고, 열린 판만 땅 색으로 내려옵니다. */
+.sw { position:relative; display:inline-flex; }
+.swb { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+.swb .cv { font-size:13px; opacity:.65; transform:rotate(90deg); display:inline-block; line-height:1; }
+.swb[aria-expanded="true"] .cv { transform:rotate(-90deg); }
+.shr { font-size:9.5px; font-weight:800; letter-spacing:.04em; padding:1px 4px; border-radius:3px;
+       background:rgb(255 255 255 / .22); }
+.swm { position:absolute; top:calc(100% + 6px); right:0; z-index:40; min-width:252px;
+       background:var(--ground); color:var(--ink); border-radius:10px; padding:var(--s3);
+       box-shadow:0 1px 2px rgb(20 20 19 / .18), 0 12px 32px rgb(20 20 19 / .22);
+       display:grid; gap:1px; }
+.swm[hidden] { display:none; }
+.swh { font-size:9.5px; font-weight:800; letter-spacing:.09em; color:var(--ink-3);
+       padding:var(--s3) var(--s3) var(--s2); }
+.swi { display:block; padding:var(--s3) var(--s3); border-radius:7px; }
+.swi:hover { background:var(--wash); }
+.swi[aria-current="true"] { background:var(--ink); color:var(--ground); }
+.swi[aria-current="true"] .swd { color:var(--ground); opacity:.72; }
+.swn { display:block; font-size:12.5px; font-weight:700; }
+.swd { display:block; font-size:10.5px; color:var(--ink-3); margin-top:1px; line-height:1.45; }
+/* 스위처 항목이 button 이라 기본 버튼 스타일을 지웁니다.
+   a 가 아니라 button 인 까닭: 가게 고정은 이동이 아니라 상태 변경입니다. */
+button.swi { width:100%; text-align:left; cursor:pointer; font:inherit; color:inherit;
+             background:none; border:0; }
+button.swi[aria-current="true"] { background:var(--ink); color:var(--ground); }
+
+/* ════════════ 모바일 바닥 시트 ════════════
+   PC 는 곁줄(.detail)에 상세를 두지만 모바일에는 그 자리가 없습니다.
+   그래서 아래에서 올라오는 판을 씁니다. 손가락이 닿는 아래쪽이
+   내용의 시작이 되도록 손잡이와 닫기를 위에 붙입니다. */
+.bsdim { position:fixed; inset:0; z-index:60; background:rgb(20 20 19 / .38);
+         opacity:0; transition:opacity 180ms ease; }
+.bsdim.on { opacity:1; }
+.bsdim[hidden] { display:none; }
+.bs { position:fixed; left:0; right:0; bottom:0; z-index:61; background:var(--ground);
+      border-radius:16px 16px 0 0; max-height:82vh; overflow-y:auto;
+      transform:translateY(101%); transition:transform 240ms cubic-bezier(.2,.85,.25,1);
+      padding:var(--s4) var(--s6) calc(var(--s8) + env(safe-area-inset-bottom, 0px)); }
+.bs.on { transform:translateY(0); }
+.bs[hidden] { display:none; }
+.bsg { width:38px; height:4px; border-radius:2px; background:var(--hair); margin:0 auto var(--s5); }
+.bsh { display:grid; grid-template-columns:1fr auto; gap:var(--s4); align-items:start;
+       padding-bottom:var(--s5); position:relative; }
+.bsh::after { content:""; position:absolute; left:0; right:0; bottom:0; height:1px; background:var(--hair); }
+.bst { font-size:17px; font-weight:800; letter-spacing:-.02em; }
+.bss { display:block; font-size:11.5px; color:var(--ink-3); margin-top:3px; line-height:1.5; }
+/* 44px — 손가락이 정하는 높이는 밀도보다 앞섭니다 */
+.bsx { min-width:44px; min-height:44px; display:grid; place-items:center; font-size:19px;
+       color:var(--ink-3); margin:-10px -10px 0 0; }
+.bsb { padding-top:var(--s5); }
+.bsr { display:grid; grid-template-columns:auto 1fr auto; gap:var(--s4); align-items:baseline;
+       padding:var(--s4) 0; position:relative; }
+.bsr + .bsr::before { content:""; position:absolute; left:0; right:0; top:0; height:1px; background:var(--hair); }
+.bsr .k { font-size:11.5px; color:var(--ink-3); min-width:64px; }
+.bsr .v { font-size:13px; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.bsr .v.num { text-align:right; font-weight:700; grid-column:3; }
+.bsact { display:grid; gap:var(--s3); margin-top:var(--s6); }
+.bsact .btn { min-height:44px; }
+
+/* ════════════ 손익 → 현금 다리 ════════════
+   "가게가 남긴 돈"과 "통장이 늘어난 돈"이 왜 다른지 보여 주는 표입니다.
+   합계 줄만 굵게 하고 나머지는 같은 무게로 둡니다. 항목 사이에 위계가 없습니다.
+   더해지는 것을 보여 주는 표라 마지막 줄 위에만 선을 그립니다. */
+.bridge { display:grid; grid-template-columns:1fr auto; gap:var(--s3) var(--s5);
+          font-size:12.5px; align-items:baseline; margin-top:var(--s5); }
+.bridge .k { color:var(--ink-2); }
+.bridge .k .s { display:block; font-size:10.5px; color:var(--ink-3); margin-top:1px; line-height:1.5; }
+.bridge .n { text-align:right; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.bridge .sum { padding-top:var(--s4); border-top:1px solid var(--ink); font-weight:800; }
+.bridge .sum.n { font-size:15px; }
+.bridge .eq { grid-column:1/-1; font-size:11px; color:var(--ink-3); line-height:1.6;
+              margin-top:var(--s3); }
+
+/* ════════════ 모바일 손가락 높이 ════════════
+   화면구성도 6.5 는 주요 버튼 44px 이상을 요구합니다.
+   .btn 은 36px 인데, PC 마우스에는 충분하지만 손가락에는 모자랍니다.
+   밀도를 위해 줄이고 싶어도 손가락이 정하는 높이는 밀도보다 앞섭니다.
+
+   보이는 크기는 그대로 두고 눌리는 영역만 넓히는 방법도 있지만,
+   등록 · 찍기처럼 실수하면 되돌리기 어려운 버튼은 눈에도 크게 보여야
+   사장이 조심해서 누릅니다. 그래서 실제 높이를 올립니다. */
+body.m .btn { height:44px; }
+body.m .btn-sm { height:40px; }
+
+/* 예보 기간 고르기 — 26px 이었습니다. 세 개가 붙어 있어 잘못 누르기 쉽습니다.
+   글자 크기는 그대로 두고 위아래 여백만 넓힙니다. */
+body.m .strip-hd .segs button { min-height:44px; padding:0 13px; }
+
+/* 줄 안의 링크.
+   처음에는 ::after 로 누르는 자리만 넓히려 했는데 히트 테스트를 통과하지 못했습니다
+   (중앙은 잡히고 위아래 18px 은 놓쳤습니다). 가짜 확장 대신 실제 높이를 올립니다.
+   글자 크기는 그대로라 줄이 두꺼워 보이지 않습니다. */
+body.m .alertbar .go { min-height:44px; display:inline-flex; align-items:center; }
+body.m .brief .go { min-height:44px; display:inline-flex; align-items:center;
+                    padding:0 var(--s2); }
+
+/* ════════════ 줄어들면 안 되는 것들 ════════════
+   버튼은 flex 안에서 기본적으로 줄어듭니다(flex-shrink:1).
+   .btn 은 white-space:nowrap 이라 줄어들면 글자가 상자 밖으로 나갑니다.
+   pc-calendar 의 「오늘로」가 32px 상자에 39px 글자로 삐져나오고 있었습니다.
+
+   규칙: 글자를 줄바꿈할 수 없는 것은 줄어들어서도 안 됩니다.
+   좁아지면 버튼이 줄어드는 대신 옆의 늘어나는 칸이 먼저 줄어야 합니다. */
+.btn, .pill, .chip, .bd, .st { flex:none; }
+
+/* 숫자 칸도 마찬가지입니다. 금액은 줄바꿈하면 자릿수를 잘못 읽습니다. */
+.n, .amt, .an, .dv { flex:none; }
+
+
+/* ════════════ 땅 위 곡선 · 하늘 아래 경보 띠 ════════════
+   홈 하늘을 다른 화면과 같은 얇은 띠로 만들면 곡선(350px)이 설 자리가 없습니다.
+   곡선은 같은 구간을 그리는 「앞으로 서른 날」 띠 바로 위로 내려옵니다. 둘이 붙어 있는 게 맞습니다.
+   경보 띠는 하늘 안에 겹치지 않고 하늘 바로 아래 띠로 섭니다(조 목업의 alertband 와 같은 자리). */
+.curve.ground { position:relative; inset:auto; height:180px; margin:var(--s4) 0 var(--s2); pointer-events:none; }
+.curve.ground .mark line { stroke:var(--ink-3); stroke-opacity:.7; }
+.curve.ground .mark circle { fill:var(--ink); stroke:var(--ground); }
+.curve.ground .mark text { fill:var(--ink); stroke:var(--ground); stroke-width:3px; }
+.alertband { position:relative; display:flex; align-items:center; gap:var(--s5);
+             padding:var(--s4) var(--s9); background:var(--ink); color:var(--ground); }
+.alertband .txt { font-size:13.5px; font-weight:600; letter-spacing:-.01em; }
+.alertband .txt b { font-weight:800; }
+.alertband .pulse { width:11px; height:11px; flex:none; position:relative; }
+.alertband .pulse i { position:absolute; inset:0; border-radius:50%; background:var(--ground); }
+.alertband .pulse i:first-child { animation:pulse 2000ms ease-out infinite; }
+.alertband .go { margin-left:auto; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:99px;
+                 background:var(--ground); color:var(--ink); min-height:36px; display:inline-flex; align-items:center; }
+/* 얇은 하늘의 홈: 날짜 줄에 상태말과 거리를 붙이고 큰 숫자를 줄입니다 */
+.sky.slim .whenrow { display:flex; align-items:baseline; gap:var(--s4); flex-wrap:wrap; }
+.sky.slim .whenrow .weather { margin-top:0; }
+.sky.slim .whenrow .word { font-size:15px; font-weight:800; }
+.sky.slim .whenrow .state { font-size:11.5px; }
+.sky.slim .bal { margin-top:var(--s3); }
+.sky.slim .bal .v { font-size:clamp(40px, 4vw, 56px); }
+.sky.slim .bal .u { font-size:18px; }
+.sky.slim .lede.one { margin-top:var(--s3); font-size:14px; line-height:1.6; max-width:none; }
+
+/* 정산 공백 구간 라벨. 띠는 색, 글자는 며칠인지. 색만 두면 6.1 에 걸립니다. */
+.curve .gaplbl { font-size:11px; font-weight:800; letter-spacing:.02em; paint-order:stroke; stroke:rgb(8 14 26 / .45); stroke-width:3px; }
+.curve.ground .gaplbl { stroke:var(--ground); }

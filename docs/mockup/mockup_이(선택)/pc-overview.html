@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>잔고예보 · 세 가게 통합 (PC)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="sky.css">
+<link rel="stylesheet" href="features.css">
+<link rel="stylesheet" href="pc.css">
+<style>
+/* SC-03-4 다사업장 통합 · 자금 융통 (P1-12 · API 19)
+   이 화면만 사업장이 아니라 사용자 단위입니다 (/overview).
+
+   화면이 답해야 하는 것이 둘인데 단위가 다릅니다.
+     "어느 가게가 버나"  → 가게 단위. 거래 귀속으로 가릅니다.
+     "돈이 마르나"       → 자금 묶음 단위. 돈은 가게가 아니라 통장에 있습니다.
+   그래서 층을 둘로 나눕니다. 위층은 지갑, 아래층은 가게입니다.
+   섞어 놓으면 "성수는 안전한가"처럼 답이 없는 질문이 생깁니다. */
+
+/* ── 지갑 층 ──
+   상자를 쓰는 자리입니다. 지갑은 실제로 경계가 있고,
+   두 지갑 사이로 돈이 저절로 넘어가지 않는다는 것이 이 화면의 요점이라
+   그 경계를 선으로 그립니다. */
+.pots { display:grid; gap:var(--s7); margin-top:var(--s6);
+        grid-template-columns:repeat(auto-fit, minmax(352px, 1fr)); align-items:start; }
+.pot { border:1px solid var(--hair); border-radius:12px; overflow:hidden; position:relative; }
+.pot::before { content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--k); }
+.pot .hd { padding:var(--s6) var(--s6) var(--s5); }
+.pot .nm { font-size:13px; font-weight:800; letter-spacing:-.01em; }
+.pot .v { display:block; font-size:29px; font-weight:800; letter-spacing:-.035em; margin-top:var(--s3);
+          font-variant-numeric:tabular-nums; }
+.pot .v small { font-size:13px; font-weight:700; color:var(--ink-3); margin-left:2px; }
+.pot .who { display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s4); }
+
+/* 지갑 안의 통장들 — 합이 위의 잔액이 되는 것을 보여 줍니다 */
+.accts { border-top:1px solid var(--hair); background:var(--wash); }
+.acct { display:grid; grid-template-columns:1fr auto; gap:var(--s2) var(--s5);
+        padding:var(--s4) var(--s6); align-items:baseline; position:relative; }
+.acct + .acct::before { content:""; position:absolute; left:var(--s6); right:var(--s6); top:0;
+                        height:1px; background:var(--hair); }
+.acct .b { font-size:12px; font-weight:700; }
+.acct .no { font-size:10.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; display:block; margin-top:1px; }
+.acct .an { font-size:13px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.acct .nt { grid-column:1/-1; font-size:10.5px; color:var(--ink-3); line-height:1.5; }
+
+.why { padding:var(--s4) var(--s6) var(--s6); font-size:11.5px; color:var(--ink-2); line-height:1.6;
+       border-top:1px solid var(--hair); }
+.why b { color:var(--ink); }
+.lo { padding:var(--s5) var(--s6) var(--s6); border-top:1px solid var(--hair);
+      display:grid; grid-template-columns:1fr auto; gap:var(--s3) var(--s5); font-size:12px;
+      align-items:baseline; }
+.lo b { font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.lo .k { color:var(--ink-3); }
+
+/* ── 가게 층 ── */
+/* 열이 여덟이라 폭이 빡빡합니다. 이름만 늘어나고 숫자 칸은 자리를 고정합니다.
+   숫자가 줄바꿈되면 행 높이가 튀어서 표가 읽히지 않습니다. */
+.shoprow { display:grid; gap:var(--s4); align-items:baseline; padding:var(--s5) 0; position:relative;
+           grid-template-columns:minmax(0,1.35fr) repeat(6, minmax(0,1fr)) minmax(72px,.62fr); }
+.shoprow + .shoprow::before { content:""; position:absolute; left:0; right:0; top:0; height:1px;
+                              background:var(--hair); }
+.shoprow .nm { font-size:14px; font-weight:700; }
+.shoprow .sub { display:block; font-size:11px; color:var(--ink-3); font-weight:400; margin-top:1px;
+                line-height:1.5; }
+.shoprow .n { font-size:14px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums;
+              letter-spacing:-.025em; }
+.shoprow .n.mut { font-weight:400; color:var(--ink-2); }
+.shoprow .hh { font-size:11px; font-weight:800; letter-spacing:.06em; color:var(--ink-3); }
+/* 이익률 막대. 길이가 크기를 말하므로 색은 하나만 씁니다.
+   매출 막대를 쓰지 않는 까닭: 매출은 이미 숫자로 있고, 세 가게를 갈라놓는 것은
+   매출 크기가 아니라 남기는 비율입니다. 서울숲이 2.9% 라는 게 이 표의 요점입니다. */
+.pbar { height:8px; background:var(--hair); border-radius:2px; overflow:hidden; margin-top:5px; }
+.pbar i { display:block; height:8px; background:var(--ink-2); border-radius:2px; width:0;
+          transition:width 900ms cubic-bezier(.2,.8,.2,1); }
+
+/* ── 융통 ── */
+.sim { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--s9);
+       align-items:start; margin-top:var(--s6); }
+.h4 { font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--ink-3); }
+.srow { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:var(--s5);
+        padding:var(--s4) 0; align-items:baseline; position:relative; }
+.srow + .srow::before { content:""; position:absolute; left:0; right:0; top:0; height:1px;
+                        background:var(--hair); }
+.srow .n { font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.025em;
+           text-align:right; }
+.mv { display:grid; grid-template-columns:1fr auto 1fr; gap:var(--s5); align-items:center;
+      font-size:12.5px; padding:var(--s5) 0; }
+.mv .amt { font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.025em;
+           display:block; margin-top:2px; }
+.mv .arw { text-align:center; color:var(--ink-3); font-size:10.5px; letter-spacing:.06em; }
+.mv .to { text-align:right; }
+.none { font-size:12.5px; color:var(--ink-2); line-height:1.7; }
+.ba { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,auto); gap:var(--s3) var(--s5);
+      font-size:12.5px; align-items:baseline; }
+.ba .n { font-variant-numeric:tabular-nums; letter-spacing:-.025em; font-weight:700; text-align:right; }
+.ba .was { font-size:11px; color:var(--ink-3); }
+.dis { margin-top:var(--s7); padding-top:var(--s4); border-top:1px solid var(--hair);
+       font-size:11.5px; color:var(--ink-3); line-height:1.65; }
+
+/* 날짜 고르기 */
+.datebtn { display:grid; grid-template-columns:1fr auto; gap:var(--s3); width:100%; text-align:left;
+           padding:var(--s3) var(--s4); border-radius:8px; font-size:12px; align-items:center; }
+.datebtn:hover { background:var(--wash); }
+.datebtn[aria-pressed="true"] { background:var(--ink); color:var(--ground); }
+.datebtn[aria-pressed="true"] .g { color:var(--ground); }
+.datebtn .g { font-size:10.5px; color:var(--ink-3); display:block; margin-top:1px;
+              font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="sky slim" id="sky">
+  <div class="top" id="top"></div>
+  <div class="answer">
+    <p class="when" id="when"></p>
+    <h1 class="hero" id="hero"></h1>
+    <p class="lede" id="lede"></p>
+  </div>
+</header>
+
+<div class="work">
+  <aside class="side">
+    <div class="grp">
+      <h3>융통을 볼 날</h3>
+      <p class="hint">어느 한 지갑이라도 안전선 아래로 내려가는 날만 골라 두었습니다.</p>
+      <div id="dates"></div>
+    </div>
+    <div class="grp">
+      <h3>지갑 구성</h3>
+      <p class="hint">묶음은 사장이 정합니다. 통장 성격을 아는 건 사람뿐이라 시스템이 묶지 않습니다.</p>
+      <div id="potList"></div>
+    </div>
+  </aside>
+
+  <main class="body">
+    <section class="sec">
+      <h2>지갑 · 돈이 마르는지는 여기서 봅니다</h2>
+      <div class="pots" id="pots"></div>
+    </section>
+
+    <section class="sec">
+      <h2>가게 · 어느 가게가 버는지는 여기서 봅니다</h2>
+      <div id="shops"></div>
+      <p class="dis" id="unalloc"></p>
+    </section>
+
+    <section class="sec">
+      <h2>가게가 남긴 돈은 통장에 그대로 남지 않습니다</h2>
+      <div class="split" id="bridges"></div>
+    </section>
+
+    <section class="sec">
+      <h2 id="simHead"></h2>
+      <div class="sim">
+        <div>
+          <h3 class="h4">그날의 여유와 부족</h3>
+          <div id="simRows" style="margin-top:var(--s4)"></div>
+          <h3 class="h4" style="margin-top:var(--s8)">옮길 수 있는 돈</h3>
+          <div id="plans" style="margin-top:var(--s2)"></div>
+        </div>
+        <div>
+          <h3 class="h4">옮긴 뒤</h3>
+          <div class="ba" id="after" style="margin-top:var(--s5)"></div>
+          <div id="unres" style="margin-top:var(--s8)"></div>
+        </div>
+      </div>
+      <p class="dis" id="note"></p>
+    </section>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+</div>
+
+<script src="sky.js"></script>
+<script src="nav.js"></script>
+<script src="features.js"></script>
+<script src="store.js"></script>
+<script>
+document.getElementById('top').outerHTML = pcTop('overview');
+wireSwitch();
+
+/* ── 하늘 ── 합쳐도 마르는 지갑이 있으면 그게 답입니다 ── */
+var worst = POTS.reduce(function (a, b) { return RANK[b.lowRisk] > RANK[a.lowRisk] ? b : a; });
+(function () {
+  var k = SKYC[worst.lowRisk], s = document.getElementById('sky');
+  s.style.setProperty('--k0', k[0]); s.style.setProperty('--k1', k[1]); s.style.setProperty('--k2', k[2]);
+  s.dataset.w = worst.lowRisk;
+})();
+document.getElementById('when').textContent =
+  '가게 ' + SHOPS.length + '곳 · 통장 ' + ACCOUNTS.length + '개 · 지갑 ' + POTS.length
+  + '개 · 8월 31일 오전 11시 20분 기준';
+document.getElementById('hero').innerHTML =
+  '세 가게를 합치면 <b>' + won(TOTAL_BALANCE) + '원</b>이 있는데, '
+  + '<b>' + mdKo(worst.low.date) + '</b>에 ' + worst.name.replace(' 지갑', '')
+  + ' 쪽이 <b>' + WORD[worst.lowRisk] + '</b>입니다';
+document.getElementById('lede').textContent =
+  '합쳐 놓으면 여유로워 보이지만 돈은 지갑을 저절로 넘어가지 않습니다. '
+  + '지갑이 다른 가게 사이에서만 옮길 수 있고, 그것도 사장이 직접 이체해야 합니다.';
+
+/* ── 지갑 층 ── */
+document.getElementById('pots').innerHTML = POTS.map(function (p) {
+  return '<div class="pot" style="--k:' + SKYC[p.lowRisk][1] + '">'
+    + '<div class="hd">'
+      + '<span class="nm">' + p.name + '</span>'
+      + '<span class="v">' + won(p.balance) + '<small>원</small></span>'
+      + '<div class="who">' + p.shops.map(function (s) {
+          return '<span class="bd">' + s.name + '</span>'; }).join('') + '</div>'
+    + '</div>'
+    + '<div class="accts">' + p.accts.map(function (a) {
+        return '<div class="acct">'
+          + '<span><span class="b">' + a.bank + ' ' + a.name + '</span>'
+            + '<span class="no">' + a.masked + '</span></span>'
+          + '<span class="an">' + won(a.balance) + '</span>'
+          + '<span class="nt">' + a.note + '</span></div>';
+      }).join('') + '</div>'
+    + '<p class="why">' + (p.accts.length > 1
+        ? '통장 ' + p.accts.length + '개를 <b>한 지갑</b>으로 봅니다. ' + p.why + '.'
+        : p.why + '.')
+      + (p.shops.length > 1
+        ? ' 가게 ' + p.shops.length + '곳이 이 지갑을 함께 쓰기 때문에 <b>가게별 잔액은 말할 수 없고</b>, '
+          + '안전선도 두 가게 몫을 더한 ' + won(p.safety) + '원입니다.' : '')
+      + '</p>'
+    + '<div class="lo">'
+      + '<span class="k">안전선</span><b>' + won(p.safety) + '원</b>'
+      + '<span class="k">30일 최저</span><b>' + won(p.low.v) + '원 · ' + mdKo(p.low.date) + '</b>'
+      + '<span class="k">그날 등급</span><b>' + badge(p.lowRisk) + '</b>'
+    + '</div></div>';
+}).join('');
+
+document.getElementById('potList').innerHTML = POTS.map(function (p) {
+  return '<div class="r" style="cursor:default"><span class="grow">'
+    + '<span class="nm">' + p.name + '</span>'
+    + '<span class="mt">' + p.accts.map(function (a) { return a.bank; }).join(' + ')
+    + ' · 가게 ' + p.shops.length + '곳</span></span></div>';
+}).join('');
+
+/* ── 가게 층 ── */
+/* 이익률이 가장 높은 가게를 100 으로 잡아 막대 길이를 냅니다 */
+function monthsOpen(ym) {
+  var a = ym.split('-'), y = +a[0], m = +a[1];
+  return (2026 - y) * 12 + (8 - m);        /* 기준 2026년 8월 */
+}
+var maxMargin = Math.max.apply(null, SHOPS.map(function (s) { return s.margin; }));
+var COLS = [['매출','sales'],['재료비','food'],['인건비','labor'],
+            ['임차료','rent'],['그 밖','other'],['남는 돈','profit']];
+
+document.getElementById('shops').innerHTML =
+  '<div class="shoprow" style="padding:var(--s5) 0 var(--s2)">'
+    + '<span class="hh">가게</span>'
+    + COLS.map(function (c) {
+        return '<span class="hh" style="text-align:right">' + c[0] + '</span>'; }).join('')
+    + '<span class="hh" style="text-align:right">이익률</span></div>'
+  + SHOPS.map(function (s) {
+      var p = POT[s.pot];
+      return '<div class="shoprow">'
+        + '<span><span class="nm">' + s.name + '</span>'
+          + '<span class="sub">' + s.opened.replace('-', '년 ') + '월 문 열었습니다 · '
+          + p.name + (p.shops.length > 1 ? ' 공용' : '') + '</span></span>'
+        + COLS.map(function (c) {
+            var mut = c[1] !== 'sales' && c[1] !== 'profit';
+            return '<span class="n' + (mut ? ' mut' : '') + '">'
+              + (mut ? '−' : '') + won(s[c[1]]) + '</span>';
+          }).join('')
+        + '<span><span class="n" style="display:block">' + s.margin + '%</span>'
+          + '<span class="pbar"><i data-w="' + Math.round(s.margin / maxMargin * 100) + '"></i></span></span>'
+        + '</div>';
+    }).join('')
+  + '<p class="dis">남는 돈은 사장 몫입니다. 여기서 생활비를 가져가면 통장은 늘지 않습니다. '
+    + '<b>이 표가 검다고 통장이 안전한 것은 아닙니다.</b> 마르는지는 위층 지갑에서 봅니다. '
+    + SHOPS[1].name + '은 문 연 지 ' + monthsOpen(SHOPS[1].opened) + '개월째라 아직 '
+    + won(SHOPS[1].profit) + '원밖에 남기지 못하고, ' + SHOPS[0].name
+    + '과 지갑을 함께 쓰기 때문에 그쪽 여유를 같이 줄이고 있습니다.</p>';
+
+document.getElementById('unalloc').innerHTML =
+  '공용 지갑 거래 <b>' + UNALLOC.count + '건 ' + won(UNALLOC.amount) + '원</b>은 '
+  + '어느 가게 것인지 아직 가르지 못했습니다. ' + UNALLOC.reason + '. '
+  + '이만큼은 위의 가게별 수익이 확정이 아니라 범위입니다. '
+  + '<a href="pc-transactions.html">거래내역에서 가르기</a>';
+
+/* ── 손익 → 현금 다리 ──
+   위 표는 가게가 남긴 돈, 위층 지갑은 통장에 있는 돈입니다.
+   두 숫자가 다른 이유를 여기서 잇습니다. */
+document.getElementById('bridges').innerHTML = BRIDGE.map(function (b) {
+  return '<div><h3 class="h4">' + b.pot.name + '</h3>' + bridgeHTML(b, false) + '</div>';
+}).join('');
+
+/* ── 융통 시뮬레이터 (API 19.2) ──
+   이 화면은 사용자 단위입니다. 전역 FC 는 "지금 고른 가게의 지갑" 곡선으로
+   갈아치워져 있으므로 여기서 쓰면 안 됩니다. 왕십리를 고른 상태에서는
+   FC 와 FC_B 가 같은 배열이 되어, 두 지갑을 다 왕십리 곡선으로 재게 됩니다.
+   그러면 가장 깊은 날 9월 14일이 후보 목록에서 빠져 아무 날도 선택되지 않습니다.
+   지갑마다 자기 곡선을 쓰고, 지갑 수가 늘어도 그대로 돕니다. */
+var DATES = POTS[0].curve.map(function (d) { return d[0]; });
+var CAND = DATES.filter(function (d, i) {
+  return POTS.some(function (o) { return o.curve[i][1] < o.safety; });
+});
+/* 고른 날이 후보에 없으면 첫 후보로 물러납니다. 아무 날도 안 눌린 화면이 되지 않게. */
+var pick = CAND.indexOf(worst.low.date) >= 0 ? worst.low.date : CAND[0];
+
+document.getElementById('dates').innerHTML = CAND.map(function (d) {
+  var i = DATES.indexOf(d);
+  var sum = POTS.reduce(function (t, o) { return t + o.curve[i][1]; }, 0);
+  /* 그날 가장 나쁜 지갑의 등급을 답니다. 각 지갑은 자기 안전선으로 잽니다. */
+  var w = POTS.reduce(function (a, o) {
+    var r = riskFor(o.curve[i][1], o.safety);
+    return RANK[r] > RANK[a] ? r : a; }, 'safe');
+  return '<button class="datebtn" data-d="' + d + '" aria-pressed="' + (d === pick) + '">'
+    + '<span>' + mdKo(d) + '<span class="g">합산 ' + won(sum) + '원</span></span>'
+    + mark(w) + '</button>';
+}).join('');
+
+function render(date) {
+  var t = transferPlan(date);
+
+  document.getElementById('simHead').innerHTML =
+    '자금 융통 · <b>' + mdKo(date) + '</b>에 옆 가게 지갑으로 막을 수 있나';
+
+  document.getElementById('simRows').innerHTML = t.rows.map(function (r) {
+    var over = r.surplus > 0;
+    return '<div class="srow">'
+      + '<span><span class="nm">' + r.pot.name + '</span>'
+        + '<span class="sub">안전선 ' + won(r.safety) + '원</span></span>'
+      + '<span class="n" style="min-width:92px">' + won(r.expected) + '</span>'
+      + '<span class="n" style="min-width:120px;color:var(--' + (over ? 'safe' : 'danger') + ')">'
+        + (over ? '여유 ' + won(r.surplus) : '부족 ' + won(r.shortfall)) + '</span>'
+      + '</div>';
+  }).join('');
+
+  document.getElementById('plans').innerHTML = t.plans.length
+    ? t.plans.map(function (p) {
+        return '<div class="mv">'
+          + '<span>' + p.from.name + '<span class="sub">' + p.from.accts[0].bank
+            + ' ' + p.from.accts[0].masked + '</span></span>'
+          + '<span class="arw">옮김<span class="amt">' + won(p.amount) + '</span></span>'
+          + '<span class="to">' + p.to.name + '<span class="sub">' + p.to.accts[0].bank
+            + ' ' + p.to.accts[0].masked + '</span></span>'
+          + '</div>';
+      }).join('')
+    : '<p class="none" style="padding-top:var(--s4)">옮길 돈이 없습니다. 이날은 '
+      + '<b>두 지갑이 같이 마릅니다</b>. 옆 가게로는 막을 수 없어서 '
+      + '지원 제도나 대출을 봐야 합니다.</p>';
+
+  document.getElementById('after').innerHTML =
+    '<span class="h4">지갑</span><span class="h4" style="text-align:right">옮긴 뒤</span>'
+    + '<span class="h4">등급</span>'
+    + t.after.map(function (a) {
+        return '<span>' + a.pot.name + '</span>'
+          + '<span class="n">' + won(a.expected) + '</span>'
+          + '<span>' + badge(a.risk)
+          + (a.risk !== a.was ? ' <span class="was">' + WORD[a.was] + '에서</span>' : '')
+          + '</span>';
+      }).join('');
+
+  document.getElementById('unres').innerHTML =
+    '<h3 class="h4">아직 남는 돈</h3>'
+    + (t.unresolved > 0
+      ? '<p class="none" style="margin-top:var(--s4)">옮겨도 <b>' + won(t.unresolved)
+        + '원</b>이 모자랍니다. 이만큼은 밖에서 구해야 합니다.</p>'
+        + '<div class="rows" style="margin-top:var(--s5)">'
+        + '<a class="r" href="pc-loans.html"><span class="grow"><span class="nm">지원 제도 찾아보기</span>'
+          + '<span class="mt">자격은 주관 기관에서 확인해야 합니다</span></span><span class="go">›</span></a>'
+        + '<a class="r" href="pc-loans.html"><span class="grow"><span class="nm">대출 알아보기</span>'
+          + '<span class="mt">참고용입니다. 실행은 금융기관에서 합니다</span></span><span class="go">›</span></a>'
+        + '</div>'
+      : '<p class="none" style="margin-top:var(--s4)">'
+        + (t.plans.length
+          ? '없습니다. 옮기면 두 지갑이 모두 안전선 위로 올라갑니다.'
+          : '이날은 두 지갑이 모두 안전선 위에 있어서 옮길 필요가 없습니다.') + '</p>');
+
+  document.getElementById('note').textContent =
+    TRANSFER_NOTE + ' 여유 금액은 그날 예상잔액에서 안전선을 뺀 값입니다. '
+    + '사업장 간 자금 이동은 세무 정리가 필요하니 세무전문가와 확인하십시오.';
+
+  paintRails();
+}
+
+document.getElementById('dates').addEventListener('click', function (e) {
+  var b = e.target.closest('.datebtn'); if (!b) return;
+  this.querySelectorAll('.datebtn').forEach(function (o) {
+    o.setAttribute('aria-pressed', String(o === b));
+  });
+  pick = b.dataset.d;
+  render(pick);
+});
+
+/* 곁줄 — 이 화면만 사용자 단위라 가게로 들어가는 문을 곁줄에 둡니다 */
+document.getElementById('detail').innerHTML =
+  '<div class="grp"><h3>가게로 들어가기</h3>'
+  + '<p class="hint">가게를 고르면 그 가게 기준으로 모든 화면이 바뀝니다.</p>'
+  + '<div class="rows" id="intoRows">' + SHOPS.map(function (s) {
+      return '<button class="r" data-s="' + s.id + '"><span class="grow"><span class="nm">' + s.name + '</span>'
+        + '<span class="mt">' + POT[s.pot].name + ' · 8월 남는 돈 ' + won(s.profit) + '원</span></span>'
+        + '<span class="go">›</span></button>';
+    }).join('') + '</div></div>'
+  + '<div class="grp"><h3>이 화면만 다른 점</h3>'
+  + '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin-top:var(--s3)">'
+  + '다른 화면은 모두 가게 하나를 기준으로 돕니다. 이 화면만 사용자 전체를 봅니다. '
+  + '그래서 주소에 사업장 번호가 없습니다.</p>'
+  + '<p style="font-size:11.5px;color:var(--ink-2);line-height:1.7;margin-top:var(--s4)">'
+  + '가게가 한 곳뿐이면 이 화면은 나타나지 않습니다.</p></div>';
+
+document.getElementById('intoRows').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-s]'); if (!b) return;
+  setShop(b.dataset.s);                 /* 고른 가게를 저장하고 나서 */
+  location.href = 'pc-home.html';       /* 예보로 갑니다 */
+});
+
+render(pick);
+wireReveal();
+mountFeatures('pc-overview');
+</script>
+</body>
+</html>
