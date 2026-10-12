@@ -110,29 +110,7 @@ AI가 닿는 곳은 **거래 분류와 영수증 글자 읽기까지**이고, �
 
 ## 4. 시스템 구조
 
-```
-                        [ 사용자 브라우저 ]
-                                │  HTTPS
-                        ┌───────▼────────┐
-                        │     Nginx      │  TLS 종료 · 정적 파일 · /api 프록시
-                        └───┬────────┬───┘
-                   정적 파일 │        │ /api
-                  ┌─────────▼──┐  ┌──▼──────────────┐
-                  │  프론트엔드 │  │  백엔드 (Java)   │
-                  │  React     │  │  Spring Boot    │
-                  └────────────┘  └──┬───────┬───┬──┘
-                                     │       │   │ 내부 호출
-                      ┌──────────────▼┐ ┌────▼─┐ │  ┌──────────────┐
-                      │  PostgreSQL   │ │Redis │ └─▶│  AI 워커      │
-                      │  거래·증빙·세무│ │토큰· │    │  FastAPI      │
-                      └───────────────┘ │작업큐│    │  분류·OCR·예측 │
-                                        └──────┘    └──────┬────────┘
-                                                           │
-                                                 ┌─────────▼─────────┐
-                      [ GitLab ] ──웹훅──▶ [ Jenkins ] 빌드·테스트·배포
-                                                 └───────────────────┘
-                                   외부: 교육용 금융망 API (계좌·거래·대출)
-```
+![잔고예보 서비스 아키텍처](docs/assets/architecture.png)
 
 **설계상 지킨 것 두 가지**
 
@@ -229,8 +207,9 @@ AI가 닿는 곳은 **거래 분류와 영수증 글자 읽기까지**이고, �
 
 ## 9. 함께 보실 자료
 
-- [프로젝트 소개 영상](https://drive.google.com/file/d/12OfRj2ece_uKDltwMsqyoH0OgJECKZbe/view?usp=sharing)
-- [최종 발표 자료(PPTX)](docs/presentation/잔고예보_발표자료.pptx)
+- [프로젝트 전체 기능 시연 영상](https://drive.google.com/file/d/12OfRj2ece_uKDltwMsqyoH0OgJECKZbe/view?usp=sharing)
+- [프로젝트 소개 영상](https://drive.google.com/file/d/1Au0KI66EFooEtMTDjgIh0EzWmcJyxdpR/view?usp=sharing)
+- [최종 발표 자료(Google Slides)](https://docs.google.com/presentation/d/1jtPIC8qLca8lJZtp6wYEOhnO8TnR8PAa/edit?usp=sharing&ouid=115660169207093417298&rtpof=true&sd=true)
 
 ---
 
